@@ -1,0 +1,1090 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\JAGS.ico"
+IDR_JAGSTYPE            ICON    DISCARDABLE     "res\\JAGSDoc.ico"
+IDI_RECEIVING           ICON    DISCARDABLE     "res\\receivin.ico"
+IDI_NOTCONNECTED        ICON    DISCARDABLE     "res\\notconn.ico"
+IDI_CONNECTED           ICON    DISCARDABLE     "res\\conn.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
+IDR_DOCKBARS            BITMAP  DISCARDABLE     "res\\dockbars.bmp"
+IDR_WINAMP              BITMAP  DISCARDABLE     "res\\winamp.bmp"
+IDR_BROWSER             BITMAP  DISCARDABLE     "res\\browser.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      ID_SHOWTRANSFERRATE
+    BUTTON      ID_PREFERENCES
+    SEPARATOR
+    BUTTON      ID_ADDSHARE
+    BUTTON      ID_REMOVESHARE
+    BUTTON      ID_SETASDOWNLOADDIR
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+IDR_DOCKBARS TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      ID_SHOWSHARES
+    BUTTON      ID_SHOWMP3
+    BUTTON      ID_SHOWTRANSFER
+    BUTTON      ID_SHOWMP3INFO
+END
+
+IDR_WINAMP TOOLBAR DISCARDABLE  22, 18
+BEGIN
+    BUTTON      ID_WINAMPPREV
+    BUTTON      ID_WINAMPPLAY
+    BUTTON      ID_WINAMPPAUSE
+    BUTTON      ID_WINAMPSTOP
+    BUTTON      ID_WINAMPNEXT
+    SEPARATOR
+    BUTTON      ID_WINAMPADDTOPL
+    BUTTON      ID_WINAMPDELETEPL
+END
+
+IDR_BROWSER TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      ID_BROWSERBACK
+    BUTTON      ID_BROWSERNEXT
+    SEPARATOR
+    BUTTON      ID_BROWSERREFRESH
+    SEPARATOR
+    BUTTON      ID_BROWSERHOME
+    BUTTON      ID_BROWSERUSER
+    BUTTON      ID_BROWSERSAT
+    BUTTON      ID_BROWSERNOTES
+    SEPARATOR
+    BUTTON      ID_CDCOVER
+    BUTTON      ID_CDDBSEARCH
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+        MENUITEM "Create a new account...",     ID_NEWACCOUNT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About JAGS...",              ID_APP_ABOUT
+    END
+END
+
+IDR_TRAY MENU DISCARDABLE 
+BEGIN
+    POPUP "TrayMenu"
+    BEGIN
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+END
+
+IDR_BARS MENU DISCARDABLE 
+BEGIN
+    POPUP "Bars"
+    BEGIN
+        MENUITEM "Shares",                      ID_SHOWSHARES
+        MENUITEM "MP3 files",                   ID_SHOWMP3
+        MENUITEM "File transfer",               ID_SHOWTRANSFER
+        MENUITEM "Transfer statistics",         ID_SHOWTRANSFERBAR
+        MENUITEM "MP3 info",                    ID_SHOWMP3INFO
+    END
+END
+
+IDR_TREECONTEXTMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "JAGS"
+    BEGIN
+        MENUITEM "Set as download directory",   ID_SETASDOWNLOADDIR
+        MENUITEM "Remove this share",           ID_REMOVESHARE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About JAGS"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "JAGS Version 0.7",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2001 by J.P Bergamin",IDC_STATIC,40,25,
+                    119,8
+    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
+    LTEXT           "http://www.ractive.ch/gpl/JAGS.html",IDC_URL,40,40,120,
+                    8
+END
+
+IDR_MAINFRAME DIALOG DISCARDABLE  0, 0, 203, 16
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_SEARCHCOMBO,0,2,144,30,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "&Search",IDC_SEARCH,153,1,50,14
+END
+
+IDD_ID3TAGS DIALOG DISCARDABLE  0, 0, 207, 102
+STYLE WS_CHILD
+FONT 7, "Small Fonts"
+BEGIN
+    EDITTEXT        IDC_TITLE,44,2,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ARTIST,44,17,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ALBUM,44,31,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_GENRE,44,45,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_COMMENT,44,59,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_YEAR,44,73,51,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_TRACK,145,73,51,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Title:",IDC_STATIC,2,2,33,12,SS_CENTERIMAGE
+    LTEXT           "Artist:",IDC_STATIC,2,17,33,12,SS_CENTERIMAGE
+    LTEXT           "Album",IDC_STATIC,2,31,33,12,SS_CENTERIMAGE
+    LTEXT           "Genre:",IDC_STATIC,2,45,33,12,SS_CENTERIMAGE
+    LTEXT           "Comment:",IDC_STATIC,2,59,38,12,SS_CENTERIMAGE
+    LTEXT           "Year:",IDC_STATIC,2,73,33,12,SS_CENTERIMAGE
+    LTEXT           "Track:",IDC_STATIC,117,73,25,12,SS_CENTERIMAGE
+    PUSHBUTTON      "Save",IDC_SAVEID3,2,87,27,13
+END
+
+IDD_MP3HEADER DIALOGEX 0, 0, 207, 95
+STYLE WS_CHILD
+FONT 7, "Small Fonts", 0, 0, 0x1
+BEGIN
+    CONTROL         "Variable BitRate",IDC_VBR,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,47,34,70,10
+    LTEXT           "Filename:",IDC_STATIC,2,4,40,8,SS_CENTERIMAGE
+    LTEXT           "Version:",IDC_STATIC,2,18,39,8,SS_CENTERIMAGE
+    LTEXT           "Bitrate:",IDC_STATIC,2,53,39,8,SS_CENTERIMAGE
+    LTEXT           "Length:",IDC_STATIC,109,53,30,8,SS_CENTERIMAGE
+    LTEXT           "Frequency:",IDC_STATIC,2,67,44,8,SS_CENTERIMAGE
+    LTEXT           "Size:",IDC_STATIC,109,67,30,8,SS_CENTERIMAGE
+    LTEXT           "Frames:",IDC_STATIC,2,81,37,8,SS_CENTERIMAGE
+    LTEXT           "Mode:",IDC_STATIC,109,81,30,8,SS_CENTERIMAGE
+    LTEXT           "",IDC_FILENAME,46,2,151,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_VERSION,46,16,151,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_BITRATE,46,51,46,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_FREQUENCY,46,65,46,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_FRAMES,46,79,46,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_LENGTH,152,52,46,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_FILESIZE,152,66,46,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_MODE,152,80,46,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+END
+
+IDD_ACCOUNT DIALOG DISCARDABLE  0, 0, 291, 127
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Account"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Username:",IDC_STATIC,83,15,35,8
+    EDITTEXT        IDC_USERNAME,133,15,65,14,ES_AUTOHSCROLL
+    LTEXT           "Password:",IDC_STATIC,83,37,34,8
+    EDITTEXT        IDC_PASSWORD,133,34,65,14,ES_PASSWORD | ES_AUTOHSCROLL
+    PUSHBUTTON      "Create new account",IDC_CREATEACCOUNT,81,75,129,14
+    PUSHBUTTON      "Login",IDC_LOGIN,81,54,129,14
+    GROUPBOX        "",IDC_STATIC,0,0,284,120
+    PUSHBUTTON      "I forgot my password :-(",IDC_LOSTPASSWORD,81,97,129,14
+END
+
+IDD_OPTIONS DIALOG DISCARDABLE  0, 0, 286, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Add downloaded files to current WinAmp play list",
+                    IDC_ADDTOPLAYLIST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    9,94,169,10
+    CONTROL         "Start WinAmp at startup",IDC_STARTWINAMP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,82,91,10
+    LTEXT           "Executable:",IDC_STATIC,7,67,38,8
+    EDITTEXT        IDC_WINAMPEXE,48,64,204,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_OPENWINAMPEXE,260,64,19,14
+    GROUPBOX        "",IDC_STATIC,0,0,284,163
+    CONTROL         "Automatically organize downloaded files in folders",
+                    IDC_AUTOORGANIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,
+                    121,171,10
+    LTEXT           "When there are more than",IDC_STATIC,21,133,84,8
+    EDITTEXT        IDC_SAMEARTIST,108,131,12,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "songs of the same artist",IDC_STATIC,124,134,75,8
+    LTEXT           "they will be moved in a separate folder.",IDC_STATIC,21,
+                    144,123,8
+    CONTROL         "Keep log file",IDC_KEEPLOG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,19,55,10
+    GROUPBOX        "Winamp",IDC_STATIC,3,56,278,52
+    GROUPBOX        "Organize",IDC_STATIC,3,110,278,50
+    GROUPBOX        "General",IDC_STATIC,3,8,278,46
+END
+
+IDD_PROXY DIALOG DISCARDABLE  0, 0, 291, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Proxy settings"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_PROXY_HOSTNAME,73,69,199,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PROXY_PORT,73,86,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_PROXY_USERNAME,73,103,199,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PROXY_PASSWORD,73,121,199,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "Proxy Type:",IDC_STATIC,11,53,50,11
+    LTEXT           "Hostname or IP:",IDC_PROXY_HOSTNAME_LABEL,11,71,52,8
+    LTEXT           "Port:",IDC_PROXY_PORT_LABEL,11,88,50,11
+    LTEXT           "Username:",IDC_PROXY_USERNAME_LABEL,11,106,50,11
+    LTEXT           "Password:",IDC_PROXY_PASSWORD_LABEL,11,123,50,11
+    COMBOBOX        IDC_PROXY_TYPE_COMBO,73,53,199,91,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "(Usually 1080)",IDC_STATIC,120,88,77,8
+    LTEXT           "If you don't know what a proxy server is, don't change these settings.",
+                    IDC_STATIC,11,12,218,8
+    GROUPBOX        "",IDC_STATIC,6,45,273,96
+    GROUPBOX        "",IDC_STATIC,6,5,273,19
+    GROUPBOX        "",IDC_STATIC,0,0,284,163
+END
+
+IDD_CONNECTIONOPTIONS DIALOGEX 0, 0, 286, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connection options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,0,0,284,163
+    GROUPBOX        "Bandwidth Throttle",IDC_STATIC,3,8,278,59
+    CONTROL         "Slider1",IDC_BWTHROTTLE,"msctls_trackbar32",
+                    TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,16,18,252,26,
+                    WS_EX_STATICEDGE
+    LTEXT           "Static",IDC_BWEXPLANATION,16,47,252,11,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    GROUPBOX        "Connection",IDC_STATIC,3,71,278,59
+    COMBOBOX        IDC_CONNECTIONCOMBO,65,79,95,84,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Type:",IDC_STATIC,11,81,19,8
+    LTEXT           "Upstream:",IDC_STATIC,13,98,33,8
+    LTEXT           "Downstream:",IDC_STATIC,13,113,42,8
+    EDITTEXT        IDC_UPSTREAM,65,94,74,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Kbps",IDC_STATIC,143,96,17,8
+    EDITTEXT        IDC_DOWNSTREAM,65,111,74,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Kbps",IDC_STATIC,143,114,17,8
+    LTEXT           "Simultaneous downloads:",IDC_STATIC,184,81,81,8
+    COMBOBOX        IDC_SIMDOWNLOADS,183,92,48,65,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "JAGS MFC Application\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "JAGS\0"
+            VALUE "LegalCopyright", "Copyright (C) 2001\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "JAGS.EXE\0"
+            VALUE "ProductName", "JAGS Application\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_ID3TAGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 205
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 100
+    END
+
+    IDD_MP3HEADER, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 205
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 93
+    END
+
+    IDD_ACCOUNT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
+    END
+
+    IDD_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 279
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_PROXY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_CONNECTIONOPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 279
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_PROXY DLGINIT
+BEGIN
+    IDC_PROXY_TYPE_COMBO, 0x403, 5, 0
+0x6f4e, 0x656e, "\000" 
+    IDC_PROXY_TYPE_COMBO, 0x403, 9, 0
+0x4f53, 0x4b43, 0x2053, 0x3476, "\000" 
+    IDC_PROXY_TYPE_COMBO, 0x403, 29, 0
+0x4f53, 0x4b43, 0x2053, 0x3576, 0x2820, 0x6f6e, 0x6120, 0x7475, 0x6568, 
+0x746e, 0x6369, 0x7461, 0x6f69, 0x296e, "\000" 
+    IDC_PROXY_TYPE_COMBO, 0x403, 29, 0
+0x4f53, 0x4b43, 0x2053, 0x3576, 0x2820, 0x7375, 0x7265, 0x616e, 0x656d, 
+0x702f, 0x7361, 0x7773, 0x726f, 0x2964, "\000" 
+    0
+END
+
+IDD_CONNECTIONOPTIONS DLGINIT
+BEGIN
+    IDC_CONNECTIONCOMBO, 0x403, 10, 0
+0x3333, 0x204b, 0x6f4d, 0x6564, 0x006d, 
+    IDC_CONNECTIONCOMBO, 0x403, 10, 0
+0x3635, 0x204b, 0x6f4d, 0x6564, 0x006d, 
+    IDC_CONNECTIONCOMBO, 0x403, 5, 0
+0x5349, 0x4e44, "\000" 
+    IDC_CONNECTIONCOMBO, 0x403, 6, 0
+0x6143, 0x6c62, 0x0065, 
+    IDC_CONNECTIONCOMBO, 0x403, 5, 0
+0x4478, 0x4c53, "\000" 
+    IDC_CONNECTIONCOMBO, 0x403, 3, 0
+0x3154, "\000" 
+    IDC_CONNECTIONCOMBO, 0x403, 3, 0
+0x3354, "\000" 
+    IDC_CONNECTIONCOMBO, 0x403, 6, 0
+0x744f, 0x6568, 0x0072, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0031, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0032, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0033, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0034, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0035, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0036, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0037, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0038, 
+    IDC_SIMDOWNLOADS, 0x403, 2, 0
+0x0039, 
+    IDC_SIMDOWNLOADS, 0x403, 3, 0
+0x3031, "\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDR_ADDRESSCOPY         AVI     DISCARDABLE     "res\\address book copy.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "JAGS"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "JAGS"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Create a new document\nNew"
+    ID_FILE_OPEN            "Open an existing document\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the active document\nSave"
+    ID_FILE_SAVE_AS         "Save the active document with a new name\nSave As"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+    ID_FILE_MRU_FILE5       "Open this document"
+    ID_FILE_MRU_FILE6       "Open this document"
+    ID_FILE_MRU_FILE7       "Open this document"
+    ID_FILE_MRU_FILE8       "Open this document"
+    ID_FILE_MRU_FILE9       "Open this document"
+    ID_FILE_MRU_FILE10      "Open this document"
+    ID_FILE_MRU_FILE11      "Open this document"
+    ID_FILE_MRU_FILE12      "Open this document"
+    ID_FILE_MRU_FILE13      "Open this document"
+    ID_FILE_MRU_FILE14      "Open this document"
+    ID_FILE_MRU_FILE15      "Open this document"
+    ID_FILE_MRU_FILE16      "Open this document"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+    ID_MSSERVERSTATE        "Master-Server state"
+    ID_SERVERSTATE          "Server state"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_SHOWTREE             "Show the "
+    ID_SHOWMP3              "Show the MP3 filellist of the selected directory\nShow MP3s"
+    ID_BUTTON32773          "Show the transfer status window\nShow transfers"
+    ID_SHOWSHARES           "Show your shared directories\nShow shares"
+    ID_SHOWTRANSFER         "Show the transfer window\nShow transfer"
+    ID_PREV                 "Play previous song\nPrevious"
+    ID_BUTTON32782          "Play\nPlay"
+    ID_PAUSE                "Pause\nPause"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_BUTTON32784          "Stop\nStop"
+    ID_NEXT                 "Play next song\nNext"
+    ID_WINAMPPLAY           "Play in Winamp\nPlay"
+    ID_WINAMPSTOP           "Stop playing\nStop"
+    ID_SHOWTRANSFERRATE     "Show the Transferrate\nTransfer rate"
+    ID_SHOWMP3INFO          "Show MP3 information\nMP3 Info"
+    ID_PREFERENCES          "Change the settings\nChange settings"
+    ID_SHOWTRANSFERBAR      "Show transfer overview\nTransfer"
+    ID_BROWSERBACK          "Go back\nBack"
+    ID_BROWSERNEXT          "Go to next page\nNext"
+    ID_BROWSERREFRESH       "Refresh\nRefresh"
+    ID_BROWSERHOME          "Go to audiogalaxy.com\nAudiogalaxy Home"
+    ID_BROWSERUSER          "Go to your personal page\nPersonal page"
+    ID_ADDSHARE             "Share another directory\nShare directory"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_SETASDOWNLOADDIR     "Download files into this directory\nSet as download directory"
+    ID_REMOVESHARE          "Don't share this directory any more\nRemove share"
+    ID_NEWACCOUNT           "Create a new account @ www.audiogalaxy.com\nNew account"
+    ID_BROWSERSAT           "Go to your satellite page.\nSatellite"
+    ID_CDCOVER              "Select a song from the MP3 list to search CD covers\nSearch CD covers"
+    ID_CDDBSEARCH           "Select a song from the MP3 list to search the CD on cddb.org\nCDDB search"
+    ID_BROWSERBUTTON        "See your Recent Notes\nRecent Notes"
+    ID_BROWSERNOTES         "See your personal Messages\nPersonal Messages"
+    ID_WINAMPPREV           "Go to the previous song in the playlist\nPrevious song"
+    ID_WINAMPPAUSE          "Pause\nPause"
+    ID_WINAMPNEXT           "Play next song\nNext"
+    ID_WINAMPADDTOPL        "Add selected songs to winamp's current playlist\nAdd to playlist"
+    ID_WINAMPDELETEPL       "Clear winamp's current playlist\nClear playlist"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// German (Switzerland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DES)
+#ifdef _WIN32
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN_SWISS
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SENDING             ICON    DISCARDABLE     "res\\sending.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_NEWACCOUNTINFO DIALOG DISCARDABLE  0, 0, 291, 223
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Personal Information"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Pick a user name*",IDC_STATIC,42,15,62,8
+    EDITTEXT        IDC_NEW_USERNAME,108,14,60,12,ES_AUTOHSCROLL
+    LTEXT           "P&assword*",IDC_STATIC,42,31,36,8
+    EDITTEXT        IDC_NEW_PASSWORD,108,30,60,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "Verify Password*",IDC_STATIC,42,48,54,8
+    EDITTEXT        IDC_NEW_PASSWORD2,108,46,60,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "Email*",IDC_STATIC,42,64,36,8
+    EDITTEXT        IDC_NEW_EMAIL,108,62,130,12,ES_AUTOHSCROLL
+    LTEXT           "Age",IDC_STATIC,42,86,14,8
+    COMBOBOX        IDC_COMBO_AGE,108,83,61,91,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Gender",IDC_STATIC,42,100,24,8
+    COMBOBOX        IDC_COMBO_GENDER,108,98,61,49,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "City*",IDC_STATIC,42,122,36,8
+    EDITTEXT        IDC_NEW_CITY,108,120,95,12,ES_AUTOHSCROLL
+    LTEXT           "State",IDC_STATIC,42,137,36,8
+    EDITTEXT        IDC_NEW_STATE,108,135,15,12,ES_AUTOHSCROLL
+    LTEXT           "ZIP Code",IDC_STATIC,42,153,36,8
+    EDITTEXT        IDC_NEW_ZIP_CODE,108,151,28,12,ES_AUTOHSCROLL
+    LTEXT           "Country*",IDC_STATIC,42,169,26,8
+    COMBOBOX        IDC_COMBO_COUNTRY,108,167,79,79,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_NEW_HEARD_ABOUT,42,195,203,12,ES_AUTOHSCROLL
+    GROUPBOX        "Account Information (fields with * are required)",
+                    IDC_STATIC,7,0,277,214,WS_GROUP | WS_TABSTOP
+    LTEXT           "How did you hear about us?",IDC_STATIC,42,184,117,8
+END
+
+IDD_EMAILOPTIONS DIALOG DISCARDABLE  0, 0, 291, 226
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "EMail Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Audiogalaxy Newsletter Options",IDC_STATIC,7,1,277,218,
+                    WS_GROUP | WS_TABSTOP
+    LTEXT           "Sign up for the Audiogalaxy Newsletter and receive up to date info on Audiogalaxy as well as special offers on Electronics, Music, and more.",
+                    IDC_STATIC,11,12,226,20
+    LTEXT           "Your email address will not be sold or given to any outside parties.",
+                    IDC_STATIC,11,33,200,8
+    CONTROL         "All Categories",IDC_EMAIL_OPT1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,47,58,11
+    CONTROL         "Consumer Electronics (like MP3 players)",IDC_EMAIL_OPT2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,58,143,10
+    CONTROL         "Computers && Software",IDC_EMAIL_OPT3,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,68,89,10
+    CONTROL         "Cell Phones/Internet Communications",IDC_EMAIL_OPT4,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,78,150,10
+    CONTROL         "Books, Music &&Movies",IDC_EMAIL_OPT5,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,88,93,10
+    CONTROL         "Cars",IDC_EMAIL_OPT6,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,98,30,10
+    CONTROL         "Entertainment && Leisure",IDC_EMAIL_OPT7,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,108,82,10
+    CONTROL         "Food / Drinks",IDC_EMAIL_OPT8,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,118,57,10
+    CONTROL         "Sports",IDC_EMAIL_OPT9,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,128,36,10
+    CONTROL         "Travel",IDC_EMAIL_OPT10,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,138,36,10
+    CONTROL         "Free Stuff",IDC_EMAIL_OPT11,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,148,44,10
+    CONTROL         "Sweepstakes",IDC_EMAIL_OPT12,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,158,57,10
+    LTEXT           "By checking the above boxes I agree that Audiogalaxy may send me information relating to the interest categories and the demographic information I have specified. I understand that I may cancel or modify my ",
+                    IDC_STATIC,11,171,221,26
+    LTEXT           "subscription to the Audiogalaxy Newsletter and/or options at any time by coming to Audiogalaxy's website and updating my profile.",
+                    IDC_STATIC,11,195,221,18
+END
+
+IDD_TRYCREATEACCOUNT DIALOGEX 0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Account creation"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,64,74,50,14
+    LTEXT           "Connection status:",IDC_STATIC,7,7,60,8
+    CTEXT           "Trying to connect...",IDC_STATUS,7,18,172,14,
+                    SS_CENTERIMAGE,WS_EX_STATICEDGE
+    CONTROL         "Animate1",IDC_ANIMATION,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,7,36,172,20
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_NEWACCOUNTINFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 216
+    END
+
+    IDD_EMAILOPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 219
+    END
+
+    IDD_TRYCREATEACCOUNT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_NEWACCOUNTINFO DLGINIT
+BEGIN
+    IDC_COMBO_AGE, 0x403, 9, 0
+0x6e75, 0x6564, 0x2072, 0x3631, "\000" 
+    IDC_COMBO_AGE, 0x403, 6, 0
+0x3631, 0x322d, 0x0030, 
+    IDC_COMBO_AGE, 0x403, 6, 0
+0x3132, 0x322d, 0x0035, 
+    IDC_COMBO_AGE, 0x403, 6, 0
+0x3632, 0x332d, 0x0030, 
+    IDC_COMBO_AGE, 0x403, 6, 0
+0x3133, 0x332d, 0x0035, 
+    IDC_COMBO_AGE, 0x403, 6, 0
+0x3633, 0x342d, 0x0030, 
+    IDC_COMBO_AGE, 0x403, 6, 0
+0x3134, 0x352d, 0x0030, 
+    IDC_COMBO_AGE, 0x403, 8, 0
+0x766f, 0x7265, 0x3520, 0x0030, 
+    IDC_COMBO_GENDER, 0x403, 5, 0
+0x614d, 0x656c, "\000" 
+    IDC_COMBO_GENDER, 0x403, 7, 0
+0x6546, 0x616d, 0x656c, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 4, 0
+0x5355, 0x0041, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x6143, 0x616e, 0x6164, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 12, 0
+0x6641, 0x6867, 0x6e61, 0x7369, 0x6174, 0x006e, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6c41, 0x6162, 0x696e, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6c41, 0x6567, 0x6972, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 10, 0
+0x7241, 0x6567, 0x746e, 0x6e69, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 10, 0
+0x7541, 0x7473, 0x6172, 0x696c, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x7541, 0x7473, 0x6972, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6542, 0x676c, 0x7569, 0x006d, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x7242, 0x7a61, 0x6c69, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 9, 0
+0x7542, 0x676c, 0x7261, 0x6169, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 6, 0
+0x6843, 0x6c69, 0x0065, 
+    IDC_COMBO_COUNTRY, 0x403, 6, 0
+0x6843, 0x6e69, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 9, 0
+0x6f43, 0x6f6c, 0x626d, 0x6169, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 11, 0
+0x6f43, 0x7473, 0x2061, 0x6952, 0x6163, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x7243, 0x616f, 0x6974, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 15, 0
+0x7a43, 0x6365, 0x2068, 0x6552, 0x7570, 0x6c62, 0x6369, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6544, 0x6d6e, 0x7261, 0x006b, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6345, 0x6175, 0x6f64, 0x0072, 
+    IDC_COMBO_COUNTRY, 0x403, 6, 0
+0x6745, 0x7079, 0x0074, 
+    IDC_COMBO_COUNTRY, 0x403, 12, 0
+0x6c45, 0x5320, 0x6c61, 0x6176, 0x6f64, 0x0072, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6946, 0x6c6e, 0x6e61, 0x0064, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x7246, 0x6e61, 0x6563, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6547, 0x6d72, 0x6e61, 0x0079, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x7247, 0x6565, 0x6563, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 10, 0
+0x6f48, 0x676e, 0x4b20, 0x6e6f, 0x0067, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x7548, 0x676e, 0x7261, 0x0079, 
+    IDC_COMBO_COUNTRY, 0x403, 6, 0
+0x6e49, 0x6964, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 10, 0
+0x6e49, 0x6f64, 0x656e, 0x6973, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x7249, 0x6c65, 0x6e61, 0x0064, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x7349, 0x6172, 0x6c65, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 6, 0
+0x7449, 0x6c61, 0x0079, 
+    IDC_COMBO_COUNTRY, 0x403, 6, 0
+0x614a, 0x6170, 0x006e, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x6f4a, 0x6472, 0x6e61, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 13, 0
+0x6f4b, 0x6572, 0x2c61, 0x5320, 0x756f, 0x6874, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x654c, 0x6162, 0x6f6e, 0x006e, 
+    IDC_COMBO_COUNTRY, 0x403, 9, 0
+0x614d, 0x616c, 0x7379, 0x6169, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x654d, 0x6978, 0x6f63, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6f4d, 0x6f72, 0x6363, 0x006f, 
+    IDC_COMBO_COUNTRY, 0x403, 12, 0
+0x654e, 0x6874, 0x7265, 0x616c, 0x646e, 0x0073, 
+    IDC_COMBO_COUNTRY, 0x403, 12, 0
+0x654e, 0x2077, 0x655a, 0x6c61, 0x6e61, 0x0064, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x6f4e, 0x7772, 0x7961, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 9, 0
+0x6150, 0x696b, 0x7473, 0x6e61, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 5, 0
+0x6550, 0x7572, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 12, 0
+0x6850, 0x6c69, 0x7069, 0x6970, 0x656e, 0x0073, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x6f50, 0x616c, 0x646e, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 9, 0
+0x6f50, 0x7472, 0x6775, 0x6c61, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 12, 0
+0x7550, 0x7265, 0x6f74, 0x5220, 0x6369, 0x006f, 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6f52, 0x616d, 0x696e, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x7552, 0x7373, 0x6169, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 13, 0
+0x6153, 0x6475, 0x2069, 0x7241, 0x6261, 0x6169, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 10, 0
+0x6953, 0x676e, 0x7061, 0x726f, 0x0065, 
+    IDC_COMBO_COUNTRY, 0x403, 13, 0
+0x6f53, 0x7475, 0x2068, 0x6641, 0x6972, 0x6163, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 6, 0
+0x7053, 0x6961, 0x006e, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x7753, 0x6465, 0x6e65, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 12, 0
+0x7753, 0x7469, 0x657a, 0x6c72, 0x6e61, 0x0064, 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x6154, 0x7769, 0x6e61, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 9, 0
+0x6854, 0x6961, 0x616c, 0x646e, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 7, 0
+0x7554, 0x6b72, 0x7965, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x6b55, 0x6172, 0x6e69, 0x0065, 
+    IDC_COMBO_COUNTRY, 0x403, 21, 0
+0x6e55, 0x7469, 0x6465, 0x4120, 0x6172, 0x2062, 0x6d45, 0x7269, 0x7461, 
+0x7365, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 15, 0
+0x6e55, 0x7469, 0x6465, 0x4b20, 0x6e69, 0x6467, 0x6d6f, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 10, 0
+0x6556, 0x656e, 0x757a, 0x6c65, 0x0061, 
+    IDC_COMBO_COUNTRY, 0x403, 11, 0
+0x7559, 0x6f67, 0x6c73, 0x7661, 0x6169, "\000" 
+    IDC_COMBO_COUNTRY, 0x403, 8, 0
+0x4f5b, 0x6874, 0x7265, 0x005d, 
+    0
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\JAGS.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // German (Switzerland) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\JAGS.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
