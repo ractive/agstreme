@@ -1059,7 +1059,7 @@ BOOL CMainFrame::AddDockViews(CCreateContext *pContext)
 	if (pDownloadView->Insert(0, "File transfers", RUNTIME_CLASS(CSatelliteView), pContext) == -1) {
 		return FALSE;
 	}
-	if (pDownloadView->Insert(1, "Song Queue", RUNTIME_CLASS(CQueueListView), pContext) == -1) {
+	if (pDownloadView->Insert(1, "Song Requests", RUNTIME_CLASS(CQueueListView), pContext) == -1) {
 		return FALSE;
 	}
 
