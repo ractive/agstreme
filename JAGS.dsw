@@ -11,6 +11,39 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name id3v2libstatic
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name id3lib
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "id3lib"=".\id3lib\libprj\id3lib.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name zlib
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "zlib"=".\id3lib\zlib\prj\zlib.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################

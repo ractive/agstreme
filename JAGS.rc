@@ -33,6 +33,19 @@ IDR_JAGSTYPE            ICON    DISCARDABLE     "res\\JAGSDoc.ico"
 IDI_RECEIVING           ICON    DISCARDABLE     "res\\receivin.ico"
 IDI_NOTCONNECTED        ICON    DISCARDABLE     "res\\notconn.ico"
 IDI_CONNECTED           ICON    DISCARDABLE     "res\\conn.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "res\\folder.ico"
+IDI_TIP                 ICON    DISCARDABLE     "res\\tip.ico"
+IDI_UP                  ICON    DISCARDABLE     "res\\up.ico"
+IDI_DOWN                ICON    DISCARDABLE     "res\\down.ico"
+IDI_NOTRANSFER          ICON    DISCARDABLE     "res\\notransfer.ico"
+IDI_TRANSFERSEND        ICON    DISCARDABLE     "res\\transfersend.ico"
+IDI_TRANSFERRECV        ICON    DISCARDABLE     "res\\transferrecv.ico"
+IDI_TRANSFERSENDRECV    ICON    DISCARDABLE     "res\\transfersendrecv.ico"
+IDI_SENDING             ICON    DISCARDABLE     "res\\sending.ico"
+IDI_SEARCH              ICON    DISCARDABLE     "res\\icon1.ico"
+IDI_ADD                 ICON    DISCARDABLE     "res\\add.ico"
+IDI_DEL                 ICON    DISCARDABLE     "res\\del.ico"
+IDI_OPEN                ICON    DISCARDABLE     "res\\open.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -44,6 +57,12 @@ IDR_DOCKBARS            BITMAP  DISCARDABLE     "res\\dockbars.bmp"
 IDR_WINAMP              BITMAP  DISCARDABLE     "res\\winamp.bmp"
 IDR_BROWSER             BITMAP  DISCARDABLE     "res\\browser.bmp"
 IDB_BANNER              BITMAP  DISCARDABLE     "res\\client-startscreen2.bmp"
+IDR_ADDDEL              BITMAP  DISCARDABLE     "res\\adddel.bmp"
+IDB_AVAILABILITY        BITMAP  DISCARDABLE     "res\\availability.bmp"
+IDB_WIZARD              BITMAP  DISCARDABLE     "res\\wizard.bmp"
+IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splash.bmp"
+IDB_YESNO               BITMAP  DISCARDABLE     "res\\yesno.bmp"
+IDB_DBICONS             BITMAP  DISCARDABLE     "res\\dbicons.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -55,6 +74,10 @@ BEGIN
     BUTTON      ID_APP_EXIT
     SEPARATOR
     BUTTON      ID_PREFERENCES
+    SEPARATOR
+    BUTTON      ID_DOWNLOADLIST
+    SEPARATOR
+    BUTTON      ID_MP3WIZARD
     SEPARATOR
     BUTTON      ID_REFRESH
     BUTTON      ID_NEWDIR
@@ -71,11 +94,14 @@ BEGIN
     BUTTON      ID_SHOWMP3
     BUTTON      ID_SHOWTRANSFER
     BUTTON      ID_SHOWMP3INFO
+    BUTTON      ID_SHOWFAVORITES
     BUTTON      ID_SHOWTRANSFERRATE
 END
 
 IDR_WINAMP TOOLBAR DISCARDABLE  22, 18
 BEGIN
+    BUTTON      ID_STARTWINAMP
+    SEPARATOR
     BUTTON      ID_WINAMPPREV
     BUTTON      ID_WINAMPPLAY
     BUTTON      ID_WINAMPPAUSE
@@ -84,6 +110,7 @@ BEGIN
     SEPARATOR
     BUTTON      ID_WINAMPADDTOPL
     BUTTON      ID_WINAMPDELETEPL
+    BUTTON      ID_PLAYLISTGEN
 END
 
 IDR_BROWSER TOOLBAR DISCARDABLE  16, 15
@@ -98,9 +125,19 @@ BEGIN
     BUTTON      ID_BROWSERSAT
     BUTTON      ID_BROWSERNOTES
     SEPARATOR
+    BUTTON      ID_QUEUESONGS
+    SEPARATOR
     BUTTON      ID_CDCOVER
     BUTTON      ID_CDDBSEARCH
     BUTTON      ID_LYRICS
+END
+
+IDR_ADDDEL TOOLBAR DISCARDABLE  16, 16
+BEGIN
+    BUTTON      ID_ADDNEWFAV
+    BUTTON      ID_DELFAV
+    BUTTON      ID_MOVEFAVUP
+    BUTTON      ID_MOVEFAVDOWN
 END
 
 
@@ -111,27 +148,41 @@ END
 
 IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
-    POPUP "File"
+    POPUP "&File"
     BEGIN
         MENUITEM "Create a new account...",     ID_NEWACCOUNT
         MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_PREFERENCES
+        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
-    POPUP "Shares"
+    POPUP "&Shares"
     BEGIN
         MENUITEM "Add new share",               ID_ADDSHARE
         MENUITEM "Remove this share",           ID_REMOVESHARE
         MENUITEM "Set as download directory",   ID_SETASDOWNLOADDIR
+    END
+    POPUP "F&avorites"
+    BEGIN
+        MENUITEM "Add to favorites",            ID_ADDTOFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "",                            ID_FILE_MRU_FILE1
     END
     POPUP "&View"
     BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
     END
+    POPUP "&Extras"
+    BEGIN
+        MENUITEM "&Delete music database",      ID_DELDB
+        MENUITEM "&Reset connection",           ID_EXTRAS_RESETCONNECTION
+        MENUITEM "&Create random playlist",     ID_PLAYLISTGEN
+    END
     POPUP "&Help"
     BEGIN
         MENUITEM "&Help...",                    ID_HELP
-        MENUITEM "&About JAGS...",              ID_APP_ABOUT
+        MENUITEM "&About AGStreme...",          ID_APP_ABOUT
     END
 END
 
@@ -147,20 +198,39 @@ IDR_BARS MENU DISCARDABLE
 BEGIN
     POPUP "Bars"
     BEGIN
-        MENUITEM "Shares",                      ID_SHOWSHARES
-        MENUITEM "MP3 files",                   ID_SHOWMP3
-        MENUITEM "File transfer",               ID_SHOWTRANSFER
-        MENUITEM "Transfer statistics",         ID_SHOWTRANSFERRATE
-        MENUITEM "MP3 info",                    ID_SHOWMP3INFO
+        MENUITEM "&Shares",                     ID_SHOWSHARES
+        MENUITEM "&MP3 files",                  ID_SHOWMP3
+        MENUITEM "&File transfer",              ID_SHOWTRANSFER
+        MENUITEM "M&P3 info",                   ID_SHOWMP3INFO
+        MENUITEM "Fa&vorites",                  ID_SHOWFAVORITES
+        MENUITEM "&Transfer statistics",        ID_SHOWTRANSFERRATE
     END
 END
 
 IDR_TREECONTEXTMENU MENU DISCARDABLE 
 BEGIN
-    POPUP "JAGS"
+    POPUP "AGStreme"
     BEGIN
         MENUITEM "Set as download directory",   ID_SETASDOWNLOADDIR
         MENUITEM "Remove this share",           ID_REMOVESHARE
+    END
+END
+
+IDR_SONGCONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "SongContext"
+    BEGIN
+        MENUITEM "Song info",                   ID_SONGINFO
+        MENUITEM "Choose version...",           ID_CHOOSEVERSION
+        POPUP "Queue songs"
+        BEGIN
+            MENUITEM "Most popular version",        ID_QUEUESONGS
+            MENUITEM "128 kbps version",            ID_QUEUE128
+            MENUITEM "160 kbps version",            ID_QUEUE160
+            MENUITEM "192 kbps version",            ID_QUEUE192
+            MENUITEM "256 kbps version",            ID_QUEUE256
+            MENUITEM "320 kbps version",            ID_QUEUE320
+        END
     END
 END
 
@@ -199,48 +269,29 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 71
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About JAGS"
+CAPTION "About AGStreme"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "JAGS Version 1.1",IDC_STATIC,40,10,119,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2001 by J.P Bergamin",IDC_STATIC,40,25,
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,25,21,20
+    LTEXT           "AGStreme Version 2.0\r\n26. Sept. 2001",IDC_STATIC,41,
+                    10,119,18,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2001 by J.P Bergamin",IDC_STATIC,41,30,
                     119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
-    LTEXT           "http://www.ractive.ch/gpl/JAGS.html",IDC_URL,40,40,120,
-                    8
+    LTEXT           "http://www.ractive.ch/gpl/AGStreme.html",IDC_URL,41,56,
+                    134,8
+    LTEXT           "For the full source code visit:",IDC_STATIC,41,45,91,8
 END
 
 IDR_MAINFRAME DIALOG DISCARDABLE  0, 0, 203, 16
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    COMBOBOX        IDC_SEARCHCOMBO,0,2,144,30,CBS_DROPDOWN | CBS_SORT | 
+    DEFPUSHBUTTON   "&GO",IDC_SEARCH,184,2,16,12
+    COMBOBOX        IDC_SEARCHCOMBO,0,2,180,109,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "&Search",IDC_SEARCH,153,1,50,14
-END
-
-IDD_ID3TAGS DIALOG DISCARDABLE  0, 0, 207, 102
-STYLE WS_CHILD
-FONT 7, "Small Fonts"
-BEGIN
-    EDITTEXT        IDC_TITLE,44,2,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_ARTIST,44,17,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_ALBUM,44,31,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_GENRE,44,45,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_COMMENT,44,59,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_YEAR,44,73,51,12,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_TRACK,145,73,51,12,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Title:",IDC_STATIC,2,2,33,12,SS_CENTERIMAGE
-    LTEXT           "Artist:",IDC_STATIC,2,17,33,12,SS_CENTERIMAGE
-    LTEXT           "Album",IDC_STATIC,2,31,33,12,SS_CENTERIMAGE
-    LTEXT           "Genre:",IDC_STATIC,2,45,33,12,SS_CENTERIMAGE
-    LTEXT           "Comment:",IDC_STATIC,2,59,38,12,SS_CENTERIMAGE
-    LTEXT           "Year:",IDC_STATIC,2,73,33,12,SS_CENTERIMAGE
-    LTEXT           "Track:",IDC_STATIC,117,73,25,12,SS_CENTERIMAGE
-    PUSHBUTTON      "Save",IDC_SAVEID3,2,87,27,13
 END
 
 IDD_MP3HEADER DIALOGEX 0, 0, 207, 95
@@ -248,30 +299,27 @@ STYLE WS_CHILD
 FONT 7, "Small Fonts", 0, 0, 0x1
 BEGIN
     CONTROL         "Variable BitRate",IDC_VBR,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,47,34,70,10
+                    WS_TABSTOP,46,35,70,10
     LTEXT           "Filename:",IDC_STATIC,2,4,40,8,SS_CENTERIMAGE
     LTEXT           "Version:",IDC_STATIC,2,18,39,8,SS_CENTERIMAGE
     LTEXT           "Bitrate:",IDC_STATIC,2,53,39,8,SS_CENTERIMAGE
-    LTEXT           "Length:",IDC_STATIC,109,53,30,8,SS_CENTERIMAGE
+    LTEXT           "Length:",IDC_STATIC,109,67,25,8,SS_CENTERIMAGE
     LTEXT           "Frequency:",IDC_STATIC,2,67,44,8,SS_CENTERIMAGE
-    LTEXT           "Size:",IDC_STATIC,109,67,30,8,SS_CENTERIMAGE
-    LTEXT           "Frames:",IDC_STATIC,2,81,37,8,SS_CENTERIMAGE
-    LTEXT           "Mode:",IDC_STATIC,109,81,30,8,SS_CENTERIMAGE
-    LTEXT           "",IDC_FILENAME,46,2,151,12,SS_CENTERIMAGE,
+    LTEXT           "Size:",IDC_STATIC,109,53,30,8,SS_CENTERIMAGE
+    LTEXT           "Mode:",IDC_STATIC,2,81,30,8,SS_CENTERIMAGE
+    LTEXT           "",IDC_FILENAME,46,2,154,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_VERSION,46,16,151,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_VERSION,46,16,154,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_BITRATE,46,51,46,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_BITRATE,46,51,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_FREQUENCY,46,65,46,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_FREQUENCY,46,65,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_FRAMES,46,79,46,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_LENGTH,147,65,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_LENGTH,152,52,46,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_FILESIZE,147,51,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_FILESIZE,152,66,46,12,SS_CENTERIMAGE,
-                    WS_EX_STATICEDGE
-    LTEXT           "",IDC_MODE,152,80,46,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    LTEXT           "",IDC_MODE,46,80,55,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
 END
 
 IDD_ACCOUNT DIALOG DISCARDABLE  0, 0, 291, 127
@@ -303,18 +351,9 @@ BEGIN
     EDITTEXT        IDC_WINAMPEXE,48,64,204,14,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_OPENWINAMPEXE,260,64,19,14
     GROUPBOX        "",IDC_STATIC,0,0,284,163
-    CONTROL         "Automatically organize downloaded files in folders",
-                    IDC_AUTOORGANIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,
-                    121,171,10
-    LTEXT           "When there are more than",IDC_STATIC,21,133,84,8
-    EDITTEXT        IDC_SAMEARTIST,108,131,12,12,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "songs of the same artist",IDC_STATIC,124,134,75,8
-    LTEXT           "they will be moved in a separate folder.",IDC_STATIC,21,
-                    144,123,8
     CONTROL         "Keep log file",IDC_KEEPLOG,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,19,55,10
     GROUPBOX        "Winamp",IDC_STATIC,3,56,278,52
-    GROUPBOX        "Organize",IDC_STATIC,3,110,278,50
     GROUPBOX        "General",IDC_STATIC,3,8,278,46
 END
 
@@ -343,31 +382,45 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,2,0,284,123
 END
 
-IDD_CONNECTIONOPTIONS DIALOGEX 0, 0, 286, 170
+IDD_CONNECTIONOPTIONS DIALOGEX 0, 0, 286, 180
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Connection options"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "",IDC_STATIC,0,0,284,163
-    GROUPBOX        "Bandwidth Throttle",IDC_STATIC,3,8,278,59
+    GROUPBOX        "",IDC_STATIC,0,0,284,176
+    GROUPBOX        "Bandwidth Throttle",IDC_STATIC,3,8,278,46
     CONTROL         "Slider1",IDC_BWTHROTTLE,"msctls_trackbar32",
-                    TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,16,18,252,26,
+                    TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,16,18,252,20,
                     WS_EX_STATICEDGE
-    LTEXT           "Static",IDC_BWEXPLANATION,16,47,252,11,SS_CENTERIMAGE,
+    LTEXT           "Static",IDC_BWEXPLANATION,16,40,252,11,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    GROUPBOX        "Connection",IDC_STATIC,3,71,278,59
-    COMBOBOX        IDC_CONNECTIONCOMBO,65,79,95,84,CBS_DROPDOWNLIST | 
+    GROUPBOX        "Connection",IDC_STATIC,3,56,278,59
+    COMBOBOX        IDC_CONNECTIONCOMBO,65,64,95,84,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Type:",IDC_STATIC,11,81,19,8
-    LTEXT           "Upstream:",IDC_STATIC,13,98,33,8
-    LTEXT           "Downstream:",IDC_STATIC,13,113,42,8
-    EDITTEXT        IDC_UPSTREAM,65,94,74,14,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Kbps",IDC_STATIC,143,96,17,8
-    EDITTEXT        IDC_DOWNSTREAM,65,111,74,14,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Kbps",IDC_STATIC,143,114,17,8
-    LTEXT           "Simultaneous downloads:",IDC_STATIC,184,81,81,8
-    COMBOBOX        IDC_SIMDOWNLOADS,183,92,48,65,CBS_DROPDOWN | WS_VSCROLL | 
+    LTEXT           "Type:",IDC_STATIC,11,66,19,8
+    LTEXT           "Upstream:",IDC_STATIC,13,100,33,8
+    LTEXT           "Downstream:",IDC_STATIC,13,81,42,8
+    EDITTEXT        IDC_UPSTREAM,65,96,74,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Kbps",IDC_STATIC,143,98,17,8
+    EDITTEXT        IDC_DOWNSTREAM,65,79,74,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Kbps",IDC_STATIC,143,82,17,8
+    LTEXT           "Simultaneous downloads:",IDC_STATIC,184,66,81,8
+    COMBOBOX        IDC_SIMDOWNLOADS,183,77,48,65,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
+    GROUPBOX        "Disconnect ",IDC_STATIC,3,115,278,57
+    EDITTEXT        IDC_MINUTES,40,125,12,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "minutes if",IDC_STATIC,56,126,30,8
+    CONTROL         "download queue is empty",IDC_DOWNLOADQUEUE,"Button",
+                    BS_AUTORADIOBUTTON,101,126,96,10
+    CONTROL         "download and upload queue is empty",IDC_UPDOWNLOADQUEUE,
+                    "Button",BS_AUTORADIOBUTTON,101,138,133,10
+    CONTROL         "DateTimePicker1",IDC_HANGUPTIME,"SysDateTimePick32",
+                    DTS_RIGHTALIGN | DTS_UPDOWN | WS_TABSTOP | 0x8,102,153,
+                    50,15
+    CONTROL         "Hangup at",IDC_HANGUPAT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,156,49,10
+    CONTROL         "After",IDC_HANGUPIDLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,126,31,10
 END
 
 IDD_WELCOME DIALOG DISCARDABLE  0, 0, 260, 117
@@ -396,6 +449,449 @@ BEGIN
     LTEXT           "Password:",IDC_STATIC,85,37,34,8
     EDITTEXT        IDC_PASSWORD,135,34,65,14,ES_PASSWORD | ES_AUTOHSCROLL
     GROUPBOX        "Account information",IDC_STATIC,7,0,272,57
+END
+
+IDD_EMAILOPTIONS DIALOG DISCARDABLE  0, 0, 291, 226
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "EMail Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Audiogalaxy Newsletter Options",IDC_STATIC,7,1,277,218,
+                    WS_GROUP | WS_TABSTOP
+    LTEXT           "Sign up for the Audiogalaxy Newsletter and receive up to date info on Audiogalaxy as well as special offers on Electronics, Music, and more.",
+                    IDC_STATIC,11,12,226,20
+    LTEXT           "Your email address will not be sold or given to any outside parties.",
+                    IDC_STATIC,11,33,200,8
+    CONTROL         "All Categories",IDC_EMAIL_OPT1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,47,58,11
+    CONTROL         "Consumer Electronics (like MP3 players)",IDC_EMAIL_OPT2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,58,143,10
+    CONTROL         "Computers && Software",IDC_EMAIL_OPT3,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,68,89,10
+    CONTROL         "Cell Phones/Internet Communications",IDC_EMAIL_OPT4,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,78,150,10
+    CONTROL         "Books, Music &&Movies",IDC_EMAIL_OPT5,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,88,93,10
+    CONTROL         "Cars",IDC_EMAIL_OPT6,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,98,30,10
+    CONTROL         "Entertainment && Leisure",IDC_EMAIL_OPT7,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,108,82,10
+    CONTROL         "Food / Drinks",IDC_EMAIL_OPT8,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,118,57,10
+    CONTROL         "Sports",IDC_EMAIL_OPT9,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,128,36,10
+    CONTROL         "Travel",IDC_EMAIL_OPT10,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,138,36,10
+    CONTROL         "Free Stuff",IDC_EMAIL_OPT11,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,148,44,10
+    CONTROL         "Sweepstakes",IDC_EMAIL_OPT12,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,158,57,10
+    LTEXT           "By checking the above boxes I agree that Audiogalaxy may send me information relating to the interest categories and the demographic information I have specified. I understand that I may cancel or modify my ",
+                    IDC_STATIC,11,171,221,26
+    LTEXT           "subscription to the Audiogalaxy Newsletter and/or options at any time by coming to Audiogalaxy's website and updating my profile.",
+                    IDC_STATIC,11,195,221,18
+END
+
+IDD_ID3V2TAGS DIALOG DISCARDABLE  0, 0, 223, 119
+STYLE WS_CHILD
+FONT 7, "Small Fonts"
+BEGIN
+    EDITTEXT        IDC_TITLE,44,2,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ARTIST,44,17,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ALBUM,44,31,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_COMMENT,44,73,152,28,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | WS_VSCROLL
+    LTEXT           "Title:",IDC_STATIC,2,2,33,12,SS_CENTERIMAGE
+    LTEXT           "Artist:",IDC_STATIC,2,17,33,12,SS_CENTERIMAGE
+    LTEXT           "Album",IDC_STATIC,2,31,33,12,SS_CENTERIMAGE
+    LTEXT           "Genre:",IDC_STATIC,2,45,33,12,SS_CENTERIMAGE
+    LTEXT           "Comment:",IDC_STATIC,2,73,38,12,SS_CENTERIMAGE
+    PUSHBUTTON      "Save",IDC_SAVEID3,2,104,27,13
+    COMBOBOX        IDC_GENRE,44,44,152,204,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Clear",IDC_CLEARID3,44,104,27,13
+    PUSHBUTTON      "Copy to ID3v2",IDC_COPYID3,90,104,60,13
+    EDITTEXT        IDC_YEAR,44,59,51,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_TRACK,145,59,51,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Year:",IDC_STATIC,2,59,33,12,SS_CENTERIMAGE
+    LTEXT           "Track:",IDC_STATIC,117,59,25,12,SS_CENTERIMAGE
+END
+
+IDD_FAVORITES DIALOGEX 0, 0, 201, 102
+STYLE WS_CHILD
+EXSTYLE WS_EX_ACCEPTFILES
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | 
+                    LVS_NOSORTHEADER | WS_TABSTOP,4,4,193,68,
+                    WS_EX_STATICEDGE
+END
+
+IDW_CHOOSE DIALOG DISCARDABLE  0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Update the ID3 tags of choosen files",IDC_GETID3TAGS,
+                    "Button",BS_AUTORADIOBUTTON | BS_VCENTER | BS_MULTILINE,
+                    118,73,183,15
+    CONTROL         "Strip ID3 tags from files",IDC_STRIPTAGS,"Button",
+                    BS_AUTORADIOBUTTON | BS_VCENTER,118,93,88,15
+    CONTROL         "Search for a complete album on www.audiogalaxy.com",
+                    IDC_SEARCHAG,"Button",BS_AUTORADIOBUTTON | BS_VCENTER | 
+                    BS_MULTILINE,118,113,230,15
+    CONTROL         "Update the music database",IDC_UPDATEDB,"Button",
+                    BS_AUTORADIOBUTTON | BS_VCENTER,118,133,103,15
+    CONTROL         "Organize my MP3 collection",IDC_ORGANIZE,"Button",
+                    BS_AUTORADIOBUTTON | BS_VCENTER | BS_MULTILINE | NOT 
+                    WS_VISIBLE,118,153,235,15
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    LTEXT           "Welcome to the MP3 wizard",IDC_CAPTION,111,7,200,18
+    LTEXT           "This wizard will help you to organize your MP3 collection",
+                    IDC_STATIC,110,29,177,8
+    LTEXT           "What would you like to do?",IDC_STATIC,111,50,87,8
+    GROUPBOX        "",IDC_STATIC,109,63,254,116
+END
+
+IDW_GETID3TAG DIALOG DISCARDABLE  0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    PUSHBUTTON      "...",IDC_OPENFILES,308,28,16,14,BS_ICON | BS_FLAT
+    LTEXT           "Please add the files you want to process.\r\nYou can also drag files and folders into this window!",
+                    IDC_STATIC,110,24,185,16
+    LTEXT           "Choose the files to process",IDC_CAPTION,111,7,200,16
+    CONTROL         "List1",IDC_FILELIST,"SysListView32",LVS_REPORT | 
+                    LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,109,46,255,131
+    PUSHBUTTON      "...",IDC_REMOVEFILES,348,28,16,14,BS_ICON | BS_FLAT
+    PUSHBUTTON      "...",IDC_OPENDIRECTORY,328,28,16,14,BS_ICON | BS_FLAT
+END
+
+IDD_WIZARD DIALOG DISCARDABLE  0, 0, 373, 221
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wizard"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,258,200,50,14
+    PUSHBUTTON      "Finish",ID_WIZFINISH,315,200,50,14
+    PUSHBUTTON      "Next >",ID_WIZNEXT,203,200,50,14
+    PUSHBUTTON      "< Back",ID_WIZBACK,153,200,50,14
+    CONTROL         "",IDC_SHEETRECT,"Static",SS_ETCHEDFRAME,0,0,372,187
+END
+
+IDW_FILEIDOPTIONS DIALOG DISCARDABLE  0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    LTEXT           "To identify the files, you must provide some informations.",
+                    IDC_STATIC,111,19,177,8
+    LTEXT           "File identification options",IDC_CAPTION,111,7,200,12
+    EDITTEXT        IDC_FILENAMEFORMAT,118,62,215,14,ES_AUTOHSCROLL
+    CONTROL         "Directories specify artist name",IDC_DIRISARTIST,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,118,94,109,10
+    CONTROL         "Directories specify album name",IDC_DIRISALBUM,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,118,107,113,10
+    PUSHBUTTON      "help",IDC_HELPBUTTON,344,62,16,14,BS_ICON | BS_FLAT
+    LTEXT           "Files from AudioGalaxy have the format ""<A> - <T>""",
+                    IDC_STATIC,118,51,230,8
+    GROUPBOX        "Filename format ",IDC_STATIC,111,42,253,40
+    GROUPBOX        "Directory options ",IDC_STATIC,111,83,253,37
+    CONTROL         "when subdirectory",IDC_SUBDIRISALBUM,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,233,107,73,10
+    PUSHBUTTON      "help",IDC_HELPBUTTON2,344,91,16,14,BS_ICON | BS_FLAT
+    GROUPBOX        "Importance order ",IDC_STATIC,111,121,253,63
+    LISTBOX         IDC_ORDERLIST,117,132,215,47,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "help",IDC_UP,344,132,16,14,BS_ICON | BS_FLAT
+    PUSHBUTTON      "help",IDC_DOWN,344,164,16,14,BS_ICON | BS_FLAT
+    PUSHBUTTON      "help",IDC_HELPBUTTONORDER,344,148,16,14,BS_ICON | 
+                    BS_FLAT
+    CONTROL         "Ask CDDB for information (maybe slow with many files)",
+                    IDC_ASKCDDB,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | 
+                    WS_TABSTOP,111,29,186,10
+END
+
+IDD_TIPDLG DIALOG DISCARDABLE  0, 0, 282, 128
+STYLE DS_CONTROL | WS_POPUP | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDW_RESOLVEFUZZY DIALOG DISCARDABLE  0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    LTEXT           "Resolve fuzzy match",IDC_CAPTION,111,7,200,16
+    LTEXT           "More than one matching discs have been found by CDDB.\r\nPlease choose the correct disc:",
+                    IDC_STATIC,110,26,254,17
+    LISTBOX         IDC_DISCLIST,109,47,250,130,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDW_PROCESSING DIALOGEX 0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         177,-1,"Static",SS_BITMAP,0,0,100,185
+    LTEXT           "Please be patient....\r\nYour files are being analyzed",
+                    IDC_WAITMSG,111,24,135,16
+    LTEXT           "Processing your request...",IDC_CAPTION,111,7,167,16
+    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",WS_BORDER,
+                    111,92,250,10
+    LTEXT           "",IDC_FILENAME,111,125,250,12,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "Animate1",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    WS_TABSTOP,293,10,53,52,WS_EX_STATICEDGE
+    LTEXT           "",IDC_OP,111,112,206,8
+END
+
+IDW_PROCESSINGOPTIONS DIALOG DISCARDABLE  0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "User input ",IDC_STATIC,111,33,250,46,WS_GROUP
+    CONTROL         "Automagically. No questions, no hassle :-)",IDC_AUTO,
+                    "Button",BS_AUTORADIOBUTTON | BS_TOP | BS_MULTILINE,123,
+                    43,231,10
+    CONTROL         "Show results for every file and allow manual corrections",
+                    IDC_SHOWEVERYFILE,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,123,54,230,10
+    CONTROL         "Show only results that are not enough adequate",
+                    IDC_ASKUNSURE,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE | NOT WS_VISIBLE,123,65,230,10
+    GROUPBOX        "File organization ",IDC_STATIC,111,81,249,46,NOT 
+                    WS_VISIBLE | WS_GROUP
+    CONTROL         "Move files into folders",IDC_MOVEFOLDER,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | 
+                    WS_TABSTOP,123,91,209,10
+    CONTROL         "Create a folder for each artist",IDC_ARTISTFOLDER,
+                    "Button",BS_AUTORADIOBUTTON | BS_TOP | BS_MULTILINE | 
+                    NOT WS_VISIBLE,137,102,194,10
+    CONTROL         "Create a folder for each artist and a subfolder for each album",
+                    IDC_ALBUMFOLDER,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE | NOT WS_VISIBLE,137,114,218,10
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    LTEXT           "Please specify how you want the actions to be taken",
+                    IDC_STATIC,111,23,242,8
+    LTEXT           "Processing options",IDC_CAPTION,111,7,200,16
+    GROUPBOX        "File naming ",IDC_STATIC,111,128,249,54,NOT WS_VISIBLE | 
+                    WS_GROUP
+    CONTROL         "Rename successfully identified files",IDC_RENAMEFILES,
+                    "Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,
+                    123,138,230,10
+    EDITTEXT        IDC_RENAMEFORMAT,197,150,118,14,ES_AUTOHSCROLL | NOT 
+                    WS_VISIBLE
+    LTEXT           "Filename format:",IDC_STATIC,135,152,52,8,NOT 
+                    WS_VISIBLE
+    PUSHBUTTON      "...",IDC_FORMATHELP,338,150,16,14,BS_ICON | BS_FLAT | 
+                    NOT WS_VISIBLE
+    PUSHBUTTON      "...",IDC_MOVEHELP,338,92,16,14,BS_ICON | BS_FLAT | NOT 
+                    WS_VISIBLE
+END
+
+IDW_USERVERIFICATION DIALOGEX 0, 0, 264, 137
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "User result verification"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_ARTIST,49,40,157,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_TITLE,49,59,157,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ALBUM,49,76,157,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_TRACK,49,94,52,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,92,118,47,14
+    PUSHBUTTON      "Cancel",IDCANCEL,152,118,47,14
+    LTEXT           "Please verify the information that have been found for the song:",
+                    IDC_STATIC,5,5,242,13
+    LTEXT           "Artist:",IDC_STATIC,13,43,18,8
+    LTEXT           "Title:",IDC_STATIC,13,60,16,8
+    LTEXT           "Album:",IDC_STATIC,13,78,22,8
+    LTEXT           "Track:",IDC_STATIC,13,94,22,8
+    GROUPBOX        "",IDC_STATIC,5,29,254,83
+    EDITTEXT        IDC_SONGNAME,5,19,254,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER,WS_EX_CLIENTEDGE
+    CONTROL         "Lock",IDC_LOCKARTIST,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,217,42,32,10
+    CONTROL         "Lock",IDC_LOCKTITLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,217,61,32,10
+    CONTROL         "Lock",IDC_LOCKALBUM,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,217,79,32,10
+    CONTROL         "Increment",IDC_INCREMENT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,109,96,47,10
+    PUSHBUTTON      "...",IDC_HELPBUTTON,234,94,15,14,BS_ICON | BS_FLAT
+    PUSHBUTTON      "Cancel all",IDC_CANCELALL,212,118,47,14
+END
+
+IDW_STRIPTAGS DIALOG DISCARDABLE  0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    LTEXT           "Strip ID3 tags",IDC_CAPTION,111,7,200,18
+    LTEXT           "Please specify which tags you want to remove:",
+                    IDC_STATIC,111,29,148,8
+    CONTROL         "ID3v1 tags  (the whole tag will be removed)",IDC_ID3V1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,111,42,152,10
+    CONTROL         "ID3v2 tags",IDC_ID3V2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,111,58,51,10
+    GROUPBOX        "Which ID3v2 tags shall be removed ",IDC_STATIC,111,73,
+                    255,103
+    CONTROL         "All",IDC_REMOVEALL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,117,84,23,10
+    CONTROL         "Artist",IDC_REMOVEARTIST,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,117,99,31,10
+    CONTROL         "Album",IDC_REMOVEALBUM,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,117,114,35,10
+    CONTROL         "Title",IDC_REMOVETITLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,117,129,29,10
+    CONTROL         "Track",IDC_REMOVETRACK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,117,144,35,10
+    CONTROL         "Rest",IDC_REMOVEREST,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,117,159,31,10
+    PUSHBUTTON      "...",IDC_HELPBUTTON,344,157,15,14,BS_ICON | BS_FLAT
+END
+
+IDD_CDDBINFO DIALOG DISCARDABLE  0, 0, 223, 119
+STYLE WS_CHILD
+FONT 7, "Small Fonts"
+BEGIN
+    EDITTEXT        IDC_TITLE,44,2,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ARTIST,44,17,152,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ALBUM,44,31,152,12,ES_AUTOHSCROLL
+    LTEXT           "Title:",-1,2,2,33,12,SS_CENTERIMAGE
+    LTEXT           "Artist:",-1,2,17,33,12,SS_CENTERIMAGE
+    LTEXT           "Album",-1,2,31,33,12,SS_CENTERIMAGE
+    LTEXT           "Genre:",-1,2,45,33,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_GENRE,44,44,152,204,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Save",IDC_SAVETAGS,44,80,60,13,WS_DISABLED
+    EDITTEXT        IDC_YEAR,44,59,51,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_TRACK,145,59,51,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Year:",-1,2,59,33,12,SS_CENTERIMAGE
+    LTEXT           "Track:",-1,117,59,25,12,SS_CENTERIMAGE
+    PUSHBUTTON      "Lookup",IDC_CDDB,136,80,60,13
+    CONTROL         "",IDC_CDDBCONTROL1,
+                    "{F4BAFF02-F907-11D2-8F8F-00C04F4C3B9F}",WS_TABSTOP,2,74,
+                    28,25
+END
+
+IDW_SEARCHAGFILE DIALOG DISCARDABLE  0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    PUSHBUTTON      "...",IDC_OPENFILES,341,53,16,14,BS_ICON | BS_FLAT
+    LTEXT           "Please specify which album you want to search for",
+                    IDC_STATIC,110,24,185,11
+    LTEXT           "Search for Album",IDC_CAPTION,111,7,200,16
+    EDITTEXT        IDC_FILENAME,122,53,214,14,ES_AUTOHSCROLL
+    CONTROL         "Search for album that contains this song:",
+                    IDC_SEARCHSONG,"Button",BS_AUTORADIOBUTTON,109,40,144,10
+    CONTROL         "Search for this album:",IDC_SEARCHMANUAL,"Button",
+                    BS_AUTORADIOBUTTON,109,84,84,10
+    LTEXT           "Artist:",IDC_STATIC,125,102,18,8
+    LTEXT           "Album:",IDC_STATIC,125,122,22,8
+    LTEXT           "Song on album:",IDC_STATIC,126,143,50,8
+    EDITTEXT        IDC_ARTIST,181,99,155,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ALBUM,181,120,155,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SONGONALBUM,181,141,155,14,ES_AUTOHSCROLL
+    GROUPBOX        "",IDC_STATIC,106,33,258,42
+    GROUPBOX        "",IDC_STATIC,106,74,258,88
+    PUSHBUTTON      "...",IDC_HELPBUTTON,341,166,16,14,BS_ICON | BS_FLAT
+    LTEXT           "Preferred bitrate:",IDC_STATIC,111,169,53,8
+    COMBOBOX        IDC_BITRATECOMBO,181,166,81,111,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDW_ACKDISC DIALOGEX 0, 0, 370, 185
+STYLE WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
+    LTEXT           "Acknowledge your choice",IDC_CAPTION,111,7,200,16
+    LTEXT           "This is the album you have selected. Hit ""Next"" to accept the choice.",
+                    IDC_STATIC,111,24,254,10
+    LISTBOX         IDC_TRACKLIST,112,74,247,106,LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_NOSEL | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Artist:",IDC_STATIC,111,38,18,8
+    LTEXT           "Album:",IDC_STATIC,111,50,22,8
+    LTEXT           "Titles:",IDC_STATIC,111,64,20,8
+    LTEXT           "",IDC_ARTIST,141,37,218,10,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_ALBUM,141,50,218,10,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+END
+
+IDD_MP3ORGANIZATION DIALOG DISCARDABLE  0, 0, 286, 170
+STYLE DS_MODALFRAME | WS_CHILD | WS_CAPTION | WS_SYSMENU
+CAPTION "File organization"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,0,0,284,163
+    LTEXT           "Standard filename format:",IDC_STATIC,7,9,81,8
+    EDITTEXT        IDC_FILENAMEFORMAT,93,7,83,14,ES_AUTOHSCROLL
+    CONTROL         "Update ID3 tags when updating the database by drag and drop",
+                    IDC_DBUPDATEID3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    30,215,10
+    CONTROL         "Automatically organize downloaded files in folders",
+                    IDC_AUTOORGANIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,
+                    55,171,10
+    LTEXT           "When there are more than",IDC_STATIC,21,67,84,8
+    EDITTEXT        IDC_SAMEARTIST,108,65,12,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "songs of the same artist",IDC_STATIC,124,68,75,8
+    LTEXT           "they will be moved in a separate folder.",IDC_STATIC,21,
+                    78,123,8
+    GROUPBOX        "Organize",IDC_STATIC,3,44,278,50
+END
+
+IDD_PLAYLISTGEN DIALOG DISCARDABLE  0, 0, 202, 114
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Playlist generator"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NUMSONGS,7,19,34,12,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,27,17,11,
+                    14
+    COMBOBOX        IDC_WHATCOMBO,7,52,48,97,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SELCOMBO,87,52,108,113,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Delete existing playlist",IDC_DELPLAYLIST,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,71,85,10
+    DEFPUSHBUTTON   "OK",IDOK,7,93,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,145,93,50,14
+    LTEXT           "Create a random playlist for winamp with",IDC_STATIC,7,
+                    7,126,8
+    LTEXT           "songs of",IDC_STATIC,43,21,28,8
+    CONTROL         "All songs",IDC_ALLSONGS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,36,44,10
+    GROUPBOX        "",IDC_STATIC,3,0,196,88
+END
+
+IDD_NEWFILEFORMAT DIALOGEX 0, 0, 342, 108
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New filename format"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,87,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,285,87,50,14
+    LTEXT           "The fileformat you specified does not match the song:",
+                    IDC_STATIC,7,7,169,8
+    LTEXT           "",IDC_FILENAME,7,17,328,13,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "Please enter a new filename format for this song:",
+                    IDC_STATIC,7,58,153,8
+    EDITTEXT        IDC_FILENAMEFORMAT,7,68,165,12,ES_AUTOHSCROLL
+    LTEXT           "Old filename format:",IDC_STATIC,7,33,63,8
+    EDITTEXT        IDC_OLDFILENAMEFORMAT,7,42,165,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
 END
 
 
@@ -458,15 +954,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 228
         TOPMARGIN, 7
-        BOTTOMMARGIN, 48
-    END
-
-    IDD_ID3TAGS, DIALOG
-    BEGIN
-        LEFTMARGIN, 2
-        RIGHTMARGIN, 205
-        TOPMARGIN, 2
-        BOTTOMMARGIN, 100
+        BOTTOMMARGIN, 64
     END
 
     IDD_MP3HEADER, DIALOG
@@ -506,7 +994,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 279
         TOPMARGIN, 7
-        BOTTOMMARGIN, 163
+        BOTTOMMARGIN, 173
     END
 
     IDD_WELCOME, DIALOG
@@ -523,6 +1011,86 @@ BEGIN
         RIGHTMARGIN, 279
         TOPMARGIN, 7
         BOTTOMMARGIN, 123
+    END
+
+    IDD_EMAILOPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 219
+    END
+
+    IDD_ID3V2TAGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 221
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 117
+    END
+
+    IDD_FAVORITES, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 197
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 366
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 214
+    END
+
+    IDD_TIPDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 275
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 121
+    END
+
+    IDW_USERVERIFICATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 259
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 132
+    END
+
+    IDD_CDDBINFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 221
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 117
+    END
+
+    IDD_MP3ORGANIZATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 279
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_PLAYLISTGEN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 195
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 107
+    END
+
+    IDD_NEWFILEFORMAT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 335
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 101
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -589,6 +1157,539 @@ BEGIN
     0
 END
 
+IDD_ID3V2TAGS DLGINIT
+BEGIN
+    IDC_GENRE, 0x403, 14, 0
+0x6f6e, 0x2074, 0x7573, 0x7070, 0x726f, 0x6574, 0x0064, 
+    IDC_GENRE, 0x403, 6, 0
+0x6c42, 0x6575, 0x0073, 
+    IDC_GENRE, 0x403, 13, 0
+0x6c43, 0x7361, 0x6973, 0x2063, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6f43, 0x6e75, 0x7274, 0x0079, 
+    IDC_GENRE, 0x403, 6, 0
+0x6144, 0x636e, 0x0065, 
+    IDC_GENRE, 0x403, 6, 0
+0x6944, 0x6373, 0x006f, 
+    IDC_GENRE, 0x403, 5, 0
+0x7546, 0x6b6e, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7247, 0x6e75, 0x6567, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6948, 0x2d70, 0x6f48, 0x0070, 
+    IDC_GENRE, 0x403, 5, 0
+0x614a, 0x7a7a, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x654d, 0x6174, 0x006c, 
+    IDC_GENRE, 0x403, 8, 0
+0x654e, 0x2077, 0x6741, 0x0065, 
+    IDC_GENRE, 0x403, 7, 0
+0x6c4f, 0x6964, 0x7365, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x744f, 0x6568, 0x0072, 
+    IDC_GENRE, 0x403, 4, 0
+0x6f50, 0x0070, 
+    IDC_GENRE, 0x403, 4, 0
+0x2652, 0x0042, 
+    IDC_GENRE, 0x403, 4, 0
+0x6152, 0x0070, 
+    IDC_GENRE, 0x403, 7, 0
+0x6552, 0x6767, 0x6561, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6554, 0x6863, 0x6f6e, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6e49, 0x7564, 0x7473, 0x6972, 0x6c61, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x6c41, 0x6574, 0x6e72, 0x7461, 0x7669, 0x0065, 
+    IDC_GENRE, 0x403, 4, 0
+0x6b53, 0x0061, 
+    IDC_GENRE, 0x403, 12, 0
+0x6544, 0x7461, 0x2068, 0x654d, 0x6174, 0x006c, 
+    IDC_GENRE, 0x403, 7, 0
+0x7250, 0x6e61, 0x736b, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6f53, 0x6e75, 0x7464, 0x6172, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x7545, 0x6f72, 0x542d, 0x6365, 0x6e68, 0x006f, 
+    IDC_GENRE, 0x403, 8, 0
+0x6d41, 0x6962, 0x6e65, 0x0074, 
+    IDC_GENRE, 0x403, 9, 0
+0x7254, 0x7069, 0x482d, 0x706f, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6f56, 0x6163, 0x006c, 
+    IDC_GENRE, 0x403, 10, 0
+0x614a, 0x7a7a, 0x462b, 0x6e75, 0x006b, 
+    IDC_GENRE, 0x403, 7, 0
+0x7546, 0x6973, 0x6e6f, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7254, 0x6e61, 0x6563, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6c43, 0x7361, 0x6973, 0x6163, 0x006c, 
+    IDC_GENRE, 0x403, 13, 0
+0x6e49, 0x7473, 0x7572, 0x656d, 0x746e, 0x6c61, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6341, 0x6469, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6f48, 0x7375, 0x0065, 
+    IDC_GENRE, 0x403, 5, 0
+0x6147, 0x656d, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6f53, 0x6e75, 0x2064, 0x6c43, 0x7069, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6f47, 0x7073, 0x6c65, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6f4e, 0x7369, 0x0065, 
+    IDC_GENRE, 0x403, 11, 0
+0x6c41, 0x6574, 0x6e72, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6142, 0x7373, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6f53, 0x6c75, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x7550, 0x6b6e, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x7053, 0x6361, 0x0065, 
+    IDC_GENRE, 0x403, 11, 0
+0x654d, 0x6964, 0x6174, 0x6974, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 17, 0
+0x6e49, 0x7473, 0x7572, 0x656d, 0x746e, 0x6c61, 0x5020, 0x706f, "\000" 
+    IDC_GENRE, 0x403, 18, 0
+0x6e49, 0x7473, 0x7572, 0x656d, 0x746e, 0x6c61, 0x5220, 0x636f, 0x006b, 
+
+    IDC_GENRE, 0x403, 7, 0
+0x7445, 0x6e68, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6f47, 0x6874, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6144, 0x6b72, 0x6177, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 18, 0
+0x6554, 0x6863, 0x6f6e, 0x492d, 0x646e, 0x7375, 0x7274, 0x6169, 0x006c, 
+
+    IDC_GENRE, 0x403, 11, 0
+0x6c45, 0x6365, 0x7274, 0x6e6f, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6f50, 0x2d70, 0x6f46, 0x6b6c, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x7545, 0x6f72, 0x6164, 0x636e, 0x0065, 
+    IDC_GENRE, 0x403, 6, 0
+0x7244, 0x6165, 0x006d, 
+    IDC_GENRE, 0x403, 14, 0
+0x6f53, 0x7475, 0x6568, 0x6e72, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 7, 0
+0x6f43, 0x656d, 0x7964, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x7543, 0x746c, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6147, 0x676e, 0x7473, 0x0061, 
+    IDC_GENRE, 0x403, 7, 0
+0x6f54, 0x2070, 0x3034, "\000" 
+    IDC_GENRE, 0x403, 14, 0
+0x6843, 0x6972, 0x7473, 0x6169, 0x206e, 0x6152, 0x0070, 
+    IDC_GENRE, 0x403, 9, 0
+0x6f50, 0x2f70, 0x7546, 0x6b6e, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x754a, 0x676e, 0x656c, "\000" 
+    IDC_GENRE, 0x403, 16, 0
+0x614e, 0x6974, 0x6576, 0x4120, 0x656d, 0x6972, 0x6163, 0x006e, 
+    IDC_GENRE, 0x403, 8, 0
+0x6143, 0x6162, 0x6572, 0x0074, 
+    IDC_GENRE, 0x403, 9, 0
+0x654e, 0x2077, 0x6157, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x7350, 0x6379, 0x6168, 0x6564, 0x696c, 0x0063, 
+    IDC_GENRE, 0x403, 5, 0
+0x6152, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6853, 0x776f, 0x7574, 0x656e, 0x0073, 
+    IDC_GENRE, 0x403, 8, 0
+0x7254, 0x6961, 0x656c, 0x0072, 
+    IDC_GENRE, 0x403, 6, 0
+0x6f4c, 0x462d, 0x0069, 
+    IDC_GENRE, 0x403, 7, 0
+0x7254, 0x6269, 0x6c61, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6341, 0x6469, 0x5020, 0x6e75, 0x006b, 
+    IDC_GENRE, 0x403, 10, 0
+0x6341, 0x6469, 0x4a20, 0x7a61, 0x007a, 
+    IDC_GENRE, 0x403, 6, 0
+0x6f50, 0x6b6c, 0x0061, 
+    IDC_GENRE, 0x403, 6, 0
+0x6552, 0x7274, 0x006f, 
+    IDC_GENRE, 0x403, 8, 0
+0x754d, 0x6973, 0x6163, 0x006c, 
+    IDC_GENRE, 0x403, 12, 0
+0x6f52, 0x6b63, 0x2620, 0x5220, 0x6c6f, 0x006c, 
+    IDC_GENRE, 0x403, 10, 0
+0x6148, 0x6472, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 5, 0
+0x6f46, 0x6b6c, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6f46, 0x6b6c, 0x522d, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 14, 0
+0x614e, 0x6974, 0x6e6f, 0x6c61, 0x4620, 0x6c6f, 0x006b, 
+    IDC_GENRE, 0x403, 6, 0
+0x7753, 0x6e69, 0x0067, 
+    IDC_GENRE, 0x403, 12, 0
+0x6146, 0x7473, 0x4620, 0x7375, 0x6f69, 0x006e, 
+    IDC_GENRE, 0x403, 6, 0
+0x6542, 0x6f62, 0x0062, 
+    IDC_GENRE, 0x403, 6, 0
+0x614c, 0x6974, 0x006e, 
+    IDC_GENRE, 0x403, 8, 0
+0x6552, 0x6976, 0x6176, 0x006c, 
+    IDC_GENRE, 0x403, 7, 0
+0x6543, 0x746c, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6c42, 0x6575, 0x7267, 0x7361, 0x0073, 
+    IDC_GENRE, 0x403, 11, 0
+0x7641, 0x6e61, 0x6774, 0x7261, 0x6564, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x6f47, 0x6874, 0x6369, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 17, 0
+0x7250, 0x676f, 0x6572, 0x7373, 0x7669, 0x2065, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 17, 0
+0x7350, 0x6379, 0x6568, 0x6564, 0x696c, 0x2063, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 15, 0
+0x7953, 0x706d, 0x6f68, 0x696e, 0x2063, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6c53, 0x776f, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 9, 0
+0x6942, 0x2067, 0x6142, 0x646e, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6843, 0x726f, 0x7375, "\000" 
+    IDC_GENRE, 0x403, 15, 0
+0x6145, 0x7973, 0x4c20, 0x7369, 0x6574, 0x696e, 0x676e, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6341, 0x756f, 0x7473, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7548, 0x6f6d, 0x7275, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7053, 0x6565, 0x6863, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6843, 0x6e61, 0x6f73, 0x006e, 
+    IDC_GENRE, 0x403, 6, 0
+0x704f, 0x7265, 0x0061, 
+    IDC_GENRE, 0x403, 14, 0
+0x6843, 0x6d61, 0x6562, 0x2072, 0x754d, 0x6973, 0x0063, 
+    IDC_GENRE, 0x403, 7, 0
+0x6f53, 0x616e, 0x6174, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x7953, 0x706d, 0x6f68, 0x796e, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6f42, 0x746f, 0x2079, 0x6142, 0x7373, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7250, 0x6d69, 0x7375, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x6f50, 0x6e72, 0x4720, 0x6f72, 0x766f, 0x0065, 
+    IDC_GENRE, 0x403, 7, 0
+0x6153, 0x6974, 0x6572, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6c53, 0x776f, 0x4a20, 0x6d61, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6c43, 0x6275, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6154, 0x676e, 0x006f, 
+    IDC_GENRE, 0x403, 6, 0
+0x6153, 0x626d, 0x0061, 
+    IDC_GENRE, 0x403, 9, 0
+0x6f46, 0x6b6c, 0x6f6c, 0x6572, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6142, 0x6c6c, 0x6461, "\000" 
+    IDC_GENRE, 0x403, 13, 0
+0x6f50, 0x6577, 0x2072, 0x6142, 0x6c6c, 0x6461, "\000" 
+    IDC_GENRE, 0x403, 14, 0
+0x6852, 0x7479, 0x6d68, 0x6369, 0x5320, 0x756f, 0x006c, 
+    IDC_GENRE, 0x403, 10, 0
+0x7246, 0x6565, 0x7473, 0x6c79, 0x0065, 
+    IDC_GENRE, 0x403, 5, 0
+0x7544, 0x7465, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x7550, 0x6b6e, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 10, 0
+0x7244, 0x6d75, 0x5320, 0x6c6f, 0x006f, 
+    IDC_GENRE, 0x403, 9, 0
+0x6341, 0x7061, 0x6c65, 0x616c, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x7545, 0x6f72, 0x482d, 0x756f, 0x6573, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6144, 0x636e, 0x2065, 0x6148, 0x6c6c, "\000" 
+    0
+END
+
+IDD_CDDBINFO DLGINIT
+BEGIN
+    IDC_GENRE, 0x403, 14, 0
+0x6f6e, 0x2074, 0x7573, 0x7070, 0x726f, 0x6574, 0x0064, 
+    IDC_GENRE, 0x403, 6, 0
+0x6c42, 0x6575, 0x0073, 
+    IDC_GENRE, 0x403, 13, 0
+0x6c43, 0x7361, 0x6973, 0x2063, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6f43, 0x6e75, 0x7274, 0x0079, 
+    IDC_GENRE, 0x403, 6, 0
+0x6144, 0x636e, 0x0065, 
+    IDC_GENRE, 0x403, 6, 0
+0x6944, 0x6373, 0x006f, 
+    IDC_GENRE, 0x403, 5, 0
+0x7546, 0x6b6e, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7247, 0x6e75, 0x6567, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6948, 0x2d70, 0x6f48, 0x0070, 
+    IDC_GENRE, 0x403, 5, 0
+0x614a, 0x7a7a, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x654d, 0x6174, 0x006c, 
+    IDC_GENRE, 0x403, 8, 0
+0x654e, 0x2077, 0x6741, 0x0065, 
+    IDC_GENRE, 0x403, 7, 0
+0x6c4f, 0x6964, 0x7365, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x744f, 0x6568, 0x0072, 
+    IDC_GENRE, 0x403, 4, 0
+0x6f50, 0x0070, 
+    IDC_GENRE, 0x403, 4, 0
+0x2652, 0x0042, 
+    IDC_GENRE, 0x403, 4, 0
+0x6152, 0x0070, 
+    IDC_GENRE, 0x403, 7, 0
+0x6552, 0x6767, 0x6561, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6554, 0x6863, 0x6f6e, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6e49, 0x7564, 0x7473, 0x6972, 0x6c61, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x6c41, 0x6574, 0x6e72, 0x7461, 0x7669, 0x0065, 
+    IDC_GENRE, 0x403, 4, 0
+0x6b53, 0x0061, 
+    IDC_GENRE, 0x403, 12, 0
+0x6544, 0x7461, 0x2068, 0x654d, 0x6174, 0x006c, 
+    IDC_GENRE, 0x403, 7, 0
+0x7250, 0x6e61, 0x736b, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6f53, 0x6e75, 0x7464, 0x6172, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x7545, 0x6f72, 0x542d, 0x6365, 0x6e68, 0x006f, 
+    IDC_GENRE, 0x403, 8, 0
+0x6d41, 0x6962, 0x6e65, 0x0074, 
+    IDC_GENRE, 0x403, 9, 0
+0x7254, 0x7069, 0x482d, 0x706f, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6f56, 0x6163, 0x006c, 
+    IDC_GENRE, 0x403, 10, 0
+0x614a, 0x7a7a, 0x462b, 0x6e75, 0x006b, 
+    IDC_GENRE, 0x403, 7, 0
+0x7546, 0x6973, 0x6e6f, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7254, 0x6e61, 0x6563, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6c43, 0x7361, 0x6973, 0x6163, 0x006c, 
+    IDC_GENRE, 0x403, 13, 0
+0x6e49, 0x7473, 0x7572, 0x656d, 0x746e, 0x6c61, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6341, 0x6469, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6f48, 0x7375, 0x0065, 
+    IDC_GENRE, 0x403, 5, 0
+0x6147, 0x656d, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6f53, 0x6e75, 0x2064, 0x6c43, 0x7069, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6f47, 0x7073, 0x6c65, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6f4e, 0x7369, 0x0065, 
+    IDC_GENRE, 0x403, 11, 0
+0x6c41, 0x6574, 0x6e72, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6142, 0x7373, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6f53, 0x6c75, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x7550, 0x6b6e, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x7053, 0x6361, 0x0065, 
+    IDC_GENRE, 0x403, 11, 0
+0x654d, 0x6964, 0x6174, 0x6974, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 17, 0
+0x6e49, 0x7473, 0x7572, 0x656d, 0x746e, 0x6c61, 0x5020, 0x706f, "\000" 
+    IDC_GENRE, 0x403, 18, 0
+0x6e49, 0x7473, 0x7572, 0x656d, 0x746e, 0x6c61, 0x5220, 0x636f, 0x006b, 
+
+    IDC_GENRE, 0x403, 7, 0
+0x7445, 0x6e68, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6f47, 0x6874, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6144, 0x6b72, 0x6177, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 18, 0
+0x6554, 0x6863, 0x6f6e, 0x492d, 0x646e, 0x7375, 0x7274, 0x6169, 0x006c, 
+
+    IDC_GENRE, 0x403, 11, 0
+0x6c45, 0x6365, 0x7274, 0x6e6f, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6f50, 0x2d70, 0x6f46, 0x6b6c, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x7545, 0x6f72, 0x6164, 0x636e, 0x0065, 
+    IDC_GENRE, 0x403, 6, 0
+0x7244, 0x6165, 0x006d, 
+    IDC_GENRE, 0x403, 14, 0
+0x6f53, 0x7475, 0x6568, 0x6e72, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 7, 0
+0x6f43, 0x656d, 0x7964, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x7543, 0x746c, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6147, 0x676e, 0x7473, 0x0061, 
+    IDC_GENRE, 0x403, 7, 0
+0x6f54, 0x2070, 0x3034, "\000" 
+    IDC_GENRE, 0x403, 14, 0
+0x6843, 0x6972, 0x7473, 0x6169, 0x206e, 0x6152, 0x0070, 
+    IDC_GENRE, 0x403, 9, 0
+0x6f50, 0x2f70, 0x7546, 0x6b6e, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x754a, 0x676e, 0x656c, "\000" 
+    IDC_GENRE, 0x403, 16, 0
+0x614e, 0x6974, 0x6576, 0x4120, 0x656d, 0x6972, 0x6163, 0x006e, 
+    IDC_GENRE, 0x403, 8, 0
+0x6143, 0x6162, 0x6572, 0x0074, 
+    IDC_GENRE, 0x403, 9, 0
+0x654e, 0x2077, 0x6157, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x7350, 0x6379, 0x6168, 0x6564, 0x696c, 0x0063, 
+    IDC_GENRE, 0x403, 5, 0
+0x6152, 0x6576, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6853, 0x776f, 0x7574, 0x656e, 0x0073, 
+    IDC_GENRE, 0x403, 8, 0
+0x7254, 0x6961, 0x656c, 0x0072, 
+    IDC_GENRE, 0x403, 6, 0
+0x6f4c, 0x462d, 0x0069, 
+    IDC_GENRE, 0x403, 7, 0
+0x7254, 0x6269, 0x6c61, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6341, 0x6469, 0x5020, 0x6e75, 0x006b, 
+    IDC_GENRE, 0x403, 10, 0
+0x6341, 0x6469, 0x4a20, 0x7a61, 0x007a, 
+    IDC_GENRE, 0x403, 6, 0
+0x6f50, 0x6b6c, 0x0061, 
+    IDC_GENRE, 0x403, 6, 0
+0x6552, 0x7274, 0x006f, 
+    IDC_GENRE, 0x403, 8, 0
+0x754d, 0x6973, 0x6163, 0x006c, 
+    IDC_GENRE, 0x403, 12, 0
+0x6f52, 0x6b63, 0x2620, 0x5220, 0x6c6f, 0x006c, 
+    IDC_GENRE, 0x403, 10, 0
+0x6148, 0x6472, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 5, 0
+0x6f46, 0x6b6c, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6f46, 0x6b6c, 0x522d, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 14, 0
+0x614e, 0x6974, 0x6e6f, 0x6c61, 0x4620, 0x6c6f, 0x006b, 
+    IDC_GENRE, 0x403, 6, 0
+0x7753, 0x6e69, 0x0067, 
+    IDC_GENRE, 0x403, 12, 0
+0x6146, 0x7473, 0x4620, 0x7375, 0x6f69, 0x006e, 
+    IDC_GENRE, 0x403, 6, 0
+0x6542, 0x6f62, 0x0062, 
+    IDC_GENRE, 0x403, 6, 0
+0x614c, 0x6974, 0x006e, 
+    IDC_GENRE, 0x403, 8, 0
+0x6552, 0x6976, 0x6176, 0x006c, 
+    IDC_GENRE, 0x403, 7, 0
+0x6543, 0x746c, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6c42, 0x6575, 0x7267, 0x7361, 0x0073, 
+    IDC_GENRE, 0x403, 11, 0
+0x7641, 0x6e61, 0x6774, 0x7261, 0x6564, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x6f47, 0x6874, 0x6369, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 17, 0
+0x7250, 0x676f, 0x6572, 0x7373, 0x7669, 0x2065, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 17, 0
+0x7350, 0x6379, 0x6568, 0x6564, 0x696c, 0x2063, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 15, 0
+0x7953, 0x706d, 0x6f68, 0x696e, 0x2063, 0x6f52, 0x6b63, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x6c53, 0x776f, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 9, 0
+0x6942, 0x2067, 0x6142, 0x646e, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6843, 0x726f, 0x7375, "\000" 
+    IDC_GENRE, 0x403, 15, 0
+0x6145, 0x7973, 0x4c20, 0x7369, 0x6574, 0x696e, 0x676e, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6341, 0x756f, 0x7473, 0x6369, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7548, 0x6f6d, 0x7275, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7053, 0x6565, 0x6863, "\000" 
+    IDC_GENRE, 0x403, 8, 0
+0x6843, 0x6e61, 0x6f73, 0x006e, 
+    IDC_GENRE, 0x403, 6, 0
+0x704f, 0x7265, 0x0061, 
+    IDC_GENRE, 0x403, 14, 0
+0x6843, 0x6d61, 0x6562, 0x2072, 0x754d, 0x6973, 0x0063, 
+    IDC_GENRE, 0x403, 7, 0
+0x6f53, 0x616e, 0x6174, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x7953, 0x706d, 0x6f68, 0x796e, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6f42, 0x746f, 0x2079, 0x6142, 0x7373, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x7250, 0x6d69, 0x7375, "\000" 
+    IDC_GENRE, 0x403, 12, 0
+0x6f50, 0x6e72, 0x4720, 0x6f72, 0x766f, 0x0065, 
+    IDC_GENRE, 0x403, 7, 0
+0x6153, 0x6974, 0x6572, "\000" 
+    IDC_GENRE, 0x403, 9, 0
+0x6c53, 0x776f, 0x4a20, 0x6d61, "\000" 
+    IDC_GENRE, 0x403, 5, 0
+0x6c43, 0x6275, "\000" 
+    IDC_GENRE, 0x403, 6, 0
+0x6154, 0x676e, 0x006f, 
+    IDC_GENRE, 0x403, 6, 0
+0x6153, 0x626d, 0x0061, 
+    IDC_GENRE, 0x403, 9, 0
+0x6f46, 0x6b6c, 0x6f6c, 0x6572, "\000" 
+    IDC_GENRE, 0x403, 7, 0
+0x6142, 0x6c6c, 0x6461, "\000" 
+    IDC_GENRE, 0x403, 13, 0
+0x6f50, 0x6577, 0x2072, 0x6142, 0x6c6c, 0x6461, "\000" 
+    IDC_GENRE, 0x403, 14, 0
+0x6852, 0x7479, 0x6d68, 0x6369, 0x5320, 0x756f, 0x006c, 
+    IDC_GENRE, 0x403, 10, 0
+0x7246, 0x6565, 0x7473, 0x6c79, 0x0065, 
+    IDC_GENRE, 0x403, 5, 0
+0x7544, 0x7465, "\000" 
+    IDC_GENRE, 0x403, 10, 0
+0x7550, 0x6b6e, 0x5220, 0x636f, 0x006b, 
+    IDC_GENRE, 0x403, 10, 0
+0x7244, 0x6d75, 0x5320, 0x6c6f, 0x006f, 
+    IDC_GENRE, 0x403, 9, 0
+0x6341, 0x7061, 0x6c65, 0x616c, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x7545, 0x6f72, 0x482d, 0x756f, 0x6573, "\000" 
+    IDC_GENRE, 0x403, 11, 0
+0x6144, 0x636e, 0x2065, 0x6148, 0x6c6c, "\000" 
+    IDC_CDDBCONTROL1, 0x376, 16, 0
+0x0000, 0x0000, 0x0300, 0x0000, 0x039e, 0x0000, 0x0384, 0x0000, 
+    0
+END
+
+IDD_PLAYLISTGEN DLGINIT
+BEGIN
+    IDC_WHATCOMBO, 0x403, 7, 0
+0x7241, 0x6974, 0x7473, "\000" 
+    IDC_WHATCOMBO, 0x403, 6, 0
+0x6547, 0x726e, 0x0065, 
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -596,6 +1697,7 @@ END
 //
 
 IDR_ADDRESSCOPY         AVI     DISCARDABLE     "res\\address book copy.avi"
+IDR_SEARCHTREE          AVI     DISCARDABLE     "res\\searchtree.avi"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -609,12 +1711,12 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAME           "JAGS"
+    IDR_MAINFRAME           "AGStreme"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "JAGS"
+    AFX_IDS_APP_TITLE       "AGStreme"
     AFX_IDS_IDLEMESSAGE     "Ready"
 END
 
@@ -640,13 +1742,13 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
-    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_APP_EXIT             "Quit AGStreme. All file transfers are cancelled!\nExit"
     ID_HELP                 "Open the help file"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE1       "Favorite"
     ID_FILE_MRU_FILE2       "Open this document"
     ID_FILE_MRU_FILE3       "Open this document"
     ID_FILE_MRU_FILE4       "Open this document"
@@ -713,6 +1815,8 @@ BEGIN
     AFX_IDS_SCTASKLIST      "Activate Task List"
     ID_MSSERVERSTATE        "Master-Server state"
     ID_SERVERSTATE          "Server state"
+    ID_BROWSER_PROGRESS     "WWWWWWW"
+    ID_TRANSFERSTATE        " "
 END
 
 STRINGTABLE DISCARDABLE 
@@ -767,6 +1871,41 @@ BEGIN
     ID_NEWDIR               "Create a new directory\nNew directory"
     ID_REFRESH              "Refresh\nRefresh"
     ID_LYRICS               "Search for lyrics of this song\nSearch lyrics"
+    ID_QUEUESONGS           "Get the most popular version with the best availability\nDownload most popular version"
+    ID_ADDTOFAVORITES       "Add current directory to the favorites\nAdd to favorites"
+    ID_SHOWFAVORITES        "Show your favorites\nFavorites"
+    ID_ADDNEWFAV            "Drag files and folder into this window to add them as favorites\nDrag files and folder into this window"
+    ID_DELFAV               "Delete selected favorite\nDelete Favorite"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_MOVEFAVUP            "Move favorite up\nMove up"
+    ID_MOVEFAVDOWN          "Move favorite down\nMove down"
+    ID_WIZARD               "Open the MP3 Wizard\nMP3 Wizard"
+    ID_CHOOSEVERSION        "Choose a special version of this song\nChoose version"
+    ID_SONGINFO             "Show information about this song and choose a version\nSong info"
+    ID_QUEUE128             "Queue 128 kbps version\nQueue 128 kbps version"
+    ID_QUEUE192             "Queue 192 kbps version\nQueue 192 kbps version"
+    ID_QUEUE256             "Queue 256 kbps version\nQueue 256 kbps version"
+    ID_QUEUE320             "Queue 320 kbps version. Very rare! Bad availability\nQueue 320 kbps version"
+    IDC_DELDB               "Remove all songs from the music database\nRemove all songs"
+    ID_PLAYLISTGEN          "Generate a random Playlist\nRandom playlist"
+    ID_EXTRAS_RESETCONNECTION 
+                            "Reset the server connection. All downloads will be interrupted\nReset connection"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_OPENFILES           "Add MP3 files to the list"
+    IDC_REMOVEFILES         "Remove the selected files from the list"
+    IDC_OPENDIRECTORY       "Add a directory to the list. All files an subfolders will be processed"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_STARTWINAMP          "Start winamp\nStart Winamp"
+    ID_DOWNLOADLIST         "Specifiy songs you want to download\nDownload list"
 END
 
 #endif    // English (U.S.) resources
@@ -781,15 +1920,6 @@ END
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN_SWISS
 #pragma code_page(1252)
 #endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_SENDING             ICON    DISCARDABLE     "res\\sending.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -832,58 +1962,134 @@ BEGIN
     LTEXT           "How did you hear about us?",IDC_STATIC,42,184,117,8
 END
 
-IDD_EMAILOPTIONS DIALOG DISCARDABLE  0, 0, 291, 226
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "EMail Options"
-FONT 8, "MS Sans Serif"
-BEGIN
-    GROUPBOX        "Audiogalaxy Newsletter Options",IDC_STATIC,7,1,277,218,
-                    WS_GROUP | WS_TABSTOP
-    LTEXT           "Sign up for the Audiogalaxy Newsletter and receive up to date info on Audiogalaxy as well as special offers on Electronics, Music, and more.",
-                    IDC_STATIC,11,12,226,20
-    LTEXT           "Your email address will not be sold or given to any outside parties.",
-                    IDC_STATIC,11,33,200,8
-    CONTROL         "All Categories",IDC_EMAIL_OPT1,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,47,58,11
-    CONTROL         "Consumer Electronics (like MP3 players)",IDC_EMAIL_OPT2,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,58,143,10
-    CONTROL         "Computers && Software",IDC_EMAIL_OPT3,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,68,89,10
-    CONTROL         "Cell Phones/Internet Communications",IDC_EMAIL_OPT4,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,78,150,10
-    CONTROL         "Books, Music &&Movies",IDC_EMAIL_OPT5,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,88,93,10
-    CONTROL         "Cars",IDC_EMAIL_OPT6,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,98,30,10
-    CONTROL         "Entertainment && Leisure",IDC_EMAIL_OPT7,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,108,82,10
-    CONTROL         "Food / Drinks",IDC_EMAIL_OPT8,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,118,57,10
-    CONTROL         "Sports",IDC_EMAIL_OPT9,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,128,36,10
-    CONTROL         "Travel",IDC_EMAIL_OPT10,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,138,36,10
-    CONTROL         "Free Stuff",IDC_EMAIL_OPT11,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,148,44,10
-    CONTROL         "Sweepstakes",IDC_EMAIL_OPT12,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,15,158,57,10
-    LTEXT           "By checking the above boxes I agree that Audiogalaxy may send me information relating to the interest categories and the demographic information I have specified. I understand that I may cancel or modify my ",
-                    IDC_STATIC,11,171,221,26
-    LTEXT           "subscription to the Audiogalaxy Newsletter and/or options at any time by coming to Audiogalaxy's website and updating my profile.",
-                    IDC_STATIC,11,195,221,18
-END
-
-IDD_TRYCREATEACCOUNT DIALOGEX 0, 0, 186, 105
+IDD_TRYCREATEACCOUNT DIALOGEX 0, 0, 186, 132
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Account creation"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Cancel",IDCANCEL,64,84,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,64,111,50,14
     LTEXT           "Connection status:",IDC_STATIC,7,7,60,8
     CTEXT           "Trying to connect...",IDC_STATUS,7,18,172,23,0,
                     WS_EX_STATICEDGE
     CONTROL         "Animate1",IDC_ANIMATION,"SysAnimate32",ACS_TRANSPARENT | 
                     ACS_AUTOPLAY | WS_TABSTOP,7,48,172,20
+    LTEXT           "If this fails, try to create your account",IDC_STATIC,7,
+                    84,116,8
+    LTEXT           "here",IDC_CREATEACCOUNT,125,84,15,8
+END
+
+IDD_FORMATERRORDLG DIALOGEX 0, 0, 270, 250
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Filename format error"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,213,229,50,14
+    LTEXT           "The filename format you entered is invalid",
+                    IDC_TITLEERROR,7,7,131,8
+    LTEXT           "",IDC_REASON,7,22,256,18,0,WS_EX_CLIENTEDGE
+    LTEXT           "<A>",IDC_STATIC,19,56,14,8
+    LTEXT           "<L>",IDC_STATIC,19,67,13,8
+    LTEXT           "<T>",IDC_STATIC,127,56,14,8
+    LTEXT           "<N>",IDC_STATIC,127,67,14,8
+    LTEXT           "You must define at least one parameter!\r\nSongs downloaded form AudioGalaxy always have the format ""Artist - Title.mp3""\r\nwhich is ""<A> - <T>""",
+                    IDC_STATIC,7,87,256,26
+    LTEXT           "for  ""Artist""",IDC_STATIC,43,56,35,8
+    LTEXT           "for  ""Album""",IDC_STATIC,43,67,39,8
+    LTEXT           "for  ""Title""",IDC_STATIC,151,56,33,8
+    LTEXT           "for  the tracknumber",IDC_STATIC,151,67,64,8
+    LTEXT           "<A> - <T>",IDC_STATIC,15,126,32,8
+    LTEXT           "<A>_<L>_<T>",IDC_STATIC,15,138,46,8
+    LTEXT           "matches",IDC_STATIC,71,126,28,8
+    LTEXT           "matches",IDC_STATIC,71,138,28,8
+    LTEXT           "Madonna - American pie.mp3",IDC_STATIC,114,126,93,8
+    LTEXT           "U2_Rattle and Hum_Desire.mp3",IDC_STATIC,114,138,103,8
+    LTEXT           "<L> (<N>) - <T>",IDC_STATIC,15,151,51,8
+    LTEXT           "matches",IDC_STATIC,71,151,28,8
+    LTEXT           "Thriller (5) - Beat it.mp3",IDC_STATIC,114,151,73,8
+    GROUPBOX        " Parameters ",IDC_STATIC,7,45,256,35
+    GROUPBOX        " Examples ",IDC_STATIC,7,116,256,49
+    GROUPBOX        "Tipps ",IDC_STATIC,7,171,256,55
+    LTEXT           "- Keep the naming of your files consistent and use always the same format",
+                    IDC_STATIC,13,181,232,8
+    LTEXT           "- Use ""special"" characters (like - ) to separate the parts of the name",
+                    IDC_STATIC,13,191,212,8
+    LTEXT           "It's easier to read and to get information: ""U2 Rattle and Hum desire.mp3""\r\nis a bad example!",
+                    IDC_STATIC,17,201,239,19
+END
+
+IDD_CHOOSETRACKDLG DIALOGEX 0, 0, 203, 206
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Choose Track"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,184,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,146,184,50,14
+    LTEXT           "Please choose the track that matches the song:",
+                    IDC_STATIC,7,72,152,8
+    LISTBOX         IDC_TRACKLIST,7,87,189,90,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Artist:",IDC_STATIC,7,33,18,8
+    LTEXT           "Album:",IDC_STATIC,7,44,22,8
+    LTEXT           "File:",IDC_STATIC,7,55,14,8
+    LTEXT           "A matching album has been found, but the track could\r\nnot be identified",
+                    IDC_STATIC,7,7,189,21
+    LTEXT           "",IDC_ARTIST,32,33,164,10,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_ALBUM,32,44,164,10,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    LTEXT           "",IDC_FILENAME,32,55,164,10,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+END
+
+IDD_SCANWAIT DIALOGEX 0, 0, 186, 114
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "The audiogalaxy satellite is scanning your MP3 files",
+                    IDC_STATIC,7,7,162,8
+    CTEXT           "Please wait...",IDC_INFO,7,21,172,8
+    CONTROL         "Animate1",IDC_ANIMATE1,"SysAnimate32",ACS_CENTER | 
+                    ACS_TRANSPARENT | ACS_AUTOPLAY | WS_TABSTOP,63,34,59,49
+    LTEXT           "",IDC_SCANINFO,7,96,172,11,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+END
+
+IDD_DAOERROR DIALOG DISCARDABLE  0, 0, 186, 118
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Database installation"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,97,50,14
+    LTEXT           "You don't have all necessary files installed on your\r\nmachine that are required for AGStreme to use the music database.\r\n\r\nPlease download the following file, upzip it and start\r\nsetup.exe in the folder ""Disk 1"":",
+                    IDC_STATIC,7,7,172,61
+    LTEXT           "http://www.ractive.ch/gpl/download/DAOInst.zip",
+                    IDC_DAOURL,7,68,158,8
+END
+
+IDD_DOWNLOADLISTDLG DIALOGEX 0, 0, 338, 254
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Download list"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_ARTIST,49,20,151,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SONG,49,36,151,12,ES_AUTOHSCROLL
+    CONTROL         "Always same artist",IDC_SAMEARTIST,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,209,22,73,10
+    DEFPUSHBUTTON   "Add to downloadlist",IDOK,49,53,97,14
+    CONTROL         "List1",IDC_SONGLIST,"SysListView32",LVS_REPORT | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,72,324,141
+    PUSHBUTTON      "Remove from downloadlist",IDC_REMOVEFROMLIST,132,233,97,
+                    14
+    PUSHBUTTON      "OK",IDC_ADDTOQUEUE,7,233,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,281,233,50,14
+    LTEXT           "Enter songs you want to download:",IDC_STATIC,7,7,112,8
+    LTEXT           "Artist:",IDC_STATIC,7,24,18,8
+    LTEXT           "Songtitle:",IDC_STATIC,7,39,30,8
+    LTEXT           "Bitrate:",IDC_STATIC,209,39,23,8
+    COMBOBOX        IDC_BITRATECOMBO,244,36,81,111,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",IDC_STATUS,7,216,324,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
 END
 
 
@@ -903,20 +2109,52 @@ BEGIN
         BOTTOMMARGIN, 216
     END
 
-    IDD_EMAILOPTIONS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 284
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 219
-    END
-
     IDD_TRYCREATEACCOUNT, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 179
         TOPMARGIN, 7
-        BOTTOMMARGIN, 98
+        BOTTOMMARGIN, 125
+    END
+
+    IDD_FORMATERRORDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 263
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 243
+    END
+
+    IDD_CHOOSETRACKDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 196
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 199
+    END
+
+    IDD_SCANWAIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 107
+    END
+
+    IDD_DAOERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 111
+    END
+
+    IDD_DOWNLOADLISTDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 331
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 247
     END
 END
 #endif    // APSTUDIO_INVOKED

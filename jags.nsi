@@ -1,26 +1,30 @@
-Name "Spinner Plus"
+Name "AGStreme"
 LicenseText "Please read and agree to this license before continuing."
 LicenseData license.txt
-ComponentText "This will install JAGS on your system. Select which options you want set up."
-DirText "Select a directory to install Spinner Plus in."
-UninstallText "This will uninstall JAGS. Hit Next to uninstall, or Cancel to cancel."
-UninstallExeName uninst-jags.exe
-OutFile JAGS.exe
+ComponentText "This will install AGStreme on your system. Select which options you want set up."
+DirText "Select a directory to install AGStreme in."
+UninstallText "This will uninstall AGStreme. Hit Next to uninstall, or Cancel to cancel."
+UninstallExeName uninst-AGStreme.exe
+OutFile AGStreme.exe
 InstType Typical
 
-InstallDir "$PROGRAMFILES\JAGS"
+InstallDir "$PROGRAMFILES\AGStreme"
 SetOverwrite on
 
-Section "JAGS (required)"
+Section "AGStreme (required)"
 	SetOutPath $INSTDIR
-	File Release\JAGS.exe
+	File Release\AGStreme.exe
 	File Release\ui.dll
-	File Release\AGSatellite.exe	
-	File Help\jagshelp.chm		
+	File Release\AGSatellite.exe
+	File Help\jagshelp.chm	
+	File CDDBControl.dll	
 	File ReadMe.txt
-	WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\JAGS" "DisplayName" "JAGS (remove only)"
-	WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\JAGS" "UninstallString" '"$INSTDIR\uninst-jags.exe"'
-	WriteRegStr HKEY_CURRENT_USER "Software\@ractive Software" "JAGS" "JAGS"
+	SetOverwrite off
+	File DB\songs.mdb
+	RegDLL $INSTDIR\CDDBControl.dll		
+	WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\AGStreme" "DisplayName" "AGStreme (remove only)"
+	WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\AGStreme" "UninstallString" '"$INSTDIR\uninst-AGStreme.exe"'
+	WriteRegStr HKEY_CURRENT_USER "Software\@ractive Software" "AGStreme" "AGStreme"
 SectionEnd
 
 Section "View Readme.txt"
@@ -30,29 +34,37 @@ SectionEnd
 
 Section "Add Icon to Start Menu"
 	SectionIn 1
-	CreateShortCut "$SMPROGRAMS\JAGS.lnk" "$INSTDIR\AGSatellite.exe" "" "" 0
+	CreateShortCut "$SMPROGRAMS\AGStreme.lnk" "$INSTDIR\AGSatellite.exe" "" "" 0
 SectionEnd
 
 Section "Add Icon to Desktop"
-	CreateShortCut "$DESKTOP\JAGS.lnk" "$INSTDIR\AGSatellite.exe" "" "" 0
+	CreateShortCut "$DESKTOP\AGStreme.lnk" "$INSTDIR\AGSatellite.exe" "" "" 0
 SectionEnd
 
 Section "Add Icon to Quicklauch Bar"
-	CreateShortCut "$QUICKLAUNCH\JAGS.lnk" "$INSTDIR\AGSatellite.exe" "" "" 0
+	CreateShortCut "$QUICKLAUNCH\AGStreme.lnk" "$INSTDIR\AGSatellite.exe" "" "" 0
 SectionEnd
 
-Section "Launch JAGS after installation"
+Section "Launch AGStreme after installation"
 	Exec '"$INSTDIR\AGSatellite.exe"'
 SectionEnd
 
 Section Uninstall
-	DeleteRegKey HKEY_CURRENT_USER "Software\@ractive Software\JAGS"
-	DeleteRegKey HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\JAGS"
+	UnRegDLL $INSTDIR\CDDBControl.dll
+
+	DeleteRegKey HKEY_CURRENT_USER "Software\@ractive Software\AGStreme"
+	DeleteRegKey HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\AGStreme"
 
 
-	Delete "$DESKTOP\JAGS.lnk"
-	Delete "$SMPROGRAMS\JAGS.lnk"
-	Delete "$QUICKLAUNCH\JAGS.lnk"
-	Delete $INSTDIR\*.*
+	Delete "$DESKTOP\AGStreme.lnk"
+	Delete "$SMPROGRAMS\AGStreme.lnk"
+	Delete "$QUICKLAUNCH\AGStreme.lnk"
+	Delete $INSTDIR\AGStreme.exe
+	Delete $INSTDIR\ui.dll
+	Delete $INSTDIR\AGSatellite.exe
+	Delete $INSTDIR\songs.mdb			
+	Delete $INSTDIR\jagshelp.chm
+	Delete $INSTDIR\Readme.txt
+	Delete $INSTDIR\CDDBControl.dll
 	RMDir $INSTDIR
 SectionEnd

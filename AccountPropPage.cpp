@@ -73,15 +73,21 @@ END_MESSAGE_MAP()
 
 void CAccountPropPage::OnLostpassword() 
 {
+	UpdateData();
+
 	EndDialog(IDC_LOSTPASSWORD);	
 }
 
 void CAccountPropPage::OnLogin() 
 {
+	UpdateData();
+
 	EndDialog(IDC_LOGIN);	
 }
 
 void CAccountPropPage::OnCreateaccount() 
 {
+	UpdateData();
+
 	EndDialog(IDC_CREATEACCOUNT);	
 }

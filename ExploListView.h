@@ -31,8 +31,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include <afxole.h>
-
 typedef enum {MP3 = 0} MOV_TYPE;
 
 class CJAGSDoc;
@@ -71,7 +69,6 @@ public:
 	virtual DROPEFFECT OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
 	virtual void OnDragLeave();
 	virtual BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
-	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult);
 	protected:
 	virtual void OnInitialUpdate(); // called first time after construct
 	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
@@ -87,16 +84,22 @@ public:
 #endif
 
 protected:
+	int m_pics[10];
 
 // Generated message map functions
 protected:
+	BOOL m_bDBView;
+	virtual BOOL AddHeaders();
+	virtual void AddFile(const CString sFileName, DWORD ulSize, FILETIME * ft, MOV_TYPE type, DWORD dwParam = 0);
+	virtual void AddFile(const CString sFilePath, DWORD dwParam = 0) { };
+	virtual int CmpItems(CString cstL, CString cstR, int nCol);
+
 	BOOL DeleteFiles(BOOL bBin);
 	CString BuildPath(int nItem);
 	BOOL PrepareData(BOOL bForClipBoard);
-	void HandleAutoOrganize(CString * pString);
+	BOOL HandleAutoOrganize(CString * pString);
 
 
-	void AddFile(const CString sFilePath, DWORD ulSize, FILETIME * ft, MOV_TYPE type);
 	//{{AFX_MSG(CExploListView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDblclk(NMHDR* pNMHDR, LRESULT* pResult);
@@ -106,7 +109,6 @@ protected:
 	afx_msg void OnWinampAddtoPL();
 	afx_msg void OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
-	afx_msg void OnClose();
 	afx_msg void OnBeginlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnRename();
@@ -116,6 +118,9 @@ protected:
 	afx_msg void OnPropertyPage();
 	afx_msg void OnShowContextMenu();
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnAddToFavorites();
+	afx_msg void OnDestroy();
+	afx_msg void OnPaint();
 	//}}AFX_MSG
 	afx_msg void OnStyleChanged(int nStyleType, LPSTYLESTRUCT lpStyleStruct);
 	afx_msg LRESULT OnFileChange(WPARAM wParam, LPARAM lParam);
@@ -140,12 +145,10 @@ private:
 	void PlayFile(int nNo);
 
 	BOOL m_bInitialized;
-	int m_pics[10];
 	int m_nSortedCol;
 	BOOL m_bSortAscending;
 	void Sort();
 	BOOL SortItems(int nCol, BOOL bAscending, int low, int high = -1);
-	int CmpItems(CString cstL, CString cstR, int nCol);
 
 	CWinThread * m_pThread;
 

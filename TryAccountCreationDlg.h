@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /////////////////////////////////////////////////////////////////////////////
 // CTryAccountCreationDlg dialog
 
+#include "HyperLink.h"
+
 class CTryAccountCreationDlg : public CDialog
 {
 // Construction
@@ -42,6 +44,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CTryAccountCreationDlg)
 	enum { IDD = IDD_TRYCREATEACCOUNT };
+	CHyperLink	m_CreateURL;
 	CAnimateCtrl	m_Animation;
 	CString	m_sStatus;
 	//}}AFX_DATA

@@ -109,7 +109,7 @@ BOOL CDockViewWnd::Create(CWnd* pParentWnd, CCreateContext* pContext, UINT nID)
 	m_pCreateContext = pContext;
 
 
-	return TRUE;	
+	return TRUE;
 }
 
 
@@ -126,9 +126,9 @@ BOOL CDockViewWnd::RegisterAsMDI(LONG fToRegister)
 	// common initialization
 	WNDCLASS wndcls;
 	memset(&wndcls, 0, sizeof(WNDCLASS));   // start with NULL defaults
-	wndcls.lpfnWndProc = AfxGetAfxWndProc();
+	wndcls.lpfnWndProc = ::DefWindowProc;
 	wndcls.hInstance = AfxGetInstanceHandle();
-	wndcls.hCursor = LoadCursor(AfxGetInstanceHandle(), IDC_ARROW);
+	wndcls.hCursor = ::LoadCursor(NULL, IDC_WAIT);
 
 	INITCOMMONCONTROLSEX init;
 	init.dwSize = sizeof(init);
@@ -191,6 +191,7 @@ BOOL CDockViewWnd::CreateView(UINT nView, LPCTSTR lpszBarTitle, CRuntimeClass *p
 
 	// Create a new bar
 	CViewBar *pViewBar = new CViewBar();
+
 	if (!pViewBar->Create(lpszBarTitle, GetParent(), m_uLastID)) {
 		return FALSE;
 	}
@@ -215,30 +216,33 @@ CView * CDockViewWnd::GetActiveView()
 	ASSERT_VALID(this);
 
 	// attempt to use active view of frame window
-	/*CWnd* pView = NULL;
+	CView* pView = NULL;
 	CFrameWnd* pFrameWnd = GetParentFrame();
-	ASSERT_VALID(pFrameWnd);
+
+	if (pFrameWnd == NULL) {
+		return NULL;
+	}
+	
 	pView = pFrameWnd->GetActiveView();
 
-	// failing that, use the current focus
-	if (pView == NULL)
-		pView = GetFocus();*/
+	// If this is successful, we return this view
+	if (pView) {
+		return pView;
+	}
 
-	CView * pView = NULL;
-
+	// Otherwise we walk through all bars to find the active one
 	POSITION pos = GetFirstBar();
 	while (pos) {
 		CViewBar * pBar = GetNextBar(pos);
-		if (!pBar->IsActive()) {
-			continue;
-		}
-		else {
+		if (pBar->GetSafeHwnd() && pBar->IsActive()) {
+			// We found the actiev bar.
+			// Returnr the associated view
 			pView = pBar->GetView();
-			break;
+			return pView;
 		}
 	}
 
-	return pView;
+	return NULL;
 }
 
 POSITION CDockViewWnd::GetFirstBar()
@@ -272,6 +276,25 @@ CViewBar * CDockViewWnd::GetBar(UINT nBar)
 	return pBar;
 }
 
+void CDockViewWnd::OnInitialUpdate()
+{
+	// Floating dockbars have a CMiniFrameWnd as parent
+	// If they are initially floating, the views won't
+	// receive the WM_INITIALUPDATE message.
+
+	// We catch this message here and route it to the
+	// floating views
+
+	POSITION pos = GetFirstBar();
+	while (pos) {
+		CViewBar * pBar = GetNextBar(pos);
+		if (pBar->IsFloating()) {
+			//pBar->GetView()->SendMessage(WM_INITIALUPDATE);
+			pBar->GetView()->OnInitialUpdate();
+		}
+	}
+}
+
 
 BOOL CDockViewWnd::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
 {
@@ -298,20 +321,21 @@ BOOL CDockViewWnd::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 }
 
 
-void CDockViewWnd::OnInitialUpdate()
-{
-	// Floating dockbars have a CMiniFrameWnd as parent
-	// If they are initially floating, the views won't
-	// receive the WM_INITIALUPDATE message.
+//DEL BOOL CDockViewWnd::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult) 
+//DEL {
+//DEL 	if (CWnd::OnNotify(wParam, lParam, pResult))
+//DEL 		return TRUE;
+//DEL 
+//DEL 	// route commands to the splitter to the parent frame window
+//DEL 	*pResult = GetParentFrame()->SendMessage(WM_NOTIFY, wParam, lParam);
+//DEL 	return TRUE;
+//DEL }
 
-	// We catch this message here and route it to the
-	// floating views
-
-	POSITION pos = GetFirstBar();
-	while (pos) {
-		CViewBar * pBar = GetNextBar(pos);
-		if (pBar->IsFloating()) {
-			pBar->GetView()->OnInitialUpdate();
-		}
-	}
-}
+//DEL BOOL CDockViewWnd::OnCommand(WPARAM wParam, LPARAM lParam) 
+//DEL {
+//DEL 	if (CWnd::OnCommand(wParam, lParam))
+//DEL 		return TRUE;
+//DEL 
+//DEL 	// route commands to the splitter to the parent frame window
+//DEL 	return GetParentFrame()->SendMessage(WM_COMMAND, wParam, lParam);
+//DEL }

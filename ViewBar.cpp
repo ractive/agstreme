@@ -97,8 +97,10 @@ BOOL CViewBar::CreateView(CRuntimeClass *pViewClass, CCreateContext *pContext, U
 		return FALSE;
 	}
 
-	SetParent(GetParentFrame());
+	//SetParent(GetParentFrame());
 
+	SetOwner(AfxGetMainWnd());
+	
 	m_pView = (CView *)pWnd;
 
 	return TRUE;
@@ -109,11 +111,12 @@ void CViewBar::OnSize(UINT nType, int cx, int cy)
 	baseClass::OnSize(nType, cx, cy);
 
 	// Move the view if it's already created
-	if (m_pView) {
+	if (m_pView->GetSafeHwnd()) {
 		CRect rc;
 
 		GetClientRect(rc);
-		m_pView->MoveWindow(rc);
+		m_pView->SetWindowPos(NULL, rc.left, rc.top, rc.Width(), rc.Height(), SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+		//m_pView->MoveWindow(rc);
 	}
 }
 
@@ -154,9 +157,11 @@ void CViewBar::OnContextMenu(CWnd* pWnd, CPoint point)
 		menu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN, point.x, point.y, m_pDockSite);
 		return;
 	}
-	
-	SendMessageToDescendants(WM_CONTEXTMENU, (WPARAM)pWnd->m_hWnd, MAKELPARAM(point.x, point.y));
-	//GetView()->SendMessage(WM_CONTEXTMENU, (WPARAM)pWnd->m_hWnd, MAKELPARAM(point.x, point.y));
+
+	// The treeview does not receive the WM_CONTEXTMENU message any more (why?)
+	// We just send it to the destination window (again?)
+	pWnd->SendMessage(WM_CONTEXTMENU, (WPARAM)pWnd->m_hWnd, MAKELPARAM(point.x, point.y));
+
 	baseClass::OnContextMenu(pWnd, point);
 }
 
@@ -166,3 +171,6 @@ BOOL CViewBar::IsActive()
 
     return (pFocus->GetSafeHwnd() && IsChild(pFocus));
 }
+
+
+

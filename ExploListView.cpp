@@ -23,12 +23,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 
 #include "stdafx.h"
-#include <afxole.h>
 #include "resource.h"
 #include "Jagsdoc.h"
 #include "ExploListView.h"
 #include "AGSocket.h"
+#include "SongsSet.h"
 #include "PidlMgr.h"
+#include "MP3Organizer.h"
 
 
 #ifdef _DEBUG
@@ -56,7 +57,6 @@ BEGIN_MESSAGE_MAP(CExploListView, CListView)
 	ON_COMMAND(ID_WINAMPADDTOPL, OnWinampAddtoPL)
 	ON_NOTIFY_REFLECT(LVN_BEGINDRAG, OnBegindrag)
 	ON_WM_CONTEXTMENU()
-	ON_WM_CLOSE()
 	ON_NOTIFY_REFLECT(LVN_BEGINLABELEDIT, OnBeginlabeledit)
 	ON_NOTIFY_REFLECT(LVN_ENDLABELEDIT, OnEndlabeledit)
 	ON_COMMAND(ID_RENAME, OnRename)
@@ -66,8 +66,11 @@ BEGIN_MESSAGE_MAP(CExploListView, CListView)
 	ON_COMMAND(ID_PROPERTY, OnPropertyPage)
 	ON_COMMAND(ID_SHOWCONTEXTMENU, OnShowContextMenu)
 	ON_WM_TIMER()
-	ON_UPDATE_COMMAND_UI(ID_CDDBSEARCH, OnUpdateBrowser)
+	ON_COMMAND(ID_ADDTOFAVORITES, OnAddToFavorites)
+	ON_WM_DESTROY()
 	ON_UPDATE_COMMAND_UI(ID_LYRICS, OnUpdateBrowser)
+	ON_UPDATE_COMMAND_UI(ID_CDDBSEARCH, OnUpdateBrowser)
+	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_FILECHANGE, OnFileChange)
 
@@ -87,6 +90,8 @@ CExploListView::CExploListView()
 	m_pEdit = NULL;
 
 	m_pThread = NULL;
+
+	m_bDBView = FALSE;
 
 	m_DropEffect = DROPEFFECT_NONE;
 }
@@ -118,30 +123,10 @@ void CExploListView::OnDraw(CDC* pDC)
 void CExploListView::OnInitialUpdate()
 {
 	CListView::OnInitialUpdate();
-
-	CListCtrl &listCtrl = GetListCtrl();
-
-	int nItem = 0;
 	
-	int nSubItem = 0;
-
-	LV_COLUMN lvc;
-	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	lvc.fmt = LVCFMT_LEFT;
-	lvc.iSubItem = nSubItem++;
-	lvc.cx = 100;
-	lvc.pszText = _T("Name");
-	listCtrl.InsertColumn(0, &lvc);
-	lvc.fmt = LVCFMT_RIGHT;
-	lvc.iSubItem = nSubItem++;
-	lvc.cx = 80;
-	lvc.pszText = _T("Size");
-	listCtrl.InsertColumn(1, &lvc);
-	lvc.fmt = LVCFMT_RIGHT;
-	lvc.iSubItem = nSubItem++;
-	lvc.cx = 100;
-	lvc.pszText = _T("Date/Time");
-	listCtrl.InsertColumn(2, &lvc);
+	if (!AddHeaders()) {
+		return;
+	}
 
 	ScanFiles();
 
@@ -150,10 +135,12 @@ void CExploListView::OnInitialUpdate()
 	m_pThreadInfo->hWnd = m_hWnd;
 	strcpy(m_pThreadInfo->sDir, GetDocument()->GetPathName());
 
-	m_pThread = AfxBeginThread(WatchChangeThreadProc, m_pThreadInfo);
+	m_pThread = AfxBeginThread(WatchChangeThreadProc, m_pThreadInfo, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED, NULL);
 	m_pThread->m_bAutoDelete = FALSE;
 
 	m_bInitialized = TRUE;
+
+	CListCtrl &listCtrl = GetListCtrl();
 
 	DWORD dwExStyle = listCtrl.GetExtendedStyle();
 	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP);
@@ -197,22 +184,80 @@ void CExploListView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	CJAGSDoc * pDoc = GetDocument();
 	
-	if (lHint == NEW_FILE) {
-		CString * psFile = (CString *)pHint;
-		if (pDoc->m_bAddToPlaylist) {
-			CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
-			pWinAmpCtrl->AddToPlaylist(*psFile);
+	if (lHint == NEW_FILE && !m_bDBView) {
+		if (pHint) {
+			CString * psFile = (CString *)pHint;
+			if (pDoc->m_bAutoOrganize) {
+				HandleAutoOrganize(psFile);
+			}
+			if (pDoc->m_bAddToPlaylist) {
+				CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
+				pWinAmpCtrl->AddToPlaylist(*psFile);
+			}
+
+			// Add the file to the music database
+			CMP3Organizer organizer;
+			organizer.m_Action = UPDATE_DB;
+			organizer.m_pSharesList = &pDoc->m_aShares;
+			organizer.AddSongToDB(*psFile);
+
 		}
-		if (pDoc->m_bAutoOrganize) {
-			HandleAutoOrganize(psFile);
+		else {
+			ScanFiles();
 		}
 	}
 
 	else if (lHint == NEW_DIR) {
+		m_bDBView = FALSE;
 		ScanFiles();
 		strcpy(m_pThreadInfo->sDir, pDoc->GetPathName());
+
+		// If this is the first time we get the NEW_DIR notification
+		// we lauch the suspended thread
+		static BOOL bThreadLaunched = FALSE;
+		if (m_pThread && !bThreadLaunched) {
+			DWORD dw = m_pThread->ResumeThread();
+			bThreadLaunched = TRUE;
+		}
 		SetEvent(m_pThreadInfo->hNewDir);
-		//m_WinAmpControl.ChangeDir(pDoc->GetPathName());
+	}
+	else if (lHint == NEW_DBSEL) {
+		CWaitCursor wait;
+		ASSERT(pHint);
+		try {
+			CString * psArtist = (CString *)pHint;
+			CListCtrl &listCtrl = GetListCtrl();
+			CSongsSet songs;
+			songs.m_strFilter = *psArtist;
+			songs.Open();
+			listCtrl.DeleteAllItems();
+			while(!songs.IsEOF()) {
+				if (!songs.m_songtitle.IsEmpty()) {
+					CFileFind finder;
+					if (!finder.FindFile(songs.m_filename)) {
+						// The file is not present any more. Delete the DB Entry...
+						songs.Delete();
+						songs.MoveNext();
+						continue;
+					}
+					
+					finder.FindNextFile();
+					FILETIME ft;
+					finder.GetLastWriteTime(&ft);
+					AddFile(finder.GetFileName(), finder.GetLength(), &ft, MP3, songs.m_id);
+					AddFile(finder.GetFilePath(), songs.m_id);
+				}
+				songs.MoveNext();
+			}
+			songs.Close();
+
+			m_bDBView = TRUE;
+		}
+		catch (CDaoException * pEx) {
+			CSongsSet::HandleDAOException(pEx);
+		}
+
+		Sort();
 	}
 }
 
@@ -250,27 +295,28 @@ void CExploListView::ScanFiles()
 		FILETIME ft;
 		finder.GetLastWriteTime(&ft);
 		AddFile(finder.GetFileName(), finder.GetLength(), &ft, MP3);
+		AddFile(finder.GetFilePath());
 	}
+
 	finder.Close();
 
 	SortItems(m_nSortedCol, m_bSortAscending, 0);
-
-	if (listCtrl.GetItemCount() == 0) {
-		listCtrl.InsertItem(0, "No MP3s in this directory", -1);
-	}
 }
 
-void CExploListView::AddFile(const CString sFilePath, DWORD ulSize, FILETIME * ft, MOV_TYPE type)
+void CExploListView::AddFile(const CString sFileName, DWORD ulSize, FILETIME * ft, MOV_TYPE type, DWORD dwParam /* = 0 */)
 {
 	CListCtrl &listCtrl = GetListCtrl();
 	LVITEM lvi;
 	lvi.mask = LVIF_TEXT | LVIF_IMAGE;
 	lvi.iItem = 0;
 	lvi.iSubItem = 0;
-	lvi.pszText = (LPTSTR)(LPCTSTR)sFilePath;
+	lvi.pszText = (LPTSTR)(LPCTSTR)sFileName;
 	lvi.cchTextMax = _MAX_PATH;
 	lvi.iImage = m_pics[type];
-	listCtrl.InsertItem(&lvi);
+	int nIns = listCtrl.InsertItem(&lvi);
+	
+	listCtrl.SetItemData(nIns, dwParam);
+
 	CString sSize;
 	lvi.iSubItem = 1;
 	sSize.Format("%lu", ulSize);
@@ -317,7 +363,9 @@ void CExploListView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 		return;
 	}
 
-	CString sFullPath = GetDocument()->GetFilePath();
+	CString sFullPath;
+
+	sFullPath = GetDocument()->GetFilePath();
 
 	CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
 
@@ -485,7 +533,7 @@ int CExploListView::CmpItems(CString cstL, CString cstR, int nCol)
 
 }
 
-void CExploListView::HandleAutoOrganize(CString *pString)
+BOOL CExploListView::HandleAutoOrganize(CString *pString)
 {
 	CJAGSDoc * pDoc = GetDocument();
 	// First we check if this file exists :-)
@@ -498,7 +546,7 @@ void CExploListView::HandleAutoOrganize(CString *pString)
 	CFileFind finder;
 	if (!finder.FindFile(sFullPath + *pString)) {
 		// Hmmpf. the file does not exist
-		return;
+		return FALSE;
 	}
 
 	finder.Close();
@@ -545,18 +593,17 @@ void CExploListView::HandleAutoOrganize(CString *pString)
 		if (nFound < pDoc->m_nSameArtist) {
 			// Not enough file to make an own folder
 			// Leave now...
-			return;
+			return FALSE;
 		}
 
 		// There isn't a dir yet, but enough files
 		// Create a new directory for this artist
 		if (!CreateDirectory(sFullPath + sArtist, NULL)) {
 			// Ooops
-			return;
+			return FALSE;
 		}
 
-		pDoc->UpdateAllViews(this, NEW_DIRCREATED, (CObject *)&sFullPath);
-
+		//pDoc->UpdateAllViews(this, NEW_DIRCREATED, (CObject *)&sFullPath);
 	}
 
 	bFound = finder.FindFile(sFullPath + sArtist + "*.mp3");
@@ -564,10 +611,18 @@ void CExploListView::HandleAutoOrganize(CString *pString)
 	// Now we actually move the files
 
 	BOOL bMoved = FALSE;
+	BOOL bRet = FALSE;
 
 	while (bFound) {
 		bFound = finder.FindNextFile();
-		bMoved |= MoveFile(finder.GetFilePath(), sFullPath + sArtist + "\\" + finder.GetFileName());
+		CString sFileName = finder.GetFileName();
+		bMoved |= MoveFile(finder.GetFilePath(), sFullPath + sArtist + "\\" + sFileName);
+		if (bMoved && *pString == sFileName) {
+			// The new file was moved
+			// Update the String
+			*pString = sFullPath + sArtist + "\\" + sFileName;
+			bRet = TRUE;
+		}
 	}
 
 	if (bMoved) {
@@ -576,19 +631,40 @@ void CExploListView::HandleAutoOrganize(CString *pString)
 	}
 
 	finder.Close();
+
+	return bRet;
 }
 
 void CExploListView::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
-	// TODO: Add your control notification handler code here
 	if (pNMListView->uChanged & LVIF_STATE) {
 		if (pNMListView->uNewState & LVIS_SELECTED && 
 			pNMListView->uNewState & LVIS_FOCUSED &&
 			!(pNMListView->uOldState & LVIS_SELECTED) &&
 			!(pNMListView->uOldState & LVIS_FOCUSED)) {
+
 			CJAGSDoc * pDoc = GetDocument();
-			pDoc->SetTitle(GetListCtrl().GetItemText(pNMListView->iItem, 0));
+			CListCtrl &listCtrl = GetListCtrl();
+			DWORD dwData = listCtrl.GetItemData(pNMListView->iItem);
+			if (dwData) {
+				CSongsSet songs;
+				songs.m_strFilter.Format("[id] = %lu", dwData);
+				songs.Open();
+				if (songs.IsEOF()) {
+					return;
+				}
+
+				CString sFullPath = songs.m_filename;
+				CString sFileName = sFullPath.Mid(sFullPath.ReverseFind('\\') + 1);
+				sFullPath = sFullPath.Left(sFullPath.ReverseFind('\\'));
+				
+				pDoc->SetPathName(sFullPath, FALSE);
+				pDoc->SetTitle(sFileName);
+			}
+			else {
+				pDoc->SetTitle(listCtrl.GetItemText(pNMListView->iItem, 0));
+			}
 
 			// Set a timer to 500 ms. Only then, the MP3 Info is updated
 			// This prevents that the MP3 info of every file is shown 
@@ -726,12 +802,29 @@ BOOL CExploListView::PrepareData(BOOL bForClipBoard)
 
 CString CExploListView::BuildPath(int nItem)
 {
-	CString sPath = GetDocument()->GetPathName();
-	if (sPath.Right(1) != "\\") {
-		sPath += "\\";
-	}
+	CListCtrl &listCtrl = GetListCtrl();
+	CString sPath;
 
-	sPath += GetListCtrl().GetItemText(nItem, 0);
+	// If an item data is specified, we fetch the path from the DB
+	DWORD dwData = listCtrl.GetItemData(nItem);
+	if (dwData) {
+		CSongsSet songs;
+		songs.m_strFilter.Format("[id] = %lu", dwData);
+		songs.Open();
+		if (songs.IsEOF()) {
+			return "";
+		}
+
+		sPath = songs.m_filename;
+	}
+	else {
+		sPath = GetDocument()->GetPathName();
+		if (sPath.Right(1) != "\\") {
+			sPath += "\\";
+		}
+
+		sPath += GetListCtrl().GetItemText(nItem, 0);
+	}
 
 	return sPath;
 }
@@ -1043,47 +1136,55 @@ UINT CExploListView::WatchChangeThreadProc(LPVOID pParam)
 		DWORD dwRet = WaitForMultipleObjects(3, ahHandles, FALSE, INFINITE);
 		if (dwRet - WAIT_OBJECT_0 == 0) {
 			// hFileNotification was signaled
+			
+			// Now we eat up all other events that occur just shortly after.
+			// Think about if the user copies 30 files to your folder, we'd get
+			// 30 notification messages
 
-			// Post a notification message
+			DWORD dwMilSecs = 500; // Wait 1/2 second to go on
+			do {
+				FindNextChangeNotification(hFileNotification);
+				dwRet = WaitForSingleObject(hFileNotification, dwMilSecs);
+			} while(dwRet == WAIT_OBJECT_0);
+
+			// Post a notification message that something changed
 			::PostMessage(pInfo->hWnd, WM_FILECHANGE, 0, 0);
-			::FindNextChangeNotification(hFileNotification);
 		}
 		else if (dwRet - WAIT_OBJECT_0 == 1) {
 			// pInfo->hNewDir was signaled
-			// Just go on...
+
+			// Get a new filenotification handle
+			if (hFileNotification) {
+				FindCloseChangeNotification(hFileNotification);
+			}
+			
+			hFileNotification = ::FindFirstChangeNotification(pInfo->sDir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
+
+			// Reset the event and go on...
 			ResetEvent(pInfo->hNewDir);
 		}
-		else if (dwRet == WAIT_TIMEOUT) {
+		else if (dwRet - WAIT_OBJECT_0 == 2) {
 			// pInfo->hKillMe was signaled
 			// leave the loop to exit the thread
-			FindCloseChangeNotification(hFileNotification);
+			if (hFileNotification) {
+				FindCloseChangeNotification(hFileNotification);
+			}
 			break;
 		}
-	}
-	return 0;
-}
-
-void CExploListView::OnClose() 
-{
-	SetEvent(m_pThreadInfo->hKillMe);
-	
-	if (m_pThread) {
-		// Give 2 sec. to exit the thread
-		if (WaitForSingleObject(m_pThread->m_hThread, 2000) != WAIT_OBJECT_0) {
-			// Kill the thread with brute force...
-			TerminateThread(m_pThread->m_hThread, 0);
+		else {
+			// Here we end i.e. if the directory doesn't exist any more
+			continue;
 		}
-
-		delete m_pThread;
-		m_pThread = NULL;
 	}
 
-	CListView::OnClose();
+	TRACE("Watch Thread ended gracefully!\r\n");
+
+	return 0;
 }
 
 LRESULT CExploListView::OnFileChange(WPARAM wParam, LPARAM lParam)
 {
-	ScanFiles();
+	GetDocument()->UpdateAllViews(NULL, NEW_FILE);
 	return 1;
 }
 
@@ -1091,7 +1192,6 @@ LRESULT CExploListView::OnFileChange(WPARAM wParam, LPARAM lParam)
 void CExploListView::OnBeginlabeledit(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
-	// TODO: Add your control notification handler code here
 
 	m_pEdit = GetListCtrl().GetEditControl();
 	if (m_pEdit) {
@@ -1109,7 +1209,7 @@ void CExploListView::OnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 	NMLVDISPINFO* pDispInfo = (NMLVDISPINFO*)pNMHDR;
 	*pResult = 0;
 
-	// Do we have a valie string?
+	// Do we have a valid string?
 	if (pDispInfo->item.pszText == 0) {
 		*pResult = 1;
 		m_pEdit = NULL;
@@ -1117,6 +1217,8 @@ void CExploListView::OnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 
 	if (m_pEdit) {
+		m_pEdit = GetListCtrl().GetEditControl();
+
 		// Build the new filename
 		CJAGSDoc * pDoc = GetDocument();
 		CString sNewFileName = pDoc->GetPathName();
@@ -1131,7 +1233,6 @@ void CExploListView::OnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 			if (!MoveFile(m_sOldFileName, sNewFileName)) {
 				// The entry could not be renamed.
 				AfxMessageBox("The file could not be renamed!\nMake sure the name is unique and valid.", MB_OK | MB_ICONSTOP);
-				m_pEdit = GetListCtrl().GetEditControl();
 				// Put in the old name
 				if (m_pEdit) {
 					m_pEdit->SetWindowText(m_sOldFileName);
@@ -1139,6 +1240,8 @@ void CExploListView::OnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult)
 			}
 		}
 	}
+
+	GetListCtrl().SetItemText(pDispInfo->item.iItem, 0, pDispInfo->item.pszText);
 
 	m_pEdit = NULL;
 }
@@ -1226,6 +1329,11 @@ void CExploListView::OnDeleteErase()
 
 DROPEFFECT CExploListView::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
 {
+	if (m_bDBView) {
+		// Don't allow drag and drop operations if a DB selection is shown
+		return DROPEFFECT_NONE;;
+	}
+
 	STGMEDIUM stgMedium;
 	if (pDataObject->GetData(CF_HDROP, &stgMedium)) {
 		CString sDraggedFile;
@@ -1252,6 +1360,11 @@ DROPEFFECT CExploListView::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyS
 
 DROPEFFECT CExploListView::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
 {
+	if (m_bDBView) {
+		// Don't allow drag and drop operations if a DB selection is shown
+		return DROPEFFECT_NONE;;
+	}
+
 	return m_DropEffect;
 }
 
@@ -1266,6 +1379,11 @@ BOOL CExploListView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, 
 {
 	BOOL bRet = FALSE;
 	
+	if (m_bDBView) {
+		// Don't allow drag and drop operations if a DB selection is shown
+		return bRet;
+	}
+
 	if (dropEffect == DROPEFFECT_NONE) {
 		return bRet;
 	}
@@ -1295,11 +1413,13 @@ BOOL CExploListView::HandleFileDrop(BOOL bCopy, HDROP hDrop)
 	shFile.hwnd = 0;
 	shFile.wFunc = bCopy ? FO_COPY : FO_MOVE;
 
-	// hDrop is a double zero terminated list of filename
-	// Exaclty what SHFileOperation expects
+	CStringArray saFileNames;
+
+	// Walk throuh all files
 	for (UINT i = 0; i < nFiles; i++) {
 		int n = DragQueryFile(hDrop, i, sFile, MAX_PATH);
 		lstrcpy(cursor, sFile);
+		saFileNames.Add(sFile);
 		cursor += n + 1;
 	}
 
@@ -1321,6 +1441,37 @@ BOOL CExploListView::HandleFileDrop(BOOL bCopy, HDROP hDrop)
 
 	delete [] pFrom;
 
+	if (sTo.Right(1) != "\\") {
+		sTo += "\\";
+	}
+
+	if (bRet) {
+		int nCount = saFileNames.GetSize();
+		try {
+			CSongsSet songs;
+			songs.Open();
+
+			for (int i = 0; i < nCount; i++) {
+				CString sFileName = saFileNames.GetAt(i);
+				CString sFind = "filename = '" + songs.FixApostrophes(sFileName) + "'";
+				sFileName = sFileName.Mid(sFileName.ReverseFind('\\') + 1);
+				if (songs.Find(AFX_DAO_FIRST, sFind) == 0) {
+					continue;
+				}
+				if (songs.CanUpdate()) {
+					songs.Edit();
+					CString sNewPath = sTo + sFileName;
+					songs.m_filename = sNewPath;
+					songs.Update();
+				}
+			}
+
+			songs.Close();
+		}
+		catch (CDaoException * pEx) {
+			pEx->Delete();
+		}
+	}
 	return bRet;
 }
 
@@ -1367,9 +1518,90 @@ void CExploListView::OnTimer(UINT nIDEvent)
 	CListView::OnTimer(nIDEvent);
 }
 
-BOOL CExploListView::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult) 
+BOOL CExploListView::AddHeaders()
 {
-	// TODO: Add your specialized code here and/or call the base class
+	CListCtrl &listCtrl = GetListCtrl();
+
+	int nItem = 0;
 	
-	return CListView::OnChildNotify(message, wParam, lParam, pLResult);
+	int nSubItem = 0;
+
+	LV_COLUMN lvc;
+	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	lvc.fmt = LVCFMT_LEFT;
+	lvc.iSubItem = nSubItem++;
+	lvc.cx = 200;
+	lvc.pszText = _T("Name");
+	if (listCtrl.InsertColumn(0, &lvc) == -1) {
+		return FALSE;
+	}
+
+	lvc.fmt = LVCFMT_RIGHT;
+	lvc.iSubItem = nSubItem++;
+	lvc.cx = 80;
+	lvc.pszText = _T("Size");
+	if (listCtrl.InsertColumn(1, &lvc) == -1) {
+		return FALSE;
+	}
+
+	lvc.fmt = LVCFMT_RIGHT;
+	lvc.iSubItem = nSubItem++;
+	lvc.cx = 100;
+	lvc.pszText = _T("Date/Time");
+	if (listCtrl.InsertColumn(2, &lvc) == -1) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+void CExploListView::OnAddToFavorites() 
+{
+	CListCtrl &listCtrl = GetListCtrl();
+
+	CWinApp * pApp = AfxGetApp();
+
+	// Add all selected file to the recent file list
+	POSITION pos = 	listCtrl.GetFirstSelectedItemPosition();
+	while (pos) {
+		int nSel = listCtrl.GetNextSelectedItem(pos);
+		pApp->AddToRecentFileList(BuildPath(nSel));
+	}
+
+	GetDocument()->UpdateAllViews(this, NEW_FAVORITE);
+}
+
+void CExploListView::OnDestroy() 
+{
+	CListView::OnDestroy();
+	
+	SetEvent(m_pThreadInfo->hKillMe);
+	
+	if (m_pThread) {
+		// Give 3 sec. to exit the thread gracefully
+		if (WaitForSingleObject(m_pThread->m_hThread, 3000) != WAIT_OBJECT_0) {
+			// Kill the thread with brute force...
+			TerminateThread(m_pThread->m_hThread, 0);
+		}
+
+		delete m_pThread;
+		m_pThread = NULL;
+	}
+}
+
+void CExploListView::OnPaint() 
+{
+	if (GetListCtrl().GetItemCount()) { 
+		Default(); 
+		return; 
+	} 
+	
+	CPaintDC dc(this); // device context for painting
+	
+	CRect Rect; 
+	GetClientRect(Rect); 
+	CString szStr = _T("No MP3 files in this directory"); 
+	UINT nFormat = DT_CENTER | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP | DT_VCENTER | DT_SINGLELINE; 
+	dc.SelectStockObject(ANSI_VAR_FONT); 
+	dc.DrawText(szStr, Rect, nFormat); 
 }

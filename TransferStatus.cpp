@@ -39,6 +39,7 @@ static char THIS_FILE[]=__FILE__;
 
 CTransferStatus::CTransferStatus()
 {
+	InitializeCriticalSection(&critical_section);
 }
 
 CTransferStatus::~CTransferStatus()
@@ -48,22 +49,20 @@ CTransferStatus::~CTransferStatus()
 
 void CTransferStatus::AddFile(LPCTSTR sFileName, int nPos, int nSize, int nSpeed, BOOL bSending)
 {
-	if (!m_Mutex.Lock(200)) {
-		return;
-	}
+	EnterCriticalSection(&critical_section);
 	fileEntry * entry = FindEntry(sFileName);
 	if (entry == NULL) {
 		entry = new fileEntry;
 		strcpy(entry->sFileName, sFileName);
 		m_PtrList.AddHead(entry);
 	}
-	
+
+	entry->bUpdated = TRUE;
 	entry->nPos = nPos;
 	entry->nSize = nSize;
 	entry->nSpeed = nSpeed;
 	entry->bSending = bSending;
-
-	m_Mutex.Unlock();
+	LeaveCriticalSection(&critical_section);
 }
 
 int CTransferStatus::GetCount()
@@ -73,36 +72,35 @@ int CTransferStatus::GetCount()
 
 void CTransferStatus::RemoveAll()
 {
-	if (m_Mutex.Lock()) {
-		POSITION pos = m_PtrList.GetHeadPosition();
-		while (pos) {
-			fileEntry * entry = (fileEntry *)m_PtrList.GetNext(pos);
-			delete entry;
-		}
-		m_PtrList.RemoveAll();
-		m_Mutex.Unlock();
+	EnterCriticalSection(&critical_section);
+
+	POSITION pos = m_PtrList.GetHeadPosition();
+	while (pos) {
+		fileEntry * entry = (fileEntry *)m_PtrList.GetNext(pos);
+		delete entry;
 	}
+	m_PtrList.RemoveAll();
+	LeaveCriticalSection(&critical_section);
 }
 
 POSITION CTransferStatus::StartListing()
 {
-	if (!m_Mutex.Lock(200)) {
-		return NULL;
-	}
+	EnterCriticalSection(&critical_section);
 
 	return m_PtrList.GetHeadPosition();
 }
 
 fileEntry * CTransferStatus::GetNext(POSITION &pos)
 {
-	return (fileEntry *)m_PtrList.GetNext(pos);
+	// Only use this method from outside the class itself. It resets the update flag
+	fileEntry * entry = (fileEntry *)m_PtrList.GetNext(pos);
+	entry->bUpdated = FALSE;
+	return entry;
 }
 
 void CTransferStatus::EndListing()
 {
-	long dwCount = 0;
-
-	m_Mutex.Unlock();
+	LeaveCriticalSection(&critical_section);
 }
 
 fileEntry * CTransferStatus::FindEntry(LPCTSTR sFileName)
@@ -111,6 +109,7 @@ fileEntry * CTransferStatus::FindEntry(LPCTSTR sFileName)
 	while (pos) {
 		fileEntry * entry = (fileEntry *)m_PtrList.GetNext(pos);
 		if (strcmp(entry->sFileName, sFileName) == 0) {
+			//TRACE("Leaving FindEntry() found\n");
 			return entry;
 		}
 	}
@@ -120,14 +119,64 @@ fileEntry * CTransferStatus::FindEntry(LPCTSTR sFileName)
 
 void CTransferStatus::RemoveEntry(LPCTSTR sFileName)
 {
+	EnterCriticalSection(&critical_section);
+
+
 	fileEntry * entry = FindEntry(sFileName);
-	if (entry == NULL) {
-		return;
+	if (entry != NULL) {
+		POSITION pos = m_PtrList.Find(entry);
+
+		delete entry;
+
+		m_PtrList.RemoveAt(pos);
 	}
 
-	POSITION pos = m_PtrList.Find(entry);
+	LeaveCriticalSection(&critical_section);
+}
 
-	delete entry;
 
-	m_PtrList.RemoveAt(pos);
+
+int CTransferStatus::GetDownloadCount(BOOL bUploadCount /* = FALSE */)
+{
+	if (GetCount() == 0) {
+		return 0;
+	}
+
+	int nCounter = 0;
+
+	POSITION pos = StartListing();
+	while (pos) {
+		fileEntry * pEntry = (fileEntry *)m_PtrList.GetNext(pos);
+		if ((pEntry->bSending && bUploadCount) || (!pEntry->bSending && !bUploadCount)) {
+			nCounter++;
+		}
+	}
+
+	EndListing();
+
+	return nCounter;
+}
+
+int CTransferStatus::GetUploadCount()
+{
+	return GetDownloadCount(TRUE);
+}
+
+void CTransferStatus::CheckUpdatedFlag()
+{
+	fileEntry * pDel = NULL;
+
+	POSITION pos1, pos2;
+	for( pos1 = StartListing(); ( pos2 = pos1 ) != NULL; ) {
+		fileEntry * pEntry = (fileEntry *)m_PtrList.GetNext(pos1);
+		if (!pEntry->bUpdated) {
+			pDel = (fileEntry *)m_PtrList.GetAt(pos2);
+			m_PtrList.RemoveAt(pos2);
+			delete pDel;
+		}
+
+	}
+
+
+	EndListing();
 }

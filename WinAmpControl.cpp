@@ -219,3 +219,28 @@ BOOL CWinAmpControl::IsStopped()
 
 	return SendMessage(m_hWinAmpWnd,WM_WA_IPC,0,IPC_ISPLAYING) == 0;
 }
+
+CString CWinAmpControl::GetCurrentSong()
+{
+	GetWinampWnd();
+
+	CString sTitle;
+	GetWindowText(m_hWinAmpWnd, sTitle.GetBuffer(2048), 2048);
+	sTitle = sTitle.Left(sTitle.Find(" - Winamp"));
+	return sTitle;
+}
+
+
+BOOL CWinAmpControl::IsRunning()
+{
+	GetWinampWnd();
+
+	return m_hWinAmpWnd != NULL;
+}
+
+void CWinAmpControl::Close()
+{
+	GetWinampWnd();
+	
+	SendMessage(m_hWinAmpWnd, WM_CLOSE, 0, 0);
+}

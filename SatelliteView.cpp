@@ -39,15 +39,13 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CSatelliteView
 
-CSatelliteView * CSatelliteView::m_pPseudoThis = NULL;
-BOOL CSatelliteView::m_bFillingList = FALSE;
-
-
 IMPLEMENT_DYNCREATE(CSatelliteView, CListView)
 
 CSatelliteView::CSatelliteView()
 {
-	m_pPseudoThis = this;
+	m_bFillingList = TRUE;
+	m_bSortAscending = TRUE;
+	m_nSortedCol = 0;
 }
 
 CSatelliteView::~CSatelliteView()
@@ -58,9 +56,8 @@ CSatelliteView::~CSatelliteView()
 BEGIN_MESSAGE_MAP(CSatelliteView, CListView)
 	//{{AFX_MSG_MAP(CSatelliteView)
 	ON_NOTIFY(HDN_ITEMCLICK, 0, OnHeaderClick)
-	ON_MESSAGE(WM_SCANCOMPLETE, OnScanComplete)
 	ON_MESSAGE(WM_FILESTATUS, OnFileStatus)
-
+	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -112,7 +109,11 @@ void CSatelliteView::OnInitialUpdate()
 
 	listCtrl.SetImageList(&m_ImageList, LVSIL_SMALL);
 
-	AddHeaders();	
+	AddHeaders();
+	
+	DWORD dwExStyle = listCtrl.GetExtendedStyle();
+	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP);
+
 }
 
 void CSatelliteView::AddHeaders()
@@ -127,32 +128,27 @@ void CSatelliteView::AddHeaders()
 	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvc.fmt = LVCFMT_LEFT;
 	lvc.iSubItem = nSubItem++;
-	lvc.cx = 20;
-	lvc.pszText = _T("");
+	lvc.cx = 150;
+	lvc.pszText = _T("Name");
 	listCtrl.InsertColumn(0, &lvc);
 	
-	lvc.iSubItem = nSubItem++;
-	lvc.pszText = _T("Name");
-	lvc.cx = 150;
-	listCtrl.InsertColumn(1, &lvc);
-
 	lvc.fmt = LVCFMT_RIGHT;
 	lvc.iSubItem = nSubItem++;
 	lvc.cx = 80;
 	lvc.pszText = _T("Percent");
-	listCtrl.InsertColumn(2, &lvc);
+	listCtrl.InsertColumn(1, &lvc);
 
 	lvc.fmt = LVCFMT_RIGHT;
 	lvc.iSubItem = nSubItem++;
 	lvc.cx = 100;
 	lvc.pszText = _T("Size");
-	listCtrl.InsertColumn(3, &lvc);
+	listCtrl.InsertColumn(2, &lvc);
 
 	lvc.pszText = _T("Speed");
-	listCtrl.InsertColumn(4, &lvc);
+	listCtrl.InsertColumn(3, &lvc);
 
 	lvc.pszText = _T("Time left");
-	listCtrl.InsertColumn(5, &lvc);
+	listCtrl.InsertColumn(4, &lvc);
 
 }
 
@@ -256,10 +252,10 @@ BOOL CSatelliteView::SortItems(int nCol, BOOL bAscending, int low, int high)
 
 int CSatelliteView::CmpItems(CString cstL, CString cstR, int nCol)
 {
-	if (nCol == 1) {
+	if (nCol == 0) {
 		return cstL.CompareNoCase(cstR);
 	}
-	else if (nCol == 5) {
+	else if (nCol == 4) {
 		COleDateTime odtL;
 		COleDateTime odtR;
 		odtL.ParseDateTime(cstL, VAR_TIMEVALUEONLY);
@@ -287,7 +283,6 @@ int CSatelliteView::CmpItems(CString cstL, CString cstR, int nCol)
 void CSatelliteView::Sort()
 {
 	CListCtrl& ListCtrl = GetListCtrl();
-	//Determine how many subdirectories are shown
 
 	// Sort files
 	m_Mutex.Lock();
@@ -325,14 +320,10 @@ void CSatelliteView::OnHeaderClick(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-LRESULT CSatelliteView::OnScanComplete(WPARAM wParam, LPARAM lParam)
-{
-	MessageBox("Scan Completed", "Scan");
-	return 1;
-}
-
 LRESULT CSatelliteView::OnFileStatus(WPARAM wParam, LPARAM lParam)
 {
+	FillList();
+	CleanUpList();
 
 	return 1;
 }
@@ -342,31 +333,31 @@ void CSatelliteView::AddFileEntry(fileEntry *entry)
 	m_Mutex.Lock();
 	CListCtrl& listCtrl = GetListCtrl();
 
-	LVFINDINFO findInfo;
-	findInfo.flags = LVFI_STRING | LVFI_WRAP;
-	findInfo.psz = entry->sFileName;
-	
 	int nFind = -1;
 	LVITEM lvi;
 
-	if ((nFind = listCtrl.FindItem(&findInfo)) == -1) {
-		lvi.mask = LVIF_IMAGE;
-		lvi.iItem = 0;
-		lvi.iSubItem = 0;
-		lvi.iImage = entry->bSending ? 1 : 0;
-		listCtrl.InsertItem(&lvi);
-		listCtrl.SetItemData(lvi.iItem, entry->bSending);
+	LVFINDINFO lfi;
+	lfi.flags = LVFI_STRING | LVFI_WRAP;
+	lfi.psz = entry->sFileName;
 
-		lvi.mask = LVIF_TEXT;
-		lvi.cchTextMax = _MAX_PATH;
-		lvi.iSubItem = 1;
+	if ((nFind = listCtrl.FindItem(&lfi)) == -1) {
+		lvi.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
+		lvi.iItem = 0;
+		lvi.lParam = entry->bSending;
+		lvi.iSubItem = 0;
+		//lvi.iImage = entry->bSending ? 1 : 0;
+		lvi.iImage = -1;
 		lvi.pszText = (LPTSTR)(LPCTSTR)entry->sFileName;
-		listCtrl.SetItem(&lvi);
+		lvi.cchTextMax = _MAX_PATH;
+		int nInserted = listCtrl.InsertItem(&lvi);
 
 		// The filesize won't change. So we can set it here
-		TCHAR sSize[64];
-		sprintf(sSize, "%d", entry->nSize);
-		lvi.iSubItem = 3;
+		TCHAR sSize[16];
+
+		lvi.mask = LVIF_TEXT;
+		sprintf(sSize, "%ld", entry->nSize);
+		lvi.iSubItem = 2;
+		lvi.iItem = nInserted;
 		lvi.pszText = sSize;
 		listCtrl.SetItem(&lvi);
 	
@@ -375,23 +366,28 @@ void CSatelliteView::AddFileEntry(fileEntry *entry)
 		lvi.iItem = nFind;
 	}
 
-	lvi.mask = LVIF_IMAGE | LVIF_TEXT;
+	// We set the image again. This is necessary because
+	// all files have the sending flag set at the beginning
+	// (even if the file is downloaded)
+	lvi.mask = LVIF_IMAGE | LVIF_PARAM;
 	lvi.iImage = entry->bSending ? 1 : 0;
-	
-
-	TCHAR sPercent[4];
-	if (entry->nSize) {
-		sprintf(sPercent, "%d%%", 100 * entry->nPos / entry->nSize);
-	}
-	lvi.iSubItem = 2;
-	lvi.pszText = sPercent;
-	lvi.cchTextMax = 4;
+	lvi.lParam = entry->bSending;
+	lvi.iSubItem = 0;
 	listCtrl.SetItem(&lvi);
 
 	lvi.mask = LVIF_TEXT;
+
 	TCHAR s[16];
+	if (entry->nSize) {
+		sprintf(s, "%d%%", 100 * entry->nPos / entry->nSize);
+	}
+	lvi.iSubItem = 1;
+	lvi.pszText = s;
+	lvi.cchTextMax = 4;
+	listCtrl.SetItem(&lvi);
+
 	sprintf(s, "%d B/s", entry->nSpeed);
-	lvi.iSubItem = 4;
+	lvi.iSubItem = 3;
 	lvi.cchTextMax = 16;
 	lvi.pszText = s;
 	listCtrl.SetItem(&lvi);
@@ -413,7 +409,7 @@ void CSatelliteView::AddFileEntry(fileEntry *entry)
 		sprintf(s, "??:??");
 	}
 
-	lvi.iSubItem = 5;
+	lvi.iSubItem = 4;
 	lvi.pszText = s;
 	listCtrl.SetItem(&lvi);
 
@@ -448,26 +444,11 @@ void CSatelliteView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 {
 	if (lHint == NEW_FILELIST && !m_bFillingList) {
 		CJAGSDoc * pDoc = GetDocument();
-		//AfxBeginThread(FillListThreadProc, (LPVOID)&pDoc->m_TransferStatus);
-		FillListThreadProc((LPVOID)&pDoc->m_TransferStatus);
+/*		FillList();
+		CleanUpList();*/
 	}
 	else if (lHint == NEW_FILE) {
-		// We have to remove the completed file from our list
-		// Since we con't get any notification if a file stopped transferring
-		// we take the chance to clean up the whole list
-		CListCtrl& list = m_pPseudoThis->GetListCtrl();
-		CJAGSDoc * pDoc = GetDocument();
-
-		// Walk through all list items
-		int nCount = list.GetItemCount();
-		for (int i = 0; i < nCount; i++) {
-			CString sSong = list.GetItemText(i, 1);
-			// If the song can't be found in the transfer list...
-			if (pDoc->m_TransferStatus.FindEntry(sSong) == 0) {
-				// ... delete the item
-				list.DeleteItem(i);
-			}
-		}
+		CleanUpList();
 	}
 }
 
@@ -476,32 +457,77 @@ CJAGSDoc* CSatelliteView::GetDocument()
 	return (CJAGSDoc*)m_pDocument;
 }
 
-UINT CSatelliteView::FillListThreadProc(LPVOID pInfo)
+UINT CSatelliteView::FillList()
 {
 	m_bFillingList = TRUE;
-	CTransferStatus * pStatus = (CTransferStatus *)pInfo;
-	CListCtrl& ListCtrl = m_pPseudoThis->GetListCtrl();
-	
-	POSITION pos = pStatus->StartListing();
-	if (!pos) {
-		//m_pPseudoThis->ShowNoTransfer();
-	}
-	else {
-		ListCtrl.SetRedraw(FALSE);
-		ListCtrl.DeleteAllItems();
 
-		while (pos) {
-			fileEntry * entry = pStatus->GetNext(pos);
-			m_pPseudoThis->AddFileEntry(entry);
-		}
-		ListCtrl.SetRedraw();
+	CJAGSDoc * pDoc = GetDocument();
+
+	CListCtrl& ListCtrl = GetListCtrl();
+	
+	POSITION pos = pDoc->m_TransferStatus.StartListing();
+	while (pos) {
+		fileEntry * entry = pDoc->m_TransferStatus.GetNext(pos);
+		AddFileEntry(entry);
 	}
 	
-	pStatus->EndListing();
+	pDoc->m_TransferStatus.EndListing();
 
 	m_bFillingList = FALSE;
 
-	m_pPseudoThis->Sort();
+	Sort();
 
 	return 0;
 }
+
+int CSatelliteView::FindSong(LPCTSTR lpszSongName)
+{
+	CListCtrl& listCtrl = GetListCtrl();
+
+	int nCount = listCtrl.GetItemCount();
+	for (int i = 0; i < nCount; i++) {
+		if (listCtrl.GetItemText(i, 1).Compare(lpszSongName) == 0) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void CSatelliteView::CleanUpList()
+{
+	// We have to remove the completed file from our list
+	// Since we con't get any notification if a file stopped transferring
+	// we take the chance to clean up the whole list
+	CListCtrl& list = GetListCtrl();
+	CJAGSDoc * pDoc = GetDocument();
+
+	// Walk through all list items
+	int nCount = list.GetItemCount();
+	for (int i = 0; i < nCount; i++) {
+		CString sSong = list.GetItemText(i, 0);
+		// If the song can't be found in the transfer list...
+		if (pDoc->m_TransferStatus.FindEntry(sSong) == 0) {
+			// ... delete the item
+			list.DeleteItem(i);
+		}
+	}
+}
+
+void CSatelliteView::OnPaint() 
+{
+	if (GetListCtrl().GetItemCount()) { 
+		Default(); 
+		return; 
+	}
+
+	CPaintDC dc(this); // device context for painting
+	
+	CRect Rect; 
+	GetClientRect(Rect);
+	CString szStr = _T("No transfers"); 
+	UINT nFormat = DT_CENTER | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP | DT_VCENTER | DT_SINGLELINE; 
+	dc.SelectStockObject(ANSI_VAR_FONT); 
+	dc.DrawText(szStr, Rect, nFormat); 
+}
+

@@ -73,11 +73,14 @@ protected:
 	afx_msg void OnRemoveShare();
 	afx_msg void OnSetasDownloaddir();
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnAddToFavorites();
+	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult);
 
 private:
+	BOOL m_bIgnoreChanges;
 	void RemoveShare();
 	void SetDownloadDir() ;
 

@@ -38,12 +38,15 @@ class CConnectionOptionsPage : public CPropertyPage
 
 // Construction
 public:
+	BOOL m_bDownloadQueueOnly;
+
 	CConnectionOptionsPage();
 	~CConnectionOptionsPage();
 
 // Dialog Data
 	//{{AFX_DATA(CConnectionOptionsPage)
 	enum { IDD = IDD_CONNECTIONOPTIONS };
+	CDateTimeCtrl	m_DateCtrl;
 	CComboBox	m_SimDownloadCombo;
 	CSliderCtrl	m_BWThrottleCtrl;
 	CString	m_sExplanation;
@@ -52,6 +55,10 @@ public:
 	int		m_nUpStream;
 	int		m_nConnectionType;
 	CString	m_sSimDownloads;
+	BOOL	m_bHangupAt;
+	CTime	m_HangupTime;
+	UINT	m_uIdleMinutes;
+	BOOL	m_bHangupIdle;
 	//}}AFX_DATA
 
 
@@ -69,9 +76,13 @@ protected:
 	afx_msg void OnReleasedcaptureBwthrottle(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnSelchangeConnectioncombo();
 	virtual BOOL OnInitDialog();
+	afx_msg void OnHangupIdle();
+	afx_msg void OnHangupAt();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
+	void HandleHangupAtState();
+	void HandleIdleState();
 	void SetBandwidth();
 	void SetExplanation();
 

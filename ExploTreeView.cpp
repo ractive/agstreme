@@ -29,7 +29,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ExploTreeView.h"
 #include "PidlMgr.h"
 #include "itemdata.h"
-#include <afxole.h>
+#include "JAGS.h"
+#include "SongsSet.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -304,6 +305,8 @@ BOOL CExploTreeView::OpenFolder(LPCTSTR szPath)
 		pMalloc->Release();
 	}
 
+	SetFocus();
+
 	return TRUE;
 }
 
@@ -312,27 +315,37 @@ void CExploTreeView::OpenPidl(const LPITEMIDLIST pidl)
 	CTreeCtrl &tree = GetTreeCtrl();
 
 	tree.SetRedraw(FALSE);
-	tree.SelectItem(NULL);
-	HTREEITEM hTI = tree.GetRootItem();
-	HTREEITEM hTIold = NULL;
-	while (pidl && hTI) {
-		LPITEMDATA data = (LPITEMDATA)tree.GetItemData(hTI);
-#ifdef _DEBUG
-		TRACE("TRAVERSING: %s\n", tree.GetItemText(hTI));
-#endif
-		if (PidlIsParentOf(data->pidlFullyQual, pidl)) {
-			// We found the next level. Expand the branch
-			tree.Expand(hTI, TVE_EXPAND);
-			tree.SetItemState(hTIold, 0, TVIS_SELECTED);
-			tree.SetItemState(hTI, TVIS_SELECTED, TVIS_SELECTED);
-			hTIold = hTI;
-			hTI = tree.GetChildItem(hTI);
-			continue;
-		}
+	//tree.SelectItem(NULL);
 
-		hTI = tree.GetNextSiblingItem(hTI);
+	HTREEITEM hRoot = tree.GetRootItem();
+	HTREEITEM hTIold = NULL;
+
+	while (hRoot) {
+		HTREEITEM hTI = hRoot;
+		while (pidl && hTI) {
+			LPITEMDATA data = (LPITEMDATA)tree.GetItemData(hTI);
+	#ifdef _DEBUG
+			TRACE("TRAVERSING: %s\n", tree.GetItemText(hTI));
+	#endif
+			CPidlMgr mgr(NULL);
+
+			if (PidlIsParentOf(data->pidlFullyQual, pidl)) {
+				// We found the next level. Expand the branch
+				tree.Expand(hTI, TVE_EXPAND);
+				tree.SetItemState(hTIold, 0, TVIS_SELECTED);
+				tree.SetItemState(hTI, TVIS_SELECTED, TVIS_SELECTED);
+				hTIold = hTI;
+				hTI = tree.GetChildItem(hTI);
+				continue;
+			}
+
+			hTI = tree.GetNextSiblingItem(hTI);
+		}
+		
+		hRoot = tree.GetNextSiblingItem(hRoot);
 	}
 	tree.EnsureVisible(hTIold);
+	tree.SelectItem(hTIold);
 	tree.SetRedraw(TRUE);
 }
 
@@ -347,7 +360,7 @@ BOOL CExploTreeView::PidlIsParentOf(LPITEMIDLIST parent, LPITEMIDLIST child)
 
 	UINT nParent = mgr.GetCount(parent);
 
-	LPITEMIDLIST pidlChildLevel = mgr.CopyFirst(child, nParent + 1);
+	LPITEMIDLIST pidlChildLevel = mgr.CopyFirst(child, nParent);
 
 	IShellFolder * pFolder;
 	HRESULT hr = 1;
@@ -356,9 +369,9 @@ BOOL CExploTreeView::PidlIsParentOf(LPITEMIDLIST parent, LPITEMIDLIST child)
 #ifdef _DEBUG
 		CString sChild;
 		CString sParent;
-		SHGetPathFromIDList(parent, sParent.GetBuffer(_MAX_PATH));
+		SHGetPathFromIDList(parent, sParent.GetBuffer(MAX_PATH + 1));
 		sParent.ReleaseBuffer();
-		SHGetPathFromIDList(pidlChildLevel, sChild.GetBuffer(_MAX_PATH));
+		BOOL b = SHGetPathFromIDList(pidlChildLevel, sChild.GetBuffer(MAX_PATH + 1));
 		sChild.ReleaseBuffer();
 		TRACE("PARENT: %s\nCHILD:  %s\n", sParent, sChild);
 #endif
@@ -462,12 +475,10 @@ HTREEITEM CExploTreeView::AddRootItem(LPCTSTR szPath)
 			   return false;
 			}
 			
-			m_ptrList.AddHead(pItemInfo);
-
-
 			pItemInfo->pidlSelf = pidlAddFolderSelf;
 			pItemInfo->pidlFullyQual = pidlAddFolderFull;
 			pItemInfo->pParentFolder = pParent;
+			m_ptrList.AddHead(pItemInfo);
 
 			tvItem.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
 			tvItem.lParam= (LPARAM)pItemInfo;
@@ -642,7 +653,7 @@ void CExploTreeView::ShowContextMenu(IShellFolder * pFolder, LPCITEMIDLIST pidlI
 	CMenu treeMenu;
 	treeMenu.LoadMenu(MAKEINTRESOURCE(IDR_TREECONTEXTMENU));
 
-	menu.InsertMenu(0, MF_POPUP | MF_BYPOSITION, (UINT)treeMenu.GetSubMenu(0)->m_hMenu, "JAGS");
+	menu.InsertMenu(0, MF_POPUP | MF_BYPOSITION, (UINT)treeMenu.GetSubMenu(0)->m_hMenu, "AGStreme");
 
 	// install the subclassing "hook", for versions 2 or 3
 	if(cmType > 1) {
@@ -893,7 +904,7 @@ DROPEFFECT CExploTreeView::OnDragScroll(DWORD dwKeyState, CPoint point)
 	// The whole point of nScrollWait is that after a scroll up/down
 	// we sleep a little bit so that the scrolling is not too fast.
 
-	// This boolean is use to determine if the scroll direction changed.
+	// This boolean is used to determine if the scroll direction changed.
 	static bool bScrollUp = true;
 
 	// Check if the point is in the upper or lower area of the window.
@@ -935,6 +946,7 @@ void CExploTreeView::OnDragLeave()
 {
 	// If the mouse leaved, remove the drop hilite.
 	GetTreeCtrl().SelectDropTarget(NULL);
+	m_hItemButton = NULL;
 	
 	CTreeView::OnDragLeave();
 }
@@ -980,11 +992,13 @@ BOOL CExploTreeView::HandleFileDrop(HTREEITEM hTI, BOOL bCopy, HDROP hDrop)
 	shFile.hwnd = 0;
 	shFile.wFunc = bCopy ? FO_COPY : FO_MOVE;
 
-	// hDrop is a double zero terminated list of filename
-	// Exaclty what SHFileOperation expects
+	CStringArray saFileNames;
+
+	// Walk throuh all files
 	for (UINT i = 0; i < nFiles; i++) {
 		int n = DragQueryFile(hDrop, i, sFile, MAX_PATH);
 		lstrcpy(cursor, sFile);
+		saFileNames.Add(sFile);
 		cursor += n + 1;
 	}
 
@@ -996,7 +1010,7 @@ BOOL CExploTreeView::HandleFileDrop(HTREEITEM hTI, BOOL bCopy, HDROP hDrop)
 
 	BOOL bRet = TRUE;
 
-	// Now we delete the files.
+	// Now we move/copy the files.
     bRet = SHFileOperation(&shFile) == 0;
 
     // BUG: Windows will ask before deleting a .exe.  If the user
@@ -1005,6 +1019,38 @@ BOOL CExploTreeView::HandleFileDrop(HTREEITEM hTI, BOOL bCopy, HDROP hDrop)
 		bRet = FALSE;
 
 	delete [] pFrom;
+
+	if (sTo.Right(1) != "\\") {
+		sTo += "\\";
+	}
+
+	if (bRet) {
+		int nCount = saFileNames.GetSize();
+		try {
+			CSongsSet songs;
+			songs.Open();
+
+			for (int i = 0; i < nCount; i++) {
+				CString sFileName = saFileNames.GetAt(i);
+				CString sFind = "filename = '" + songs.FixApostrophes(sFileName) + "'";
+				sFileName = sFileName.Mid(sFileName.ReverseFind('\\') + 1);
+				if (songs.Find(AFX_DAO_FIRST, sFind) == 0) {
+					continue;
+				}
+				if (songs.CanUpdate()) {
+					songs.Edit();
+					CString sNewPath = sTo + sFileName;
+					songs.m_filename = sNewPath;
+					songs.Update();
+				}
+			}
+
+			songs.Close();
+		}
+		catch (CDaoException * pEx) {
+			pEx->Delete();
+		}
+	}
 
 	return bRet;
 }
@@ -1052,6 +1098,11 @@ void CExploTreeView::OnBeginLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
 	TV_DISPINFO* pTVDispInfo = (TV_DISPINFO*)pNMHDR;
 	
 	m_pEdit = GetTreeCtrl().GetEditControl();
+
+#ifdef _DEBUG
+	m_pEdit->Dump(afxDump);
+#endif
+
 	if (m_pEdit) {
 		m_pEdit->GetWindowText(m_sOldName);
 		m_pEdit->LimitText(_MAX_DIR);
@@ -1073,9 +1124,11 @@ void CExploTreeView::OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
 		return;
 	}
 
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+
 	if (m_pEdit) {
+
 		if (m_bNewDir) {
-			CTreeCtrl &treeCtrl = GetTreeCtrl();
 			HTREEITEM hParent = treeCtrl.GetParentItem(pTVDispInfo->item.hItem);
 			if (hParent == NULL) {
 				*pResult = 0;
@@ -1126,7 +1179,7 @@ void CExploTreeView::OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
 			LPITEMIDLIST pidlOld = pItemData->pidlSelf;
 			
 			m_pEdit = GetTreeCtrl().GetEditControl();
-
+			
 			if (!SUCCEEDED(pItemData->pParentFolder->SetNameOf(m_hWnd, pItemData->pidlSelf, wchPath, SHGDN_INFOLDER, &(pItemData->pidlSelf)))) {
 				// The entry could not be renamed.
 				// Put in the old name
@@ -1136,15 +1189,25 @@ void CExploTreeView::OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
 				*pResult = 0;
 			}
 			else {
-				// Free the old pidl
 				IMalloc * pMalloc;
 				SHGetMalloc(&pMalloc);
-				pMalloc->Free(pidlOld);
-				pMalloc->Release();
+				// pItemData->pidlSelf now contains the new pidl
+				// Now we also build the fully qualified pidl
+				CPidlMgr mgr(pMalloc);
+				int nCount = mgr.GetCount(pItemData->pidlFullyQual);
+				// Get the parent pidl
+				LPITEMIDLIST pidlNew = mgr.CopyFirst(pItemData->pidlFullyQual, nCount - 1);
+				// and add the new pidl to it.
+				pidlNew = mgr.Concatenate(pidlNew, pItemData->pidlSelf);
+				// Free the old one...
+				pMalloc->Free(pItemData->pidlFullyQual);
+				pItemData->pidlFullyQual = pidlNew;
 				*pResult = 1;
 			}
 		}
 	}
+
+	treeCtrl.SetItemText(pTVDispInfo->item.hItem, pTVDispInfo->item.pszText);
 
 	m_pEdit = NULL;
 }
@@ -1262,7 +1325,6 @@ void CExploTreeView::OnNewDir()
 		return;
 	}
 
-	treeCtrl.Expand(hSel, TVE_EXPAND);
 
 	CString sBasePath = GetPath(hSel);
 	if (sBasePath.Right(1) != "\\") {
@@ -1287,12 +1349,12 @@ void CExploTreeView::OnNewDir()
 		tvi.mask = TVIF_CHILDREN | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
 		treeCtrl.GetItem(&tvi);
 		HTREEITEM hInserted = treeCtrl.InsertItem(sNewName, tvi.iImage, tvi.iSelectedImage, hSel);
+		
 		treeCtrl.EnsureVisible(hInserted);
 		m_bNewDir = TRUE;
 
 		treeCtrl.EditLabel(hInserted);
 	}
-	
 }
 
 void CExploTreeView::Expand(HTREEITEM hItem)
@@ -1370,4 +1432,21 @@ void CExploTreeView::RefreshAll()
 void CExploTreeView::OnRefresh() 
 {
 	RefreshAll();	
+}
+
+
+BOOL CExploTreeView::PreTranslateMessage(MSG* pMsg) 
+{
+      if (pMsg->message == WM_KEYDOWN &&
+         pMsg->wParam == VK_RETURN || pMsg->wParam == VK_ESCAPE)
+      {
+         CEdit* edit = GetTreeCtrl().GetEditControl();
+         if (edit)
+         {
+            edit->SendMessage(WM_KEYDOWN, pMsg->wParam, pMsg->lParam);
+            return TRUE;
+         }
+      }
+	
+	return CTreeView::PreTranslateMessage(pMsg);
 }

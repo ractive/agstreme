@@ -39,12 +39,16 @@ struct fileEntry {
 	int nSize;
 	int nSpeed;
 	BOOL bSending;
+	BOOL bUpdated;
 };
 
 
 class CTransferStatus  
 {
 public:
+	void CheckUpdatedFlag();
+	int GetUploadCount();
+	int GetDownloadCount(BOOL bUploadCount = FALSE);
 	void RemoveEntry(LPCTSTR sFileName);
 	void EndListing();
 	fileEntry * GetNext(POSITION &pos);
@@ -56,7 +60,7 @@ public:
 	virtual ~CTransferStatus();
 	fileEntry * FindEntry(LPCTSTR sFileName);
 private:
-	CMutex m_Mutex;
+	CRITICAL_SECTION critical_section;
 	CPtrList m_PtrList;
 protected:
 };

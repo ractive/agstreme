@@ -52,6 +52,7 @@ public:
 	public:
 	virtual BOOL Create(CWnd* pParentWnd, CCreateContext* pContext = NULL, UINT nID = AFX_IDW_PANE_FIRST +64);
 	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
+	protected:
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -67,7 +68,6 @@ public:
 protected:
 	CView * GetActiveView();
 	//{{AFX_MSG(CDockViewWnd)
-	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	afx_msg void OnInitialUpdate();
 

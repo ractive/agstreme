@@ -51,7 +51,6 @@ public:
 	//{{AFX_VIRTUAL(CMP3InfoView)
 	protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
-	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 	//}}AFX_VIRTUAL
 
 // Implementation

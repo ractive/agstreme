@@ -70,10 +70,7 @@ CMessage::~CMessage()
 
 BOOL CMessage::Init()
 {
-	/*if (m_pBuffer->wPos + 2000 > m_pBuffer->bufferSize )
-	{
-		return FALSE;
-	}*/
+	Request();
 	m_pBuffer->timeout = time( 0 );
 
 	m_pInitialWrite = m_pBuffer->pWrite;
@@ -169,6 +166,8 @@ void CMessage::CompleteMsg()
 	m_nMsgID++;
 	if (m_nMsgID > 10000000 )
 		m_nMsgID = 0;
+
+	Release();
 }
 
 int CMessage::CheckCompleteMsg()
@@ -367,4 +366,16 @@ unsigned int CMessage::GetType()
 	unsigned short int n;
 	Read(&n);
 	return n;
+}
+
+void CMessage::Release()
+{
+	CSingleLock lock(&m_Mutex);
+	lock.Unlock();
+}
+
+void CMessage::Request()
+{
+	CSingleLock lock(&m_Mutex);
+	lock.Lock();
 }

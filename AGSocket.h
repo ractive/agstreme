@@ -87,6 +87,7 @@ public:
 		// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 public:
+	HWND m_hFileStatusWnd;
 	BOOL SendAccountInfo(CString sUsername, CString sPassword);
 	BOOL ResetServerConnection();
 	BOOL SendNewAccount();

@@ -44,6 +44,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class CJAGSApp : public CWinApp
 {
 public:
+	void SetMRUTo(UINT n, LPCTSTR lpszPath);
+	BOOL SetMRUDirName(UINT n);
+	BOOL GetMRUDirName(int n, CString &sName);
+	void RemoveMRU(int nIndex);
+
 	CJAGSApp();
 
 // Overrides
@@ -53,15 +58,19 @@ public:
 	virtual BOOL InitInstance();
 	virtual void WinHelp(DWORD dwData, UINT nCmd = HELP_CONTEXT);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	virtual int ExitInstance();
 	//}}AFX_VIRTUAL
 
 // Implementation
 	//{{AFX_MSG(CJAGSApp)
 	afx_msg void OnAppAbout();
-		// NOTE - the ClassWizard will add and remove member functions here.
-		//    DO NOT EDIT what you see in these blocks of generated code !
 	//}}AFX_MSG
+	afx_msg void OnMRUDir(UINT nID);
 	DECLARE_MESSAGE_MAP()
+
+private:
+	BOOL FirstInstance();
+	static BOOL m_bClassRegistered;
 };
 
 

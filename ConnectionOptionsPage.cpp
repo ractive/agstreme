@@ -47,6 +47,10 @@ CConnectionOptionsPage::CConnectionOptionsPage() : CPropertyPage(CConnectionOpti
 	m_nUpStream = 0;
 	m_nConnectionType = -1;
 	m_sSimDownloads = _T("");
+	m_bHangupAt = FALSE;
+	m_HangupTime = 0;
+	m_uIdleMinutes = 0;
+	m_bHangupIdle = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -58,6 +62,7 @@ void CConnectionOptionsPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CConnectionOptionsPage)
+	DDX_Control(pDX, IDC_HANGUPTIME, m_DateCtrl);
 	DDX_Control(pDX, IDC_SIMDOWNLOADS, m_SimDownloadCombo);
 	DDX_Control(pDX, IDC_BWTHROTTLE, m_BWThrottleCtrl);
 	DDX_Text(pDX, IDC_BWEXPLANATION, m_sExplanation);
@@ -66,7 +71,30 @@ void CConnectionOptionsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_UPSTREAM, m_nUpStream);
 	DDX_CBIndex(pDX, IDC_CONNECTIONCOMBO, m_nConnectionType);
 	DDX_CBString(pDX, IDC_SIMDOWNLOADS, m_sSimDownloads);
+	DDX_Check(pDX, IDC_HANGUPAT, m_bHangupAt);
+	DDX_DateTimeCtrl(pDX, IDC_HANGUPTIME, m_HangupTime);
+	DDX_Text(pDX, IDC_MINUTES, m_uIdleMinutes);
+	DDX_Check(pDX, IDC_HANGUPIDLE, m_bHangupIdle);
 	//}}AFX_DATA_MAP
+
+	CButton * pDownButton = (CButton *)GetDlgItem(IDC_DOWNLOADQUEUE);
+	CButton * pUpDownButton = (CButton *)GetDlgItem(IDC_UPDOWNLOADQUEUE);
+	if (!pDX->m_bSaveAndValidate) {
+		if (m_bDownloadQueueOnly) {
+			pDownButton->SetCheck(1);
+			pUpDownButton->SetCheck(0);
+		}
+		else {
+			pDownButton->SetCheck(0);
+			pUpDownButton->SetCheck(1);
+		}
+	}
+	else {
+		m_bDownloadQueueOnly = IsDlgButtonChecked(IDC_DOWNLOADQUEUE);
+	}
+
+	HandleIdleState();
+	HandleHangupAtState();
 }
 
 
@@ -74,6 +102,8 @@ BEGIN_MESSAGE_MAP(CConnectionOptionsPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CConnectionOptionsPage)
 	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_BWTHROTTLE, OnReleasedcaptureBwthrottle)
 	ON_CBN_SELCHANGE(IDC_CONNECTIONCOMBO, OnSelchangeConnectioncombo)
+	ON_BN_CLICKED(IDC_HANGUPIDLE, OnHangupIdle)
+	ON_BN_CLICKED(IDC_HANGUPAT, OnHangupAt)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -125,7 +155,7 @@ BOOL CConnectionOptionsPage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 	
 	m_BWThrottleCtrl.SetRange(0, 4, TRUE);
-
+	m_BWThrottleCtrl.SetPos(m_nBWThrottle);
 	SetExplanation();
 	SetBandwidth();
 
@@ -171,4 +201,26 @@ void CConnectionOptionsPage::SetBandwidth()
 	}
 
 	UpdateData(FALSE);
+}
+
+void CConnectionOptionsPage::HandleIdleState()
+{
+	GetDlgItem(IDC_MINUTES)->EnableWindow(m_bHangupIdle);
+	GetDlgItem(IDC_DOWNLOADQUEUE)->EnableWindow(m_bHangupIdle);
+	GetDlgItem(IDC_UPDOWNLOADQUEUE)->EnableWindow(m_bHangupIdle);
+}
+
+void CConnectionOptionsPage::HandleHangupAtState()
+{
+	GetDlgItem(IDC_HANGUPTIME)->EnableWindow(m_bHangupAt);
+}
+
+void CConnectionOptionsPage::OnHangupIdle() 
+{
+	UpdateData();
+}
+
+void CConnectionOptionsPage::OnHangupAt() 
+{
+	UpdateData();
 }

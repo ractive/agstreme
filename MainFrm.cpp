@@ -25,18 +25,38 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "stdafx.h"
 #include "JAGS.h"
-#include <HtmlHelp.h>
-#include "MainFrm.h"
 #include "JAGSDoc.h"
+
+#include "TrayIcon.h"
+#include "AGSocket.h"
+#include "DockViewWnd.h"
+#include "Regbinding.h"
+#include "WizardHolder.h"
+
+#include "StatusControl.h"
+#include "StatusProgress.h"
+
+#include "SongListView.h"
+#include "MainView.h"
 #include "JAGSView.h"
+#include "TabListView.h"
+#include "MP3ListView.h"
 #include "UserMsgs.h"
 #include "SocketException.h"
 #include "ShareTreeView.h"
 #include "ExploListView.h"
 #include "SatelliteView.h"
+#include "QueueListView.h"
+#include "DownloadTabView.h"
+#include "FavoriteListView.h"
 #include "MP3InfoView.h"
 #include "MP3HeaderView.h"
-#include "ID3TagView.h"
+#include "ID3v1TagView.h"
+#include "ID3v2TagView.h"
+#include "CDDBView.h"
+#include "TreeTabView.h"
+#include "DBTreeView.h"
+
 #include "GeneralPropPage.h"
 #include "AccountPropPage.h"
 #include "ProxyPropPage.h"
@@ -47,11 +67,26 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "NewAccountPage.h"
 #include "ConnectionOptionsPage.h"
 #include "TryAccountCreationDlg.h"
+#include "FileOrganizationPage.h"
 #include "LoginPage.h"
+
+#include "DownloadListDlg.h"
+
+#include "CDDBInfo.h"
+
 #include "WelcomeDlg.h"
+
+#include "PlaylistGenDlg.h"
+
+#include "AGInet.h"
 
 #include "ViewBar.h"
 #include "TransferWnd.h"
+#include "Splash.h"
+#include "MainFrm.h"
+#include "ScanDlg.h"
+
+#include <HtmlHelp.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -59,6 +94,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static char THIS_FILE[] = __FILE__;
 #endif
 
+enum {HANGUPIDLE_TIMER = 6, HANGUPAT_TIMER = 7};
+enum {NOTRANSFER = 0, SEND = 1, RECV = 2, BOTH = 3};
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame
 
@@ -67,11 +104,6 @@ IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	//{{AFX_MSG_MAP(CMainFrame)
 	ON_WM_CREATE()
-	ON_MESSAGE(WM_TRAYNOTIFICATION, OnTrayNotification)
-	ON_MESSAGE(WM_STARTUP, OnStartup)
-	ON_MESSAGE(WM_FILESTATUS, OnFileStatus)
-	ON_MESSAGE(WM_MASTERSTATE, OnMSServerStatus)
-	ON_MESSAGE(WM_SERVERSTATE, OnServerStatus)
 	ON_WM_SYSCOMMAND()
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
@@ -101,6 +133,24 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPPAUSE, OnUpdateWinampPause)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPPLAY, OnUpdateWinampPlay)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPSTOP, OnUpdateWinampStop)
+	ON_COMMAND(ID_HELP, OnHelp)
+	ON_WM_TIMER()
+	ON_COMMAND(ID_SHOWFAVORITES, OnShowFavorites)
+	ON_COMMAND(ID_WINAMPADDTOPL, OnWinampAddToPL)
+	ON_UPDATE_COMMAND_UI(ID_SHOWFAVORITES, OnUpdateShowFavorites)
+	ON_COMMAND(ID_CDDBSEARCH, OnCddbSearch)
+	ON_COMMAND(ID_MP3WIZARD, OnMp3Wizard)
+	ON_BN_CLICKED(IDC_SEARCH, OnSearch)
+	ON_COMMAND(ID_DELDB, OnDelDB)
+	ON_COMMAND(ID_PLAYLISTGEN, OnPlaylistGen)
+	ON_COMMAND(ID_EXTRAS_RESETCONNECTION, OnResetConnection)
+	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
+	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
+	ON_COMMAND(ID_EDIT_CUT, OnEditCut)
+	ON_COMMAND(ID_STARTWINAMP, OnWinampStart)
+	ON_UPDATE_COMMAND_UI(ID_STARTWINAMP, OnUpdateStartwinamp)
+	ON_UPDATE_COMMAND_UI(ID_WINAMPADDTOPL, OnUpdateWinampaddtopl)
+	ON_UPDATE_COMMAND_UI(ID_PLAYLISTGEN, OnUpdatePlaylistgen)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERHOME, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERNEXT, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERREFRESH, OnUpdateEnabled)
@@ -109,15 +159,29 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERNOTES, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPNEXT, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPPREV, OnUpdateEnabled)
-	ON_COMMAND(ID_HELP, OnHelp)
+	ON_COMMAND(ID_DOWNLOADLIST, OnDownloadList)
 	//}}AFX_MSG_MAP
+	ON_MESSAGE(WM_SCANCOMPLETE, OnScanComplete)
+	ON_MESSAGE(WM_QUEUEEMTPY, OnEmptyQueue)
+	ON_MESSAGE(WM_TRAYNOTIFICATION, OnTrayNotification)
+	ON_MESSAGE(WM_STARTUP, OnStartup)
+	ON_MESSAGE(WM_FILESTATUS, OnFileStatus)
+	ON_MESSAGE(WM_MASTERSTATE, OnMSServerStatus)
+	ON_MESSAGE(WM_SERVERSTATE, OnServerStatus)
+	ON_MESSAGE(WM_BROWSERPROGSET, OnBrowserProgSet)
+	ON_MESSAGE(WM_SEND, OnSend)
+	ON_MESSAGE(WM_RECV, OnRecv)
+	ON_COMMAND(IDOK, OnNewAddressEnter)
+	ON_CBN_SELENDOK(AFX_IDW_TOOLBAR + 10,OnNewAddress)
+
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
 {
 	ID_SEPARATOR,           // status line indicator
+	ID_BROWSER_PROGRESS,
 	ID_MSSERVERSTATE,
-	ID_SERVERSTATE
+	ID_SERVERSTATE,
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -131,6 +195,8 @@ CMainFrame::CMainFrame(): rb("Settings")
 
 	m_pTransferWnd = NULL;
 
+	m_pScanDlg = NULL;
+
 	m_hStatusBarIconConnected = NULL;
 	m_hStatusBarIconNotConnected = NULL;
 
@@ -139,6 +205,7 @@ CMainFrame::CMainFrame(): rb("Settings")
 	rb.Bind((int &)m_TransRect.right, "Transfer Window right", 600);
 	rb.Bind((int &)m_TransRect.bottom, "Transfer Window bottom", 60);
 
+	m_uTransState = NOTRANSFER;
 }
 
 CMainFrame::~CMainFrame()
@@ -188,7 +255,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_wndWinAmpBar.SetWindowText(_T("WinAmp Control"));
 
-
 	if (!m_wndReBar.Create(this) ||	
 		!m_wndReBar.AddBar(&m_wndToolBar) || 
 		!m_wndReBar.AddBar(&m_wndShowBars)) {
@@ -204,12 +270,17 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;      // fail to create
 	}
 
+	if (!m_statusProgress.Create(&m_wndStatusBar, ID_BROWSER_PROGRESS, WS_VISIBLE | PBS_SMOOTH)) {
+		return -1;
+	}
+
+
 	UINT nID = 0, nStyle = 0;
 	int nWidth = 0;
-	m_wndStatusBar.GetPaneInfo(1, nID, nStyle, nWidth);
-	m_wndStatusBar.SetPaneInfo(1, nID, nStyle, 200);
 	m_wndStatusBar.GetPaneInfo(2, nID, nStyle, nWidth);
 	m_wndStatusBar.SetPaneInfo(2, nID, nStyle, 200);
+	m_wndStatusBar.GetPaneInfo(3, nID, nStyle, nWidth);
+	m_wndStatusBar.SetPaneInfo(3, nID, nStyle, 200);
 
 	// TODO: Remove this if you don't want tool tips
 	m_wndToolBar.SetBarStyle(m_wndToolBar.GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY);
@@ -235,11 +306,26 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 	}
 	
+	CViewBar * pBar = NULL;
 	for(int i = 0; i < 4; i++) {
-		CViewBar * pBar = m_wndDockView.GetBar(i);
+		pBar = m_wndDockView.GetBar(i);
+		if (!pBar) {
+			continue;
+		}
 		pBar->SetBarStyle(pBar->GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
 		pBar->EnableDocking(CBRS_ALIGN_ANY);
 		DockControlBar(pBar, AFX_IDW_DOCKBAR_LEFT);
+	}
+
+	// Favorites list view
+	pBar = m_wndDockView.GetBar(4);
+
+	if (pBar) {
+		pBar->SetBarStyle(pBar->GetBarStyle() | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC);
+		// Don't allow the docking of the favorites view
+		// The toolbar would not work any more :-(
+		pBar->EnableDocking(0);
+		FloatControlBar(pBar, CPoint(0, 0));
 	}
 
 
@@ -254,8 +340,41 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
-	
-	if (!m_viewReBar.Create(this) ||	!m_viewReBar.AddBar(&m_wndBrowserBar)) {
+		// create a combo box for the address bar
+	if (!m_wndAddress.Create(CBS_DROPDOWN | WS_CHILD, CRect(0, 0, 200, 120), this, AFX_IDW_TOOLBAR + 10))
+	{
+		TRACE0("Failed to create combobox\n");
+		return -1;      // fail to create
+	};
+
+
+	// set up min/max sizes and ideal sizes for pieces of the rebar
+	/*REBARBANDINFO rbbi;
+	CRect rectToolBar;
+
+	rbbi.cbSize = sizeof(rbbi);
+	rbbi.fMask = RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_SIZE;
+	rbbi.cxMinChild = rectToolBar.Width();
+	rbbi.cyMinChild = rectToolBar.Height();
+	rbbi.cx = rbbi.cxIdeal = rectToolBar.Width() * 9;
+	m_wndReBar.GetReBarCtrl().SetBandInfo(0, &rbbi);
+	rbbi.cxMinChild = 0;
+
+	CRect rectAddress;
+
+	rbbi.fMask = RBBIM_CHILDSIZE | RBBIM_IDEALSIZE;
+	m_wndAddress.GetEditCtrl()->GetWindowRect(&rectAddress);
+	rbbi.cyMinChild = rectAddress.Height() + 10;
+	rbbi.cxIdeal = 200;
+	m_wndReBar.GetReBarCtrl().SetBandInfo(1, &rbbi);*/
+
+	m_wndToolBar.SetBarStyle(m_wndToolBar.GetBarStyle() |
+		CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_FIXED);
+
+	if (!m_viewReBar.Create(this) ||	
+		!m_viewReBar.AddBar(&m_wndBrowserBar) ||
+		!m_viewReBar.AddBar(&m_wndAddress, "Address")/* ||
+		!m_viewReBar.AddBar(&m_wndDlgBar)*/) {
 		TRACE0("Failed to create rebar\n");
 		return -1;      // fail to create
 	}
@@ -278,16 +397,34 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (VerifyBarState(sProfile))
 	{
 		CSizingControlBar::GlobalLoadState(this, sProfile);
+
 		LoadBarState(sProfile);
 	}
 
 
 	m_BarMenu.LoadMenu(MAKEINTRESOURCE(IDR_BARS));
 
-	GetMenu()->GetSubMenu(2)->AppendMenu(MF_POPUP, (UINT)m_BarMenu.GetSubMenu(0)->m_hMenu, "Show panes");
+	GetMenu()->GetSubMenu(3)->AppendMenu(MF_POPUP, (UINT)m_BarMenu.GetSubMenu(0)->m_hMenu, "Show panes");
+
+	if (!CreateCDDBInterface()) {
+		MessageBox("The CDDB-Interface could not be initialized.\r\n\r\nFunctions requiring CDDB are not accessible", "Error", MB_OK | MB_ICONEXCLAMATION);
+	}
+
+
+	CWinApp * pApp = AfxGetApp();
+	m_hNoTransfer = pApp->LoadIcon(IDI_NOTRANSFER);
+	m_hSendTransfer = pApp->LoadIcon(IDI_TRANSFERSEND);
+	m_hRecvTransfer = pApp->LoadIcon(IDI_TRANSFERRECV);
+	m_hBothTransfer = pApp->LoadIcon(IDI_TRANSFERSENDRECV);
+
+	m_wndDockView.SetParent(this);
+	m_wndDockView.SetOwner(this);
+
+	// CG: The following line was added by the Splash Screen component.
+	CSplashWnd::ShowSplashScreen(this);
 
 	PostMessage(WM_STARTUP, 0, 0);
-
+	
 	return 0;
 }
 
@@ -296,6 +433,8 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	if( !CFrameWnd::PreCreateWindow(cs) )
 		return FALSE;
 	
+	cs.lpszClass = _T("JAGSClass");
+
 	m_sClassName = cs.lpszClass;
 	
 	return TRUE;
@@ -323,10 +462,34 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext) 
 {
+	// Create the dockview object
+	m_wndDockView.Create(this, pContext);
+
 	if (!AfxOleInit())
 		return FALSE;
 
-	return CFrameWnd::OnCreateClient(lpcs, pContext);
+	if (!CFrameWnd::OnCreateClient(lpcs, pContext)) {
+		return FALSE;
+	}
+
+	CWnd* pWnd = GetDescendantWindow(AFX_IDW_PANE_FIRST, TRUE);
+	if (pWnd != NULL && pWnd->IsKindOf(pContext->m_pNewViewClass))
+	{
+		CMainView* pView = (CMainView*)pWnd;
+
+		// Here you can add your dialogs and views and whatever you like....
+		if (pView->Insert(0, "Browser", RUNTIME_CLASS(CJAGSView), pContext) == -1) {
+			return FALSE;
+		}
+		if (pView->Insert(1, "Song list", RUNTIME_CLASS(CSongListView), pContext) == -1) {
+			return FALSE;
+		}
+
+		CJAGSView * pJView = (CJAGSView *)pView->GetView(0);
+		pJView->m_pAddressCombo = &m_wndAddress;
+	}
+
+	return TRUE;
 }
 
 void CMainFrame::ShowTrayIcon(BOOL bShow)
@@ -340,6 +503,65 @@ void CMainFrame::ShowTrayIcon(BOOL bShow)
 	}
 
 }
+
+LRESULT CMainFrame::OnFileStatus(WPARAM wParam, LPARAM lParam)
+{
+	CJAGSDoc * pDoc = GetDocument();
+	if (!pDoc->m_bHangupIdle) {
+		// The user does not want to hangup if the queue is empty
+		return 0;
+	}
+
+	BOOL bKillTimer = FALSE;
+
+	if (wParam > 0) {
+		// The download queue is not empty. We don't want to hangup
+		bKillTimer = TRUE;
+	}
+	else if (wParam == 0 && lParam > 0 && !pDoc->m_bDownloadQueueOnly) {
+		// The download queue is empty, but not the upload queue
+		// Kill the timer
+		bKillTimer = TRUE;
+	}
+	
+	if (bKillTimer) {
+		KillTimer(HANGUPIDLE_TIMER);
+		return 1;
+	}
+
+	return 0;
+}
+
+
+LRESULT CMainFrame::OnEmptyQueue(WPARAM wParam, LPARAM lParam)
+{
+	CJAGSDoc * pDoc = GetDocument();
+	if (!pDoc->m_bHangupIdle) {
+		// The user does not want to hangup if the queue is empty
+		return 0;
+	}
+
+	BOOL bSetTimer = FALSE;
+
+	if (wParam == 0 && pDoc->m_bDownloadQueueOnly) {
+		// The download queue is empty and the user wants to hangup
+		// then
+		bSetTimer = TRUE;
+	}
+	else if (wParam == 0 && lParam == 0 && !pDoc->m_bDownloadQueueOnly) {
+		// The up and download queue is empty and the user wants to
+		// hangup
+		bSetTimer = TRUE;
+	}
+
+	if (bSetTimer) {
+		SetTimer(HANGUPIDLE_TIMER, pDoc->m_uIdleMinutes * 60 * 1000, NULL);
+		return 1;
+	}
+
+	return 0;
+}
+
 
 LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam)
 {
@@ -364,14 +586,16 @@ LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam)
 
 LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 {
+	SetWindowText("AGStreme");
+
 	try {
 		CAGSocket * pSocket = CAGSocket::GetInstance();
-		pSocket->SetNotificationWnd(&m_hWnd);
+
 		if (!pSocket->Init()) {
-			MessageBox("The local connection to the Satellite could not be established.\r\nYou have to start AGSatellite.exe, not only JAGS.exe!!!\r\n\r\nPlease also check if another version is running", "ERROR", MB_OK | MB_ICONERROR);
+			MessageBox("The local connection to the Satellite could not be established.\r\nYou have to start AGSatellite.exe, not only AGStreme.exe!!!\r\n\r\nPlease also check if another version is running", "ERROR", MB_OK | MB_ICONERROR);
 		}
 		
-		CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+		CJAGSDoc * pDoc = GetDocument();
 
 		pDoc->LoadSettings();
 			
@@ -399,6 +623,10 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 					}
 				}
 			}
+			else if (pDoc->m_sUsername.IsEmpty()) {
+				MessageBox("You have not entered a username yet. Please do that now in the account tab", "Error", MB_OK | MB_ICONEXCLAMATION);
+				OnPreferences();
+			}
 			else {
 				ASSERT(pDoc);
 				unsigned int nPort = atoi(pDoc->m_Settings.sProxyPort);
@@ -406,6 +634,13 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 				pSocket->SendLogin();
 				pSocket->SetLoggingStatus();
 			}
+
+			m_pScanDlg = new CScanDlg(this);
+			m_pScanDlg->Create(IDD_SCANWAIT, this);
+			//m_pScanDlg->CenterWindow();
+			m_pScanDlg->SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+			m_pScanDlg->ShowWindow(SW_SHOW);
+
 		}
 		if (pDoc && pDoc->m_bStartWinAmp && !pDoc->m_sWinAmpExe.IsEmpty()) {
 			ShellExecute(m_hWnd, "open", pDoc->m_sWinAmpExe, NULL, NULL, SW_SHOW);
@@ -417,14 +652,41 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 	}
 
 	CRect rc;
-	m_wndStatusBar.GetItemRect(2, rc);
+	m_wndStatusBar.GetItemRect(3, rc);
 	m_hStatusBarIconConnected = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_CONNECTED), IMAGE_ICON, 16, rc.Height(), LR_DEFAULTCOLOR);
 	m_hStatusBarIconNotConnected = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_NOTCONNECTED), IMAGE_ICON, 16, rc.Height(), LR_DEFAULTCOLOR);
 
 
-	m_wndStatusBar.GetStatusBarCtrl().SetIcon(2, m_hStatusBarIconNotConnected);
-	m_wndStatusBar.SetPaneText(2, "Not connected");
-	m_wndStatusBar.SetPaneText(1, "Not connected to Master server");
+	m_wndStatusBar.GetStatusBarCtrl().SetIcon(3, m_hStatusBarIconNotConnected);
+	m_wndStatusBar.SetPaneText(3, "Not connected");
+	m_wndStatusBar.SetPaneText(2, "Not connected to Master server");
+
+	// At startup the queue is always empty
+	PostMessage(WM_QUEUEEMTPY, 0, 0);
+
+	/*DWORD dwConnection = 0;
+	BOOL bConnected = InternetGetConnectedState(&dwConnection, NULL);
+	int x = 0;
+	switch (dwConnection) {
+	case INTERNET_CONNECTION_MODEM:
+		x = 1;
+		break;
+	case INTERNET_CONNECTION_LAN :
+		x = 1;
+		break;
+	case INTERNET_CONNECTION_PROXY:
+		x = 1;
+		break;
+	case INTERNET_CONNECTION_MODEM_BUSY:
+		x = 1;
+		break;
+
+	}*/
+
+	/*if (!InitCDDBInterface()) {
+		MessageBox("The CDDB-Interface could not be initialized.\r\n\r\nFunctions basing on CDDB won't work", "Error", MB_OK | MB_ICONEXCLAMATION);
+	}*/
+
 
 
 	return 1;
@@ -439,6 +701,7 @@ void CMainFrame::OnSysCommand(UINT nID, LPARAM lParam)
 		ShowWindow(SW_MINIMIZE);
 		return;
 	}
+
 	CFrameWnd::OnSysCommand(nID, lParam);
 }
 
@@ -446,10 +709,14 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 {
 	CFrameWnd::OnSize(nType, cx, cy);
 	
+	m_statusProgress.Reposition();
+	
 	if (nType == SIZE_MINIMIZED && m_TrayIcon.IsSet()) {
 		ShowWindow(SW_HIDE);
 		m_bActivated = FALSE;
 	}
+
+	//SendMessageToDescendants(WM_SIZE, nType, MAKELPARAM(cx, cy), TRUE);
 }
 
 void CMainFrame::OnDestroy() 
@@ -458,6 +725,7 @@ void CMainFrame::OnDestroy()
 
 	CWinAmpControl::Destroy();
 	CAGSocket::Destroy();
+	CAGInet::Destroy();
 }
 
 
@@ -531,6 +799,13 @@ void CMainFrame::OnShowMP3info()
 	ToggleBar(3);	
 }
 
+
+void CMainFrame::OnShowFavorites() 
+{
+	ToggleBar(4);	
+}
+
+
 void CMainFrame::OnUpdateShowShares(CCmdUI* pCmdUI) 
 {
 	UpdateViewState(0, pCmdUI);	
@@ -549,6 +824,12 @@ void CMainFrame::OnUpdateShowtransfer(CCmdUI* pCmdUI)
 void CMainFrame::OnUpdateShowMP3info(CCmdUI* pCmdUI) 
 {
 	UpdateViewState(3, pCmdUI);	
+}
+
+
+void CMainFrame::OnUpdateShowFavorites(CCmdUI* pCmdUI) 
+{
+	UpdateViewState(4, pCmdUI);	
 }
 
 void CMainFrame::ToggleBar(UINT nBar)
@@ -572,13 +853,6 @@ void CMainFrame::UpdateViewState(UINT nBar, CCmdUI *pCmdUI)
 	pCmdUI->SetCheck(pBar->IsVisible());
 }
 
-
-LRESULT CMainFrame::OnFileStatus(WPARAM wParam, LPARAM lParam)
-{
-	m_wndDockView.GetView(2)->SendMessage(WM_FILESTATUS, wParam, lParam);
-	return 1;
-}
-
 LRESULT CMainFrame::OnMSServerStatus(WPARAM wParam, LPARAM lParam)
 {
 	CString sStatus;
@@ -586,7 +860,7 @@ LRESULT CMainFrame::OnMSServerStatus(WPARAM wParam, LPARAM lParam)
 	switch(wParam) {
 
 		case MS_UNKNOWN:
-			sStatus = "Connecting to master server";
+			sStatus = "Connecting to master server...";
 			break;
 
 		case MS_SUCCESS:
@@ -605,38 +879,40 @@ LRESULT CMainFrame::OnMSServerStatus(WPARAM wParam, LPARAM lParam)
 		case MS_PROXY_S5_AUTH_READ_FAILED :
 		case MS_PROXY_S5_SEND_CONNECT_FAILED :
 		case MS_PROXY_S5_CONNECT_READ_FAILED :
-			sStatus.Format("Error handshaking with proxy (%i)", wParam );
+			sStatus = "Error handshaking with proxy (%i)";
 			break;
 
 		case MS_PROXY_S5_CONNECT_FAILED :
 		case MS_PROXY_S4_CONNECT_FAILED :
-			sStatus.Format("Unable to connect through proxy (%i)", wParam );
+			sStatus = "Unable to connect through proxy";
 			break;
 
 		case MS_PROXY_S4_HOSTNAME_LOOKUP_FAILED :
+			sStatus = "Hostname lookup failure";
 		case MS_PROXY_S4_SEND_CONNECT_FAILED :
+			sStatus = "Could not send request";
 		case MS_PROXY_S4_CONNECT_READ_FAILED :
-			sStatus.Format("Error connecting to master server (%i)", wParam );
-
+			sStatus = "Could not read from master server";
 		case MS_PROXY_CONNECT_FAILED :
-			sStatus.Format("Error connecting to proxy server" );
+			sStatus = "Error connecting to proxy server";
 			break;
 
 		case MS_INVALID_PORT:
+			sStatus = "Invalid port for master server";
 		case MS_READ_FAILED:
+			sStatus = "Could not read from master server";
 		case MS_CONNECT_FAILED:
-			sStatus.Format("Error connecting to master server (%i)", wParam );
+			sStatus = "Connection to master server failed!";
 			break;
-
 		case MS_CONNECT_DELAYED:
+			sStatus = "Connection to master server delayed";
 			break;
-
 		default:
-			sStatus.Format("Invalid master server state (%i)", wParam );
+			sStatus = "Invalid master server state";
 			break;	
 	}
 
-	m_wndStatusBar.SetPaneText(1, sStatus);
+	m_wndStatusBar.SetPaneText(2, sStatus);
 	return 1;
 }
 
@@ -647,37 +923,30 @@ LRESULT CMainFrame::OnServerStatus(WPARAM wParam, LPARAM lParam)
 	CStatusBarCtrl &statusbar = m_wndStatusBar.GetStatusBarCtrl();
 
 	if (wParam == serverWait) {
-		statusbar.SetIcon(2, m_hStatusBarIconConnected);
+		statusbar.SetIcon(3, m_hStatusBarIconConnected);
 		sStatus = "Connected";
 	}
 	else {
 		if (wParam == connectFailed) {
 			sStatus = "Connection failed";
 		}
-		else {
-			sStatus = "Trying to connect";
+		else if (wParam == connectMachineWait) {
+			sStatus = "Connecting...";
 		}
-		statusbar.SetIcon(2, m_hStatusBarIconNotConnected);
+		else {
+			sStatus = "Trying to connect...";
+		}
+		statusbar.SetIcon(3, m_hStatusBarIconNotConnected);
 	}
 	
-	statusbar.SetText(sStatus, 2, 0);
+	statusbar.SetText(sStatus, 3, 0);
 
 	return 1;
 }
 
-BOOL CMainFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
-{
-	// Pump command-messages through all panes
-	if (m_wndDockView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
-		return TRUE;
-	}
-	
-	return CFrameWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
-}
-
 void CMainFrame::OnShowTransferrate() 
 {
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+	CJAGSDoc * pDoc = GetDocument();
 	if (m_pTransferWnd) {
 		m_pTransferWnd->GetWindowRect(&m_TransRect);
 		m_pTransferWnd->DestroyWindow();
@@ -719,23 +988,35 @@ void CMainFrame::OnUpdateShowTransferrate(CCmdUI* pCmdUI)
 
 BOOL CMainFrame::AddDockViews(CCreateContext *pContext)
 {
-	// Create the dockview object
-	m_wndDockView.Create(this, pContext);
 
 	// Add all docking views
-	if (!m_wndDockView.CreateView(0, "Shares", RUNTIME_CLASS(CShareTreeView))) {
+	if (!m_wndDockView.CreateView(0, "Music Collection", RUNTIME_CLASS(CTreeTabView))) {
 		return FALSE;
 	}
-	if (!m_wndDockView.CreateView(1, "MP3 files", RUNTIME_CLASS(CExploListView))) {
+	if (!m_wndDockView.CreateView(1, "MP3 files", RUNTIME_CLASS(CTabListView))) {
 		return FALSE;
 	}
-	if (!m_wndDockView.CreateView(2, "Download", RUNTIME_CLASS(CSatelliteView))) {
+	if (!m_wndDockView.CreateView(2, "Download", RUNTIME_CLASS(CDownloadTabView))) {
 		return FALSE;
 	}
 	if (!m_wndDockView.CreateView(3, "MP3 Info", RUNTIME_CLASS(CMP3InfoView))) {
 		return FALSE;
 	}
+	if (!m_wndDockView.CreateView(4, "Favorites", RUNTIME_CLASS(CFavoriteListView))) {
+		return FALSE;
+	}
 
+	CTreeTabView * pTreeView = (CTreeTabView *)(CViewBar *)m_wndDockView.GetBar(0)->GetView();
+	if (!pTreeView) {
+		return FALSE;
+	}
+
+	if (pTreeView->Insert(0, "Shares", RUNTIME_CLASS(CShareTreeView), pContext) == -1) {
+		return FALSE;
+	}
+	if (pTreeView->Insert(1, "Music database", RUNTIME_CLASS(CDBTreeView), pContext) == -1) {
+		return FALSE;
+	}
 
 	CMP3InfoView * pView = (CMP3InfoView *)(CViewBar *)m_wndDockView.GetBar(3)->GetView();
 
@@ -746,9 +1027,48 @@ BOOL CMainFrame::AddDockViews(CCreateContext *pContext)
 	if (pView->Insert(0, "MP3 Header", RUNTIME_CLASS(CMP3HeaderView), pContext) == -1) {
 		return FALSE;
 	}
-	if (pView->Insert(1, "ID3 Tags", RUNTIME_CLASS(CID3TagView), pContext) == -1) {
+	if (pView->Insert(1, "ID3 Tags", RUNTIME_CLASS(CID3v1TagView), pContext) == -1) {
 		return FALSE;
 	}
+	if (pView->Insert(2, "ID3v2 Tags", RUNTIME_CLASS(CID3v2TagView), pContext) == -1) {
+		return FALSE;
+	}
+	if (pView->Insert(3, "CDDB Info", RUNTIME_CLASS(CCDDBView), pContext) == -1) {
+		return FALSE;
+	}
+
+
+	CTabListView * pListView = (CTabListView *)(CViewBar *)m_wndDockView.GetBar(1)->GetView();
+
+	if (!pListView) {
+		return FALSE;
+	}
+
+	if (pListView->Insert(0, "MP3 files", RUNTIME_CLASS(CExploListView), pContext) == -1) {
+		return FALSE;
+	}
+	if (pListView->Insert(1, "MP3 details", RUNTIME_CLASS(CMP3ListView), pContext) == -1) {
+		return FALSE;
+	}
+
+	CDownloadTabView * pDownloadView = (CDownloadTabView *)(CViewBar *)m_wndDockView.GetBar(2)->GetView();
+
+	if (!pDownloadView) {
+		return FALSE;
+	}
+	if (pDownloadView->Insert(0, "File transfers", RUNTIME_CLASS(CSatelliteView), pContext) == -1) {
+		return FALSE;
+	}
+	if (pDownloadView->Insert(1, "Song Queue", RUNTIME_CLASS(CQueueListView), pContext) == -1) {
+		return FALSE;
+	}
+
+	CAGSocket * pSocket = CAGSocket::GetInstance();
+	pSocket->m_hFileStatusWnd = pDownloadView->GetView(0)->m_hWnd;
+
+	pSocket->SetNotificationWnd(&m_hWnd);
+
+	CAGInet::m_hNotificationWnd = pDownloadView->GetView(1)->m_hWnd;
 
 	return TRUE;
 }
@@ -772,15 +1092,27 @@ void CMainFrame::SetImageLists()
 	}
 
 	// Set the image lists
-	::SendMessage(m_wndDockView.GetView(0)->m_hWnd, TVM_SETIMAGELIST, (WPARAM)TVSIL_NORMAL, (LPARAM)hImageListSmall);
+	CTreeTabView * pTabTreeView = (CTreeTabView *)m_wndDockView.GetView(0);
+	CExploTreeView *pTreeView = (CExploTreeView *)pTabTreeView->GetView(0);
 
-	::SendMessage(m_wndDockView.GetView(1)->m_hWnd, LVM_SETIMAGELIST, (WPARAM)LVSIL_SMALL, (LPARAM)hImageListSmall);
-	::SendMessage(m_wndDockView.GetView(1)->m_hWnd, LVM_SETIMAGELIST, (WPARAM)LVSIL_NORMAL, (LPARAM)hImageListLarge);
+	::SendMessage(pTreeView->m_hWnd, TVM_SETIMAGELIST, (WPARAM)TVSIL_NORMAL, (LPARAM)hImageListSmall);
+
+	CTabListView * pTabListView = (CTabListView *)m_wndDockView.GetView(1);
+	CExploListView * pListView = (CExploListView *)pTabListView->GetView(0);
+
+	::SendMessage(pListView->m_hWnd, LVM_SETIMAGELIST, (WPARAM)LVSIL_SMALL, (LPARAM)hImageListSmall);
+	::SendMessage(pListView->m_hWnd, LVM_SETIMAGELIST, (WPARAM)LVSIL_NORMAL, (LPARAM)hImageListLarge);
+
+	pListView = (CExploListView *)pTabListView->GetView(1);
+
+	::SendMessage(pListView->m_hWnd, LVM_SETIMAGELIST, (WPARAM)LVSIL_SMALL, (LPARAM)hImageListSmall);
+	::SendMessage(pListView->m_hWnd, LVM_SETIMAGELIST, (WPARAM)LVSIL_NORMAL, (LPARAM)hImageListLarge);
+
 }
 
 void CMainFrame::OnPreferences() 
 {
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+	CJAGSDoc * pDoc = GetDocument();
 
 	// Create the property sheet...
 	CPreferencesSheet propSheet("Preferences...", this);
@@ -789,10 +1121,8 @@ void CMainFrame::OnPreferences()
 	CGeneralPropPage generalPage;
 	// Initzialize the member variables
 	generalPage.m_bAddToPlaylist = pDoc->m_bAddToPlaylist;
-	generalPage.m_bAutoOrganize = pDoc->m_bAutoOrganize;
 	generalPage.m_bStartWinamp = pDoc->m_bStartWinAmp;
 	generalPage.m_sWinAmpExe = pDoc->m_sWinAmpExe;
-	generalPage.m_nSameArtist = pDoc->m_nSameArtist;
 
 	
 	CAccountPropPage accountPage;
@@ -805,6 +1135,10 @@ void CMainFrame::OnPreferences()
 	connectionPage.m_nDownStream = pDoc->m_nBandwidthDownstream;
 	connectionPage.m_sSimDownloads.Format("%d", pDoc->m_nSimDownloads);
 	connectionPage.m_nConnectionType = pDoc->m_nConnectionType;
+	connectionPage.m_bHangupIdle = pDoc->m_bHangupIdle;
+	connectionPage.m_HangupTime = pDoc->m_HangupTime;
+	connectionPage.m_bDownloadQueueOnly = pDoc->m_bDownloadQueueOnly;
+	connectionPage.m_uIdleMinutes = pDoc->m_uIdleMinutes;
 
 	CProxyPropPage proxyPage;
 	proxyPage.m_sProxyHostname = pDoc->m_Settings.sProxyHost;
@@ -814,12 +1148,18 @@ void CMainFrame::OnPreferences()
 	proxyPage.m_nProxyPort = nProxyPort;
 	proxyPage.m_nProxyType = pDoc->m_Settings.proxyType;
 
+	CFileOrganizationPage fileorgPage;
+	fileorgPage.m_bDBUpdateID3 = pDoc->m_bDBUpdateID3;
+	fileorgPage.m_sFileFormat = pDoc->m_sFilenameFormat;
+	fileorgPage.m_nSameArtist = pDoc->m_nSameArtist;
+	fileorgPage.m_bAutoOrganize = pDoc->m_bAutoOrganize;
+
 	// Add the property pages
 	propSheet.AddPage(&generalPage);
 	propSheet.AddPage(&accountPage);
 	propSheet.AddPage(&proxyPage);
 	propSheet.AddPage(&connectionPage);
-
+	propSheet.AddPage(&fileorgPage);
 
 	int nRet = propSheet.DoModal();
 	if (nRet == IDOK || nRet == IDC_LOGIN) {
@@ -827,12 +1167,19 @@ void CMainFrame::OnPreferences()
 		// we put the new values into the document
 		pDoc->m_nConnectionType = connectionPage.m_nConnectionType;
 		pDoc->m_bAddToPlaylist = generalPage.m_bAddToPlaylist;
-		pDoc->m_bAutoOrganize = generalPage.m_bAutoOrganize;
 		pDoc->m_bStartWinAmp = generalPage.m_bStartWinamp;
 		pDoc->m_sWinAmpExe = generalPage.m_sWinAmpExe;
-		pDoc->m_nSameArtist = generalPage.m_nSameArtist;
 		pDoc->m_nBandwidthUpstream = connectionPage.m_nUpStream;
 		pDoc->m_nBandwidthDownstream = connectionPage.m_nDownStream;
+		pDoc->m_HangupTime = connectionPage.m_HangupTime;
+		pDoc->m_bDownloadQueueOnly = connectionPage.m_bDownloadQueueOnly;
+		pDoc->m_bHangupIdle = connectionPage.m_bHangupIdle;
+		pDoc->m_bHangupAt = connectionPage.m_bHangupAt;
+		pDoc->m_uIdleMinutes = connectionPage.m_uIdleMinutes;
+		pDoc->m_bDBUpdateID3 = fileorgPage.m_bDBUpdateID3;
+		pDoc->m_sFilenameFormat = fileorgPage.m_sFileFormat;
+		pDoc->m_bAutoOrganize = fileorgPage.m_bAutoOrganize;
+		pDoc->m_nSameArtist = fileorgPage.m_nSameArtist;
 
 		CAGSocket * pSocket = CAGSocket::GetInstance();
 
@@ -860,12 +1207,14 @@ void CMainFrame::OnPreferences()
 			connectionPage.m_nBWThrottle != pDoc->m_Settings.bandwidthThrottle ||
 			nRet == IDC_LOGIN) {
 			//...store the new values and...
-			pDoc->m_sUsername = accountPage.m_sUsername;
-			pDoc->m_sPassword = accountPage.m_sPassword;
-			pDoc->m_Settings.bandwidthThrottle = connectionPage.m_nBWThrottle;
-			pDoc->SaveAccountInfo();
-			// ...login again
-			pSocket->SendLogin();
+			if (!accountPage.m_sUsername.IsEmpty() && !accountPage.m_sPassword.IsEmpty()) {
+				pDoc->m_sUsername = accountPage.m_sUsername;
+				pDoc->m_sPassword = accountPage.m_sPassword;
+				pDoc->m_Settings.bandwidthThrottle = connectionPage.m_nBWThrottle;
+				pDoc->SaveAccountInfo();
+				// ...login again
+				pSocket->SendLogin();
+			}
 		}
 
 		// Check if the log status changed...
@@ -873,6 +1222,19 @@ void CMainFrame::OnPreferences()
 			pDoc->m_Settings.keepLogFile = generalPage.m_bKeepLog;
 			// and tell it to the satellite
 			pSocket->SetLoggingStatus();
+		}
+
+		if (!pDoc->SaveSettings()) {
+			MessageBox("The settings could not be saved!", "Error", MB_OK | MB_ICONEXCLAMATION);
+		}
+
+		// Check if the user wants to hangup at a given time
+		if (pDoc->m_bHangupAt) {
+			// Check every minute if the time has come to hang up
+			SetTimer(HANGUPAT_TIMER, 60000, NULL);
+		}
+		else {
+			KillTimer(HANGUPAT_TIMER);
 		}
 	}
 	else if (nRet == IDC_LOSTPASSWORD) {
@@ -882,9 +1244,10 @@ void CMainFrame::OnPreferences()
 	else if (nRet == IDC_CREATEACCOUNT) {
 		OnNewAccount();
 	}
-
-	if (pDoc->m_nSimDownloads != atol(connectionPage.m_sSimDownloads)) {
-
+	
+	int nSim = atol(connectionPage.m_sSimDownloads);
+	if (pDoc->m_nSimDownloads != nSim) {
+		pDoc->m_nSimDownloads = nSim;
 		CString sUrl = "http://www.audiogalaxy.com/user/home.php?newTransferLimit=" + connectionPage.m_sSimDownloads + "&submit=change";
 		pDoc->UpdateAllViews(NULL, NEW_URL, (CObject *)&sUrl);
 	}
@@ -899,6 +1262,12 @@ void CMainFrame::OnClose()
 		delete m_pTransferWnd;
 	}
 
+	if (m_pScanDlg) {
+		m_pScanDlg->DestroyWindow();
+		delete m_pScanDlg;
+		m_pScanDlg = NULL;
+	}
+
 	SetActiveView(NULL, FALSE);
 
 	CFrameWnd::OnClose();
@@ -906,7 +1275,7 @@ void CMainFrame::OnClose()
 
 void CMainFrame::OnAddshare() 
 {
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+	CJAGSDoc * pDoc = GetDocument();
 	CString sNewShare;
 
 	if (pDoc->m_aShares.GetCount() > 0) {
@@ -941,7 +1310,7 @@ void CMainFrame::OnAddshare()
 BOOL CMainFrame::TryToLogin()
 {
 	CPropertySheet loginSheet("Login", this);
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+	CJAGSDoc * pDoc = GetDocument();
 
 	CProxyPropPage proxyPage;
 	proxyPage.SetLoginPage(TRUE);
@@ -963,14 +1332,28 @@ BOOL CMainFrame::TryToLogin()
 
 		// Tell the satellite our proxy settings
 		//pSocket->SendProxySettings();
+		pSocket->SendAccountInfo(loginPage.m_sUsername, loginPage.m_sPassword);
+		if (loginPage.m_sUsername.IsEmpty() || loginPage.m_sPassword.IsEmpty()) {
+			return FALSE;
+		}
 
-		CTryAccountCreationDlg dlg;
+		pDoc->m_sUsername = loginPage.m_sUsername;
+		pDoc->m_sPassword = loginPage.m_sPassword;
+		if (!pDoc->SaveAccountInfo()) {
+			return FALSE;
+		}
+		if (!CheckForShares()) {
+			return FALSE;
+		}
+			
+		return TRUE;
+
+		/*CTryAccountCreationDlg dlg;
 		dlg.SetLoginTest(TRUE);
 
 		pSocket->SetNotificationWnd(&dlg.m_hWnd);
 		// Try to create the new account
 
-		pSocket->SendAccountInfo(loginPage.m_sUsername, loginPage.m_sPassword);
 		int nRet = dlg.DoModal();
 		pSocket->SetNotificationWnd(&m_hWnd);
 
@@ -985,7 +1368,7 @@ BOOL CMainFrame::TryToLogin()
 			}
 				
 			return TRUE;
-		}
+		}*/
 	}
 
 	return FALSE;
@@ -996,7 +1379,7 @@ BOOL CMainFrame::CreateNewAccount()
 {
 	CPropertySheet NewAccountWizard("New account", this);
 
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+	CJAGSDoc * pDoc = GetDocument();
 
 	CEmailOptionsPage emailPage;
 	emailPage.m_EmailOptions = pDoc->m_NewAccount.emailOptions;
@@ -1062,7 +1445,7 @@ BOOL CMainFrame::CreateNewAccount()
 
 BOOL CMainFrame::CheckForShares()
 {
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+	CJAGSDoc * pDoc = GetDocument();
 
 	// If there are no shares set, do so...
 	if (pDoc->m_aShares.GetCount() == 0) {
@@ -1083,6 +1466,8 @@ BOOL CMainFrame::CheckForShares()
 			MessageBox("The information about the shared directories could not be stored!", "ERROR", MB_OK | MB_ICONEXCLAMATION);
 			return FALSE;	
 		}
+
+		pDoc->UpdateAllViews(NULL, NEW_SHARE);
 	}
 
 	// Save the settings
@@ -1105,7 +1490,7 @@ BOOL CMainFrame::CheckForShares()
 
 void CMainFrame::OnNewAccount() 
 {
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+	CJAGSDoc * pDoc = GetDocument();
 	// Check if there are ongoing transfer...
 	if (pDoc->m_TransferStatus.GetCount() > 0) {
 		// Warn the user...
@@ -1189,12 +1574,77 @@ void CMainFrame::OnWinampPlay()
 	pWinAmpCtrl->Play();
 }
 
+void CMainFrame::OnWinampStart() 
+{
+	if (CWinAmpControl::GetInstance()->IsRunning()) {
+		// If it's running, close it...
+		CWinAmpControl::GetInstance()->Close();
+		return;
+	}
+
+	CJAGSDoc * pDoc = GetDocument();
+
+	// Get a name for a temp file
+	LPTSTR tmp = _tempnam(NULL, NULL);
+	CString sTmpName = tmp;
+	sTmpName += ".mp3";
+	delete [] tmp;
+
+	TCHAR app[MAX_PATH];
+
+	try {
+		CFile tmpfile;
+		// Create the temp file
+		if (tmpfile.Open(sTmpName, CFile::modeCreate)) {
+			// Find the associated app
+			HINSTANCE h = FindExecutable(sTmpName, NULL, app);
+			tmpfile.Close();
+			// Delete the temp file again
+			CFile::Remove(sTmpName);
+		}
+	}
+	catch (CFileException * pEx) {
+		pEx->Delete();
+	}
+
+
+	if (pDoc->m_sWinAmpExe.IsEmpty()) {
+		ShellExecute(NULL, "open", app, NULL, NULL, SW_SHOW);
+	}
+	else {
+		ShellExecute(NULL, "open", pDoc->m_sWinAmpExe, NULL, NULL, SW_SHOW);
+	}
+}
+
+void CMainFrame::OnUpdateStartwinamp(CCmdUI* pCmdUI) 
+{
+	CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
+
+	pCmdUI->SetCheck(pWinAmpCtrl->IsRunning());
+}
+
+void CMainFrame::OnUpdateWinampaddtopl(CCmdUI* pCmdUI) 
+{
+	CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
+
+	pCmdUI->Enable(pWinAmpCtrl->IsRunning());
+}
+
 void CMainFrame::OnUpdateWinampPause(CCmdUI* pCmdUI) 
 {
 	CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
 
 	pCmdUI->SetCheck(pWinAmpCtrl->IsPaused());
 }
+
+
+void CMainFrame::OnUpdatePlaylistgen(CCmdUI* pCmdUI) 
+{
+	CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
+
+	pCmdUI->Enable(pWinAmpCtrl->IsRunning());
+}
+
 
 void CMainFrame::OnUpdateWinampPlay(CCmdUI* pCmdUI) 
 {
@@ -1215,3 +1665,270 @@ void CMainFrame::OnHelp()
 	HtmlHelp(m_hWnd,"jagshelp.chm",HH_DISPLAY_TOPIC,0);
 }
 
+
+void CMainFrame::OnTimer(UINT nIDEvent) 
+{
+	if (nIDEvent == HANGUPIDLE_TIMER) {
+		KillTimer(nIDEvent);
+		MessageBox("Now I'd hangup!!!", "HANGUP");
+		InternetAutodialHangup(0);
+	}
+	if (nIDEvent == HANGUPAT_TIMER) {
+		// compage the hanguptime with the current time
+		CTime time = CTime::GetCurrentTime();
+		CTimeSpan s = GetDocument()->m_HangupTime - time;
+		// If the hangup time is in the past...
+		if (s.GetSeconds() < 0) {
+			// ...we hangup :-)
+			KillTimer(nIDEvent);
+			MessageBox("Now I'd hangup!!!", "HANGUP");
+			InternetAutodialHangup(0);
+		}
+	}
+
+	else if (nIDEvent == SEND) {
+		m_uTransState &= ~SEND;
+		KillTimer(nIDEvent);
+		UpdateTransferIcon();
+	}
+	else if (nIDEvent == RECV) {
+		m_uTransState &= ~RECV;
+		KillTimer(nIDEvent);
+		UpdateTransferIcon();
+	}
+
+	CFrameWnd::OnTimer(nIDEvent);
+}
+
+
+void CMainFrame::OnWinampAddToPL() 
+{
+	CJAGSDoc * pDoc = GetDocument();
+
+	CWinAmpControl * pWinampCtrl = CWinAmpControl::GetInstance();
+	pWinampCtrl->AddToPlaylist(pDoc->GetFilePath());
+}
+
+void CMainFrame::OnCddbSearch() 
+{
+}
+
+BOOL CMainFrame::CreateCDDBInterface()
+{
+	// Gracenote CDDB credentials removed for publication
+	_bstr_t bstrClientID = L"YOUR_CDDB_CLIENT_ID";
+	_bstr_t bstrClientTag = L"YOUR_CDDB_CLIENT_TAG";
+	_bstr_t bstrClientVersion = L"1";
+	_bstr_t bstrReg = L"regstring";
+
+		
+	m_pControl = NULL;
+
+
+	// Create an instance of CDDBControl using the COM interface
+	HRESULT hr = CoCreateInstance(CLSID_CDDBControl, NULL, CLSCTX_ALL, IID_ICDDBControl, (void **)&m_pControl);
+
+	if (FAILED(hr)) {
+		return FALSE;
+	}
+
+	// The first call should set the client information within the control
+	m_pControl->SetClientInfo(bstrClientID, bstrClientTag, bstrClientVersion, bstrReg);
+
+	return TRUE;
+}
+
+CJAGSDoc * CMainFrame::GetDocument()
+{
+	return (CJAGSDoc *)GetActiveDocument();
+}
+
+ICDDBControl * CMainFrame::GetCDDBControl()
+{
+	return m_pControl;
+}
+
+void CMainFrame::OnMp3Wizard() 
+{
+	m_WizardHolder.ShowWizard(this);
+}
+
+LRESULT CMainFrame::OnBrowserProgSet(WPARAM wParam, LPARAM lParam)
+{
+	m_statusProgress.SetRange32(0, lParam);
+	m_statusProgress.SetPos(wParam);
+	return 0;
+}
+
+LRESULT CMainFrame::OnSend(WPARAM wParam, LPARAM lParam)
+{
+	SetTimer(SEND, 500, NULL);
+	m_uTransState |= SEND;
+	UpdateTransferIcon();
+	return 0;
+}
+
+
+LRESULT CMainFrame::OnRecv(WPARAM wParam, LPARAM lParam)
+{
+	SetTimer(RECV, 500, NULL);
+	m_uTransState |= RECV;
+	UpdateTransferIcon();
+	return 0;
+}
+
+void CMainFrame::UpdateTransferIcon()
+{
+	if (m_uTransState == NOTRANSFER) {
+		m_TrayIcon.SetIcon(IDI_NOTRANSFER);
+	}
+	else if (m_uTransState == BOTH) {
+		m_TrayIcon.SetIcon(IDI_TRANSFERSENDRECV);
+	}
+	else if (m_uTransState == SEND) {
+		m_TrayIcon.SetIcon(IDI_TRANSFERSEND);
+	}
+	else if (m_uTransState == RECV) {
+		m_TrayIcon.SetIcon(IDI_TRANSFERRECV);
+	}
+}
+
+void CMainFrame::OnSearch()
+{
+	CJAGSDoc * pDoc = GetDocument();
+	CString sUrl;
+	m_wndAddress.GetWindowText(sUrl);
+
+	pDoc->UpdateAllViews(NULL, NEW_URL, (CObject *)&sUrl);
+}
+
+
+void CMainFrame::SetStatusBarText(int nIndex, LPCTSTR lpszText)
+{
+	m_wndStatusBar.SetPaneText(nIndex, lpszText);
+}
+
+void CMainFrame::OnDelDB() 
+{
+	if (MessageBox("Are you sure you want to delete all informations in the database?\r\n\r\nThe data will be lost forever!", "Warning!", MB_YESNO | MB_ICONINFORMATION) == IDNO)  {
+		return;
+	}
+
+	try {
+		CSongsSet songs;
+		songs.Open();
+		if (songs.CanUpdate()) {
+			songs.MoveFirst();
+			while (!songs.IsEOF()) {
+				songs.Delete();
+				songs.MoveNext();
+			}
+		}
+	}
+	catch(CDaoException *pEx) {
+		CSongsSet::HandleDAOException(pEx);
+	}
+
+	GetDocument()->UpdateAllViews(NULL, DB_CHANGED);
+}
+
+BOOL CMainFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
+{
+	// Pump command-messages through all panes
+	if (m_wndDockView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
+		return TRUE;
+	}
+	
+	/*CMainView * pView = (CMainView *)GetActiveView();
+	if (pView->GetSafeHwnd() && pView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
+		return TRUE;
+	}*/
+
+	return CFrameWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+}
+
+void CMainFrame::OnPlaylistGen() 
+{
+	CPlaylistGenDlg dlg;
+	dlg.DoModal();
+	
+}
+
+
+LRESULT CMainFrame::OnScanComplete(WPARAM wParam, LPARAM lParam)
+{
+	// Close the scan dialog
+	if (m_pScanDlg) {
+		m_pScanDlg->m_sInfo.Format("Total files: %d   New files: %d", wParam, lParam);
+		m_pScanDlg->UpdateData(FALSE);
+		Sleep(2000);
+		m_pScanDlg->DestroyWindow();
+		delete m_pScanDlg;
+		m_pScanDlg = NULL;
+	}
+	return 1;
+}
+
+void CMainFrame::OnResetConnection() 
+{
+	CAGSocket * pSocket = CAGSocket::GetInstance();
+	
+	// Ask the user
+	if (MessageBox("Do you really want to reset the server connection?\r\n\r\nAll filetransfers will be interrupted!", "Warning", MB_YESNO | MB_ICONINFORMATION) == IDNO) {
+		return;
+	}
+
+	pSocket->ResetServerConnection();
+}
+
+void CMainFrame::OnNewAddressEnter()
+{
+	// gets called when an item is entered manually into the edit box portion
+	// of the Address combo box.
+	// navigate to the newly selected location and also add this address to the
+	// list of addresses in the combo box.
+	CString str;
+
+	m_wndAddress.GetEditCtrl()->GetWindowText(str);
+
+	GetDocument()->UpdateAllViews(NULL, NEW_URL, (CObject *)&str);
+
+	COMBOBOXEXITEM item;
+
+	item.mask = CBEIF_TEXT;
+	item.iItem = -1;
+	item.pszText = (LPTSTR)(LPCTSTR)str;
+	m_wndAddress.InsertItem(&item);
+}
+
+void CMainFrame::OnNewAddress()
+{
+	// gets called when an item in the Address combo box is selected
+	// just navigate to the newly selected location.
+	CString str;
+
+	m_wndAddress.GetLBText(m_wndAddress.GetCurSel(), str);
+	GetDocument()->UpdateAllViews(NULL, NEW_URL, (CObject *)&str);
+}
+
+void CMainFrame::OnEditPaste() 
+{
+	m_wndAddress.Paste();
+}
+
+void CMainFrame::OnEditCopy() 
+{
+	m_wndAddress.Copy();	
+}
+
+void CMainFrame::OnEditCut() 
+{
+	m_wndAddress.Cut();	
+}
+
+
+void CMainFrame::OnDownloadList() 
+{
+	CDownloadListDlg dlg;
+	dlg.DoModal();
+}

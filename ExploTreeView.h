@@ -30,8 +30,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include <afxole.h>
-
 class CExploTreeView : public CTreeView
 {
 protected: // create from serialization only
@@ -55,6 +53,7 @@ public:
 	virtual void OnDragLeave();
 	virtual BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 	virtual DROPEFFECT OnDragScroll(DWORD dwKeyState, CPoint point);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 	BOOL HandleKeyDownMsg(MSG* pMsg);
 
@@ -104,7 +103,6 @@ protected:
 	afx_msg void OnNewDir();
 	afx_msg void OnRefresh();
 	//}}AFX_MSG
-
 	DECLARE_MESSAGE_MAP()
 
 private:
@@ -112,7 +110,7 @@ private:
 	HTREEITEM m_hItemButton;
 	CString m_sDraggedFile;
 	enum {InitialScrollWait = 400};
-	enum {ScrollRange = 30};
+	enum {ScrollRange = 15};
 	int m_nScrollWait;
 
 

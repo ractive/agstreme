@@ -47,7 +47,6 @@ public:
 
 // Operations
 public:
-	static CSatelliteView * m_pPseudoThis;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -70,19 +69,20 @@ protected:
 
 	// Generated message map functions
 protected:
+	void CleanUpList();
+	int FindSong(LPCTSTR lpszSongName);
 	//{{AFX_MSG(CSatelliteView)
 	afx_msg void OnHeaderClick(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg LRESULT OnScanComplete(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnFileStatus(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnPaint();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 	static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-
 private:
 	CMutex m_Mutex;
-	static BOOL m_bFillingList;
-	static UINT FillListThreadProc(LPVOID pInfo);
+	BOOL m_bFillingList;
+	UINT FillList();
 	void ShowNoTransfer();
 	void AddFileEntry(fileEntry * entry);
 	BOOL SortItems(int nCol, BOOL bAscending, int low, int high = -1);

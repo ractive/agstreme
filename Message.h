@@ -31,6 +31,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <afxmt.h>
+
 class CMessage  
 {
 	struct buffer {
@@ -42,6 +44,8 @@ class CMessage
 	};
 
 public:
+	void Request();
+	void Release();
 	unsigned int GetType();
 	unsigned int GetID();
 	int GetFree();
@@ -70,7 +74,7 @@ public:
 	BOOL Read(unsigned short int *pInt);
 	BOOL Read(BOOL * pB);
 private:
-
+	CMutex m_Mutex;
 	BOOL m_bSendBuffer;
 	unsigned char * m_pInitialWrite;
 	int unsigned m_nPacketSize;

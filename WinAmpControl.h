@@ -34,6 +34,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class CWinAmpControl  
 {
 public:
+	void Close();
+	BOOL IsRunning();
+	CString GetCurrentSong();
 	BOOL IsStopped();
 	BOOL IsPaused();
 	BOOL IsPlaying();

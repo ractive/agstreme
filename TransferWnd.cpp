@@ -261,6 +261,7 @@ void CTransferWnd::OnMouseMove(UINT nFlags, CPoint point)
 
 		DockWindow(&rc);
 	}
+
 	CWnd::OnMouseMove(nFlags, point);
 }
 
@@ -369,8 +370,6 @@ void CTransferWnd::DockWindow(CRect *pRect)
 
 	if (!DockPoint(pRect, tl)) {
 		DockPoint(pRect, br);
-	}
-	else {
 	}
 
 	DockToDesktop(pRect);

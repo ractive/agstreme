@@ -1,6 +1,6 @@
 =========================================================
                                 
-                                    JAGS
+                                    AGStreme
 
 =========================================================
 
@@ -11,7 +11,7 @@ as published by the Free Software Foundation (see below).
 JAGSCopyright (C) 2000 by Jean-Pierre Bergamin
 JAGScomes with ABSOLUTELY NO WARRANTY
 
-http://www.ractive.ch/gpl/JAGS.html
+http://www.ractive.ch/gpl/AGStreme.html
 
 =========================================================
 

@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static char THIS_FILE[] = __FILE__;
 #endif
 
-enum {TIMER_ID = 3, TIMEOUT=60};
+enum {TIMER_ID = 3, TIMEOUT=90};
 
 /////////////////////////////////////////////////////////////////////////////
 // CTryAccountCreationDlg dialog
@@ -56,6 +56,7 @@ void CTryAccountCreationDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CTryAccountCreationDlg)
+	DDX_Control(pDX, IDC_CREATEACCOUNT, m_CreateURL);
 	DDX_Control(pDX, IDC_ANIMATION, m_Animation);
 	DDX_Text(pDX, IDC_STATUS, m_sStatus);
 	//}}AFX_DATA_MAP
@@ -79,6 +80,8 @@ BOOL CTryAccountCreationDlg::OnInitDialog()
 	m_Animation.Open(MAKEINTRESOURCE(IDR_ADDRESSCOPY));
 
 	SetTimer(TIMER_ID, 1000, NULL);
+
+	m_CreateURL.SetURL("http://www.audiogalaxy.com/user/index.php?createAccountPage=1");
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -122,42 +125,43 @@ LRESULT CTryAccountCreationDlg::OnAccountStatus(WPARAM wParam, LPARAM lParam)
 	}
 
 	// Show why the account could not be created.
-	char failureMessage[512];
+	CString sMsg;
 
 	if (m_bLogin) {
 		if (wParam & ATS_SUCCESS) {
 			EndDialog(wParam);
 			return 1;
 		}
-		sprintf( failureMessage, "Unable to login for the following reason(s):\r\n\r\n" );
+		sMsg = "Unable to login for the following reason(s):\r\n\r\n";
 		if( wParam & ATS_ERROR ) {
-			sprintf( failureMessage, "%s - Undefined error while trying to login. Please try again  later", failureMessage );		
+			sMsg += "- Undefined error while trying to login. Please try again  later";		
 		}
 		else if( wParam & ATS_OLD_VERSION ) {
-			sprintf( failureMessage, "%s - This version of the software is too old.  Please upgrade.\n", failureMessage );
+			sMsg += "- This version of the software is too old.  Please upgrade.\n";
 		}
 		else if( wParam & ATS_BAD_ACCOUNT ) {
-			sprintf( failureMessage, "%s - Could not find an account with the username and password you supplied.  You may either try to login again or create a new account.", failureMessage );
+			sMsg += "- Could not find an account with the username and password you supplied.  You may either try to login again or create a new account.";
 		} 
 	}
 	else {
 
 		if( wParam & ACS_ERROR ) {
-			sprintf( failureMessage, "Unable to create your account for the following reason(s):\r\n\r\n" );
+			sMsg = "Unable to create your account for the following reason(s):\r\n\r\n";
 			if( wParam & ACS_OLD_VERSION ) {
-				sprintf( failureMessage, "%s - This version of the software is too old.  Please upgrade.\n", failureMessage );
+				sMsg += "%s - This version of the software is too old.  Please upgrade.\n";
 			}
 
 			if( wParam & ACS_DUPE_USERNAME ) {
-				sprintf( failureMessage, "%s - That username is already taken.  Please try a different one.\n", failureMessage );
+				sMsg += "%s - That username is already taken.  Please try a different one.\n";
 			}
 
 			if( wParam & ACS_DUPE_EMAIL ) {
-				sprintf( failureMessage, "%s - That email address is already taken.  Please try a different one.\n", failureMessage );
+				sMsg += "%s - That email address is already taken.  Please try a different one.\n";
 			}
 		}
 	}
-	MessageBox(failureMessage, "Error", MB_OK | MB_ICONERROR );
+
+	MessageBox(sMsg, "Error", MB_OK | MB_ICONERROR );
 
 	// Close the dialog and return the error code
 	EndDialog(wParam);

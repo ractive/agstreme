@@ -74,7 +74,6 @@ void CMP3InfoView::Dump(CDumpContext& dc) const
 
 BOOL CMP3InfoView::PreCreateWindow(CREATESTRUCT& cs) 
 {
-	// TODO: Add your specialized code here and/or call the base class
 	cs.style |= TCS_HOTTRACK | TCS_BOTTOM;
 	return CTabView::PreCreateWindow(cs);
 }
@@ -89,7 +88,3 @@ int CMP3InfoView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-void CMP3InfoView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint) 
-{
-	
-}

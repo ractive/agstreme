@@ -24,6 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define WM_STARTUP			(WM_USER +  2)
 #define WM_ACCOUNTSTATUS	(WM_USER +  3)
 #define WM_FILECHANGE		(WM_USER +  4)
+#define WM_QUEUEEMTPY		(WM_USER +  5)
+#define WM_PROGRESS			(WM_USER +  6)
+#define WM_THREADQUIT		(WM_USER +  7)
+#define WM_SHOWUSERDLG		(WM_USER +  8)
 
 #define WM_SCANCOMPLETE		(WM_USER + 10)
 #define WM_SCANSTART		(WM_USER + 11)
@@ -35,6 +39,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define WM_MASTERSTATE		(WM_USER + 17)
 #define WM_SERVERSTATE		(WM_USER + 18)
 #define WM_REJECTED			(WM_USER + 20)
+#define WM_BROWSERPROGSET	(WM_USER + 21)
+#define WM_RECV				(WM_USER + 22)
+#define WM_SEND				(WM_USER + 23)
+#define WM_SONGQUEUED		(WM_USER + 24)
+#define WM_SONGIDQUEUED		(WM_USER + 25)
 
 // possible states for the account creation status:
 // (Don't change these, by the way -- these are the values the server is going to send)

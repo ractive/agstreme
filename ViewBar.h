@@ -31,8 +31,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "scbarcf.h"
-
 #define baseClass CSizingControlBarCF
 
 class CViewBar : public baseClass
@@ -46,17 +44,14 @@ public:
 	BOOL CreateView(CRuntimeClass *pViewClass, CCreateContext *pContext, UINT nID);
 
 private:
-	CTreeCtrl m_wndChild;
-	CFont	m_font;
 	CView *m_pView;
 
 	// Generated message map functions
 protected:
-
 	BOOL CaptionHitTest(CPoint point);
 	//{{AFX_MSG(CMyBar)
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint point);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "JAGSDoc.h"
 #include "ShareTreeView.h"
 #include "AGSocket.h"
+#include "WinampControl.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -45,6 +46,8 @@ IMPLEMENT_DYNCREATE(CShareTreeView, CExploTreeView)
 CShareTreeView::CShareTreeView()
 {
 	m_bInitialized = FALSE;
+
+	m_bIgnoreChanges = FALSE;
 }
 
 CShareTreeView::~CShareTreeView()
@@ -55,12 +58,14 @@ CShareTreeView::~CShareTreeView()
 BEGIN_MESSAGE_MAP(CShareTreeView, CExploTreeView)
 	//{{AFX_MSG_MAP(CShareTreeView)
 	ON_NOTIFY_REFLECT(TVN_SELCHANGED, OnSelchanged)
-	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, OnEndLabelEdit)
 	ON_UPDATE_COMMAND_UI(ID_SETASDOWNLOADDIR, OnUpdateSetDownloadDir)
 	ON_UPDATE_COMMAND_UI(ID_REMOVESHARE, OnUpdateRemoveShare)
 	ON_COMMAND(ID_REMOVESHARE, OnRemoveShare)
 	ON_COMMAND(ID_SETASDOWNLOADDIR, OnSetasDownloaddir)
 	ON_WM_TIMER()
+	ON_COMMAND(ID_ADDTOFAVORITES, OnAddToFavorites)
+	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, OnEndLabelEdit)
+	ON_WM_SHOWWINDOW()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -130,13 +135,11 @@ void CShareTreeView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		return;
 	}
 
+	m_bIgnoreChanges = TRUE;
 	if (lHint == NEW_SHARE) {
 		CJAGSDoc * pDoc = GetDocument();
 		
 		HTREEITEM hTI = AddRootItem(pDoc->m_aShares.GetTail());
-
-		/*CTreeCtrl &TreeCtrl = GetTreeCtrl();
-		TreeCtrl.SelectItem(hTI);*/
 	}
 
 	if (lHint == NEW_DIR) {
@@ -144,20 +147,32 @@ void CShareTreeView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		CString sPath = pDoc->GetPathName();
 		OpenFolder(sPath);
 	}
+
+	m_bIgnoreChanges = FALSE;
 }
 
 void CShareTreeView::OnSelchanged(NMHDR* pNMHDR, LRESULT* pResult) 
 {
+	if (m_bIgnoreChanges) {
+		return;
+	}
+
 	NMTREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
+
+	HTREEITEM hTI = pNMTreeView->itemNew.hItem;
+	if (hTI == NULL) {
+		*pResult = 1;
+		return;
+	}
 
 	CTreeCtrl &TreeCtrl = GetTreeCtrl();
 
-	HTREEITEM hTI = pNMTreeView->itemNew.hItem;
 	CString sPath = GetPath(hTI);
 
 	CJAGSDoc * pDoc = GetDocument();
 
 	pDoc->SetPathName(sPath, FALSE);
+	pDoc->SetTitle("");
 
 	// We start a timer
 	// When it runs out, the other views (esp the MP3 files view)
@@ -322,8 +337,6 @@ void CShareTreeView::OnTimer(UINT nIDEvent)
 
 void CShareTreeView::OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult) 
 {
-	CExploTreeView::OnEndLabelEdit(pNMHDR, pResult);
-
 	if (*pResult) {
 		CTreeCtrl &treeCtrl = GetTreeCtrl();
 		if (treeCtrl.GetParentItem(treeCtrl.GetSelectedItem()) == NULL) {
@@ -332,5 +345,46 @@ void CShareTreeView::OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
 			}
 		}
 
+	}
+
+	CExploTreeView::OnEndLabelEdit(pNMHDR, pResult);
+}
+
+
+void CShareTreeView::OnAddToFavorites() 
+{
+	HTREEITEM hTI = GetTreeCtrl().GetSelectedItem();
+	if (hTI == NULL) {
+		return;
+	}
+
+	AfxGetApp()->AddToRecentFileList(GetDocument()->GetPathName());
+
+	GetDocument()->UpdateAllViews(this, NEW_FAVORITE);
+}
+
+void CShareTreeView::OnShowWindow(BOOL bShow, UINT nStatus) 
+{
+	CExploTreeView::OnShowWindow(bShow, nStatus);
+	
+	if (bShow) {
+		// If the tree is shown (after clicking on the tab)
+		// we reread the content
+
+		CTreeCtrl &TreeCtrl = GetTreeCtrl();
+
+		HTREEITEM hTI = TreeCtrl.GetSelectedItem();
+		if (hTI == NULL) {
+			return;
+		}
+
+		CString sPath = GetPath(hTI);
+
+		CJAGSDoc * pDoc = GetDocument();
+
+		pDoc->SetPathName(sPath, FALSE);
+		pDoc->SetTitle("");
+
+		GetDocument()->UpdateAllViews(this, NEW_DIR);
 	}
 }

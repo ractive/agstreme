@@ -27,16 +27,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #if !defined(AFX_MAINFRM_H__F599A6A6_8D0B_4199_BE92_FBE3F590897E__INCLUDED_)
 #define AFX_MAINFRM_H__F599A6A6_8D0B_4199_BE92_FBE3F590897E__INCLUDED_
 
+#include "ScanDlg.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "TrayIcon.h"
-#include "AGSocket.h"
-#include "DockViewWnd.h"
-#include "Regbinding.h"
 
+#import	"CDDBControl.dll" no_namespace, named_guids
+
+class CJAGSDoc;
 class CTransferWnd;
+class CScanDlg;
 
 class CMainFrame : public CFrameWnd
 {
@@ -64,6 +65,8 @@ public:
 
 // Implementation
 public:
+	void SetStatusBarText(int nIndex, LPCTSTR lpszText);
+	ICDDBControl * GetCDDBControl();
 	afx_msg LRESULT OnRejected(WPARAM wParam, LPARAM lParam);
 	virtual ~CMainFrame();
 #ifdef _DEBUG
@@ -72,7 +75,10 @@ public:
 #endif
 
 protected:  // control bar embedded members
+
 	CStatusBar  m_wndStatusBar;
+	CStatusProgress m_statusProgress;
+
 	CToolBar    m_wndToolBar;
 	CToolBar    m_wndBrowserBar;
 	CToolBar	m_wndWinAmpBar;
@@ -80,11 +86,16 @@ protected:  // control bar embedded members
 	CReBar      m_wndReBar;
 	CReBar      m_viewReBar;
 
-	//CDialogBar  m_wndDlgBar;
+//	CDialogBar  m_wndDlgBar;
 	//CTransferRateBar m_wndTransferBar;
 
 // Generated message map functions
 protected:
+	CComboBoxEx m_wndAddress;
+	CScanDlg *m_pScanDlg;
+	unsigned short m_uTransState;
+	void UpdateTransferIcon();
+	CJAGSDoc * GetDocument();
 
 	BOOL CheckForShares();
 	BOOL TryToLogin();
@@ -95,11 +106,6 @@ protected:
 	void ToggleBar(UINT nBar);
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg LRESULT OnTrayNotification(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnStartup(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnFileStatus(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnMSServerStatus(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnServerStatus(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDestroy();
@@ -130,9 +136,41 @@ protected:
 	afx_msg void OnUpdateWinampPlay(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateWinampStop(CCmdUI* pCmdUI);
 	afx_msg void OnHelp();
+	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnShowFavorites();
+	afx_msg void OnWinampAddToPL();
+	afx_msg void OnUpdateShowFavorites(CCmdUI* pCmdUI);
+	afx_msg void OnCddbSearch();
+	afx_msg void OnMp3Wizard();
+	afx_msg void OnSearch();
+	afx_msg void OnDelDB();
+	afx_msg void OnPlaylistGen();
+	afx_msg void OnResetConnection();
+	afx_msg void OnEditPaste();
+	afx_msg void OnEditCopy();
+	afx_msg void OnEditCut();
+	afx_msg void OnWinampStart();
+	afx_msg void OnUpdateStartwinamp(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateWinampaddtopl(CCmdUI* pCmdUI);
+	afx_msg void OnUpdatePlaylistgen(CCmdUI* pCmdUI);
+	afx_msg void OnDownloadList();
 	//}}AFX_MSG
+	afx_msg LRESULT OnEmptyQueue(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnTrayNotification(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnStartup(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnFileStatus(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMSServerStatus(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnServerStatus(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnBrowserProgSet(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSend(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnRecv(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnScanComplete(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnNewAddressEnter();
+	afx_msg void OnNewAddress();
+
 	DECLARE_MESSAGE_MAP()
 private:
+	BOOL CreateCDDBInterface();
 	HICON m_hStatusBarIconConnected;
 	HICON m_hStatusBarIconNotConnected;
 
@@ -150,9 +188,16 @@ private:
 
 	CImageList * m_pImageListSmall;
 	CImageList * m_pImageListLarge;
-	
+	HICON m_hNoTransfer;
+	HICON m_hSendTransfer;
+	HICON m_hRecvTransfer;
+	HICON m_hBothTransfer;
+
 	BOOL VerifyBarState(LPCTSTR lpszProfileName);
 
+	ICDDBControl * m_pControl;
+
+	CWizardHolder m_WizardHolder;
 };
 
 /////////////////////////////////////////////////////////////////////////////

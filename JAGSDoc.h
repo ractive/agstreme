@@ -61,7 +61,11 @@ typedef enum {
 	NEW_DOWNLOADDIR = 15, 
 	REMOVE_SHARE	= 16,
 	NEW_URL			= 17,
-	NEW_DIRCREATED	= 18
+	NEW_DIRCREATED	= 18,
+	NEW_SEARCHRES	= 19,
+	NEW_FAVORITE	= 20,
+	NEW_DBSEL		= 21,
+	DB_CHANGED		= 22
 } HINT;
 
 
@@ -71,6 +75,12 @@ typedef enum {
 
 class CJAGSDoc : public CDocument
 {
+	struct searchRes {
+		TCHAR sArtist[256];
+		TCHAR sSong[256];
+		UINT nSongID;
+		int nAvailability;
+	};
 
 //basic UI settings -- this is written out to a file
 struct Settings {
@@ -126,6 +136,7 @@ public:
 	public:
 	virtual BOOL OnNewDocument();
 	virtual void Serialize(CArchive& ar);
+	virtual void SetTitle(LPCTSTR lpszTitle);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -137,6 +148,7 @@ public:
 #endif
 
 	CString m_sSearch;
+	CPtrList m_SearchRes;
 protected:
 
 // Generated message map functions
@@ -154,7 +166,20 @@ private:
 	UINT m_nTransferRecvRate;
 	UINT m_nTransferSendRate;
 
+
 public:
+	BOOL m_bDBUpdateID3;
+	CString m_sFilenameFormat;
+
+	void ResetSearchRes();
+	void GetNextSearchRes(POSITION &pos, CString &sArtist, CString &sSong, UINT &nSongID, int &nAvailability);
+	void AddSong(CString sArtist, CString sSongName, UINT nSongID, int nAvailability);
+	int m_uIdleMinutes;
+	BOOL m_bHangupIdle;
+	CTime m_HangupTime;
+	BOOL m_bHangupAt;
+	BOOL m_bDownloadQueueOnly;
+
 	BOOL SaveAccountInfo();
 	CString GetSongName();
 	CString GetArtist();

@@ -26,12 +26,25 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "stdafx.h"
 #include "JAGS.h"
 
-#include "MainFrm.h"
+
+#include "TrayIcon.h"
+#include "AGSocket.h"
+#include "DockViewWnd.h"
+#include "Regbinding.h"
+#include "WizardHolder.h"
+
+#include "StatusControl.h"
+#include "StatusProgress.h"
+
+
 #include "JAGSDoc.h"
-#include "JAGSView.h"
+#include "MainFrm.h"
+#include "MainView.h"
 #include "ExploTreeView.h"
 #include "HyperLink.h"
+#include "WinampControl.h"
 #include <HtmlHelp.h>
+#include "Splash.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,18 +52,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
 /////////////////////////////////////////////////////////////////////////////
 // CJAGSApp
+BOOL CJAGSApp::m_bClassRegistered = FALSE;
 
 BEGIN_MESSAGE_MAP(CJAGSApp, CWinApp)
 	//{{AFX_MSG_MAP(CJAGSApp)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
-		//    DO NOT EDIT what you see in these blocks of generated code!
 	//}}AFX_MSG_MAP
 	// Standard file based document commands
 	ON_COMMAND(ID_FILE_NEW, CWinApp::OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, CWinApp::OnFileOpen)
+	ON_COMMAND_RANGE(ID_FILE_MRU_FILE1, ID_FILE_MRU_FILE1 + _AFX_MRU_MAX_COUNT, OnMRUDir)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -67,11 +81,65 @@ CJAGSApp::CJAGSApp()
 
 CJAGSApp theApp;
 
+// Add a static BOOL that indicates whether the class was
+// registered so that we can unregister it in ExitInstance
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CJAGSApp initialization
 
 BOOL CJAGSApp::InitInstance()
 {
+	// CG: The following block was added by the Splash Screen component.
+
+	{
+
+		CCommandLineInfo cmdInfo;
+
+		ParseCommandLine(cmdInfo);
+
+
+
+		CSplashWnd::EnableSplashScreen(cmdInfo.m_bShowSplash);
+
+	}
+	// This code if form MSDN article: Q141752 
+
+
+	// If a previous instance of the application is already running,
+	// then activate it and return FALSE from InitInstance to
+	// end the execution of this instance.
+
+	if(!FirstInstance())
+		return FALSE;
+
+	// Register our unique class name that we wish to use
+	WNDCLASS wndcls;
+
+	memset(&wndcls, 0, sizeof(WNDCLASS));   // start with NULL
+										  // defaults
+
+	wndcls.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
+	wndcls.lpfnWndProc = ::DefWindowProc;
+	wndcls.hInstance = AfxGetInstanceHandle();
+	wndcls.hIcon = LoadIcon(IDR_MAINFRAME); // or load a different
+										  // icon
+	wndcls.hCursor = LoadCursor( IDC_ARROW );
+	wndcls.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
+	wndcls.lpszMenuName = NULL;
+
+	// Specify our own class name for using FindWindow later
+	wndcls.lpszClassName = _T("JAGSClass");
+
+	// Register new class and exit if it fails
+	if(!AfxRegisterClass(&wndcls))	{
+		TRACE("Class Registration Failed\n");
+		return FALSE;
+	}
+
+	m_bClassRegistered = TRUE;
+
+
 	if (!AfxSocketInit())
 	{
 		AfxMessageBox(IDP_SOCKETS_INIT_FAILED);
@@ -94,7 +162,7 @@ BOOL CJAGSApp::InitInstance()
 	// such as the name of your company or organization.
 	SetRegistryKey(_T("@ractive Software"));
 
-	LoadStdProfileSettings();  // Load standard INI file options (including MRU)
+	LoadStdProfileSettings(_AFX_MRU_MAX_COUNT);  // Load standard INI file options (including MRU)
 
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views.
@@ -104,7 +172,7 @@ BOOL CJAGSApp::InitInstance()
 		IDR_MAINFRAME,
 		RUNTIME_CLASS(CJAGSDoc),
 		RUNTIME_CLASS(CMainFrame),       // main SDI frame window
-		RUNTIME_CLASS(CJAGSView));
+		RUNTIME_CLASS(CMainView));
 	AddDocTemplate(pDocTemplate);
 
 	// Parse command line for standard shell commands, DDE, file open
@@ -185,7 +253,7 @@ void CJAGSApp::OnAppAbout()
 void CJAGSApp::WinHelp(DWORD dwData, UINT nCmd) 
 {
 	if (nCmd == HELP_CONTEXT) {
-			HtmlHelp(m_pMainWnd->m_hWnd,"HPGComm.chm",HH_DISPLAY_TOPIC,0);
+		HtmlHelp(m_pMainWnd->m_hWnd,"HPGComm.chm",HH_DISPLAY_TOPIC,0);
 	}
 	
 	CWinApp::WinHelp(dwData, nCmd);
@@ -193,13 +261,105 @@ void CJAGSApp::WinHelp(DWORD dwData, UINT nCmd)
 
 BOOL CJAGSApp::PreTranslateMessage(MSG* pMsg) 
 {
-	if (pMsg->message == WM_KEYDOWN)
-	{
-		CView* view = ((CFrameWnd *) AfxGetMainWnd())->GetActiveView();
-		if (((CExploTreeView *) view)->HandleKeyDownMsg(pMsg)) {
-			return TRUE;
+	// CG: The following line was added by the Splash Screen component.
+
+	CSplashWnd::PreTranslateAppMessage(pMsg);
+	if (pMsg->message == WM_LBUTTONDOWN) {
+		static int x = 0;
+		x++;
+		if (x % 2) {
+			int s = 0;
 		}
 	}
-	
 	return CWinApp::PreTranslateMessage(pMsg);
 }
+
+BOOL CJAGSApp::FirstInstance()
+{
+	// This code if form MSDN article: Q141752 
+
+	CWnd *pWndPrev, *pWndChild;
+
+	// Determine if another window with our class name exists...
+	if (pWndPrev = CWnd::FindWindow(_T("JAGSClass"),NULL)) {
+		// if so, does it have any popups?
+		pWndChild = pWndPrev->GetLastActivePopup();
+
+		// If iconic, restore the main window
+		if (pWndPrev->IsIconic())
+		pWndPrev->ShowWindow(SW_RESTORE);
+
+		// Bring the main window or its popup to
+		// the foreground
+		pWndChild->SetForegroundWindow();
+
+		// and we are done activating the previous one.
+		return FALSE;
+	}
+	// First instance. Proceed as normal.
+	else
+		return TRUE;
+      
+}
+
+int CJAGSApp::ExitInstance() 
+{
+	// This code if form MSDN article: Q141752 
+
+	if(m_bClassRegistered)
+		::UnregisterClass(_T("JAGSClass"),AfxGetInstanceHandle());
+      	
+	return CWinApp::ExitInstance();
+}
+
+BOOL CJAGSApp::SetMRUDirName(UINT n)
+{
+	if (n > (UINT)m_pRecentFileList->GetSize())
+		return FALSE;
+
+	CJAGSDoc * pDoc = (CJAGSDoc *)((CFrameWnd *)m_pMainWnd)->GetActiveDocument();
+	CFileFind finder;
+	if (!finder.FindFile(m_pRecentFileList->m_arrNames[n])) {
+		return FALSE;
+	}
+	finder.FindNextFile();
+
+	if (finder.IsDirectory()) {
+		pDoc->SetPathName(finder.GetFilePath(), FALSE);
+		pDoc->SetTitle("");
+		pDoc->UpdateAllViews(NULL, NEW_DIR);
+	}
+	else {
+		CWinAmpControl * pWA = CWinAmpControl::GetInstance();
+		pWA->PlayFile(finder.GetFilePath());
+		pWA->PlayLastSong();
+	}
+	return TRUE;
+}
+
+BOOL CJAGSApp::GetMRUDirName(int n, CString &sName)
+{
+	if (n > m_pRecentFileList->GetSize())
+		return FALSE;
+	sName = m_pRecentFileList->m_arrNames[n];
+	return !(sName.IsEmpty());
+}
+
+void CJAGSApp::RemoveMRU(int nIndex)
+{
+	m_pRecentFileList->Remove(nIndex);
+}
+
+
+void CJAGSApp::OnMRUDir(UINT nID)
+{
+	CWaitCursor wait;
+
+	SetMRUDirName(nID - ID_FILE_MRU_FILE1);
+}
+
+void CJAGSApp::SetMRUTo(UINT n, LPCTSTR lpszPath)
+{
+	m_pRecentFileList->m_arrNames[n] = lpszPath;
+}
+

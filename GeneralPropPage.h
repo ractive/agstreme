@@ -48,8 +48,6 @@ public:
 	BOOL	m_bAddToPlaylist;
 	BOOL	m_bStartWinamp;
 	CString	m_sWinAmpExe;
-	BOOL	m_bAutoOrganize;
-	int		m_nSameArtist;
 	BOOL	m_bKeepLog;
 	//}}AFX_DATA
 

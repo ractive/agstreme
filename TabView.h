@@ -29,10 +29,12 @@
 //   
 // I decided to make my own class.
 // 
-// It supports full doc/view support!!!  
+// It supports full doc/view support and dynamic creation and deletion of
+// views!
+//  
 // 
 // This class contains some fragments of WINSPLIT.CPP (implementations of
-// CSplitterWnd), the CListView implementation and Chris Maunder's
+// CSplitterWnd), the CTreeView implementation of MFC and Chris Maunder's
 // CTabCtrlEx class (http://www.codeguru.com/controls/ownerdraw_tab.shtml)
 //
 // Thanks for the valuable input :-)
@@ -72,6 +74,7 @@
 //			if (pWnd != NULL && pWnd->IsKindOf(pContext->m_pNewViewClass))
 //			{
 //				CTestTabView* pView = (CTestTabView*)pWnd;
+//				m_pTabView = pView;
 //
 //				// Here you can add your dialogs and views and whatever you like....
 //				if (pView->Insert(0, "Browser", RUNTIME_CLASS(CTestHtmlView), pContext) == -1) {
@@ -88,20 +91,9 @@
 //			return TRUE;
 //
 // - I recommend:
-//          Add views! Other windows are quite useless (or not?)
-//          Dialogs are also not very useful since they don't provide native support for
-//          the doc/view architecture. Use a CFormView instead. It's almost the same as
-//          a CDialog AND you get scrolling for free :-)
-//
-//          If you want to use dialogs anyway, you have to declare them as dyncreate.
-//   
-//          To do this add   
-//              DECLARE_DYNCREATE(CMyDialog)
-//          below your class declaration and
-//   
-//              IMPLEMENT_DYNCREATE(CMyDialog, CDialog);
-//   
-//          At the top your your class implementation (your .cpp file)
+//	 Keep a pointer to your tabview in the main frame (as above m_pTabView = pView)
+//   CTabView * m_pTabView;
+//   Otherwise it's hard to get the tabview
 //   
 //   
 // - If you have problems, questions, additions etc....
@@ -165,41 +157,59 @@ protected:
 
 // Operations
 public:
-	int Insert(int nPage, LPCTSTR lpszItemText, CRuntimeClass * pNewDlg, UINT nDlgTemplate);
-	int Insert(int nPage, LPCTSTR lpszItemText, CRuntimeClass * pNewDlg, LPCTSTR lpszDialogTemplate);
+	void HidePage(int nPage);
+	void RemoveView(int nItem);		// Removes a view
+	void RemoveView(CView * pView); // Removes a view
+	UINT GetPageID(int nPage);		// Get the ID of the page
+	void ActivateView(int nItem);	// Activates a view (tab)
+	CView * GetView(int nView);		// Return the correcponsing view
+
+	// Insert a view at a given page
 	int Insert(int nPage, LPCTSTR lpszItemText, CRuntimeClass * pNewWnd, CCreateContext * pContext = NULL);
+	// Insert a view as the last page
+	int Insert(LPCTSTR lpszItemText, CRuntimeClass *pNewWnd, CCreateContext *pContext = NULL);
+
+	// Set the height of the tab font (9 is a good value)
 	void SetFontHeight(int nHeight);
 
+	// Shows a page
 
-	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
-	virtual BOOL OnChildNotify(UINT, WPARAM, LPARAM, LRESULT*);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CTabView)
 	public:
 	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+	virtual BOOL OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult);
+	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
 	protected:
 	virtual void PreSubclassWindow();
-
+	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
 	CFont    m_Font;
-	CMap<int, int, UINT, UINT> m_aPageIDs;
 	CMapWordToPtr m_aPages;
+	CMap<int, int, UINT, UINT> m_aPageIDs;
 
 	UINT m_uLastID;
 
 	// Generated message map functions
 protected:
-	void RecalcLayout();
-	UINT GetPageID(int nPage);
+//	CWnd * m_pDummyWnd;
+	CFrameWnd * m_pMainFrame;
+	void RecalcLayout(CWnd *pCurWnd = NULL);	// Fits the view into the client area of the tab
+	UINT GetNewPageID(int nPage);				// Gets a new available ID for a page
+
+
 	//{{AFX_MSG(CTabView)
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg void OnSelChange (NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnSelChange(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnSelChanging(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -49,7 +49,6 @@ public:
 	CString	m_sBitrate;
 	CString	m_sFileName;
 	CString	m_sFileSize;
-	CString	m_sFrames;
 	CString	m_sFrequency;
 	CString	m_sLength;
 	CString	m_sMode;

@@ -65,6 +65,7 @@ CAGSocket::CAGSocket(): recv(FALSE, 64 * 1024), send(TRUE, 16 * 1024)
 {
 	m_phNotificationWnd = NULL;
 	m_bConnected = FALSE;
+	m_hFileStatusWnd = NULL;
 }
 
 CAGSocket::~CAGSocket()
@@ -125,9 +126,7 @@ void CAGSocket::OnReceive(int nErrorCode)
 		int x = 2;
 	}
 		
-	//TRACE("Free: %d\r\n", recv.GetFree());
 	recv.Restructure();
-	//TRACE("Free: %d\r\n", recv.GetFree());
 
 	int n = Receive(recv.GetBuffer(), recv.GetFree());
 
@@ -136,6 +135,8 @@ void CAGSocket::OnReceive(int nErrorCode)
 	}
 
 	PrepareRecvData();
+	
+	Notify(WM_RECV, 0, 0);
 
 	CAsyncSocket::OnReceive(nErrorCode);
 
@@ -154,18 +155,17 @@ void CAGSocket::OnSend(int nErrorCode)
 		int n;
 
 		send.Restructure();
-		/*assert( b->rPos >= 0 );
-		assert( b->wPos >= 0 );
-	//	fprintf( logHandle,"(SEND)BufferRPos: %i   BufferWPos %i\n", b->rPos, b->wPos);
-		assert( (b->wPos - b->rPos) != 0 );*/
 
 		n = Send(send.GetBuffer(), send.GetLength());
+
 		if (n != SOCKET_ERROR) {
 			send.AdjustBuffer(n);
 		}
 
+		Notify(WM_SEND, 0, 0);
 	}
 	
+
 	CAsyncSocket::OnSend(nErrorCode);
 }
 
@@ -249,7 +249,7 @@ BOOL CAGSocket::SendLogin()
 	AsyncSelect(FD_READ | FD_CLOSE | FD_WRITE);
 
 	pDoc->UpdateAllViews(NULL, CONNECTED);
-		
+	
 	return TRUE;
 }
 
@@ -349,11 +349,11 @@ void CAGSocket::PrepareRecvData()
 	CJAGSDoc * pDoc = GetDocument();
 
 	while (recv.CheckCompleteMsg() > 0) {
+		recv.Request();
 		unsigned int ID = recv.GetID();
-		//TRACE("ID: %d\r\n", ID);
 
 		unsigned int type = recv.GetType();
-		//TRACE("Received type: %d\r\n", type);
+
 		switch (type) {
 			case FILE_TRANS_STATUS: {
 				unsigned char filename[MAX_PATH];
@@ -386,7 +386,7 @@ void CAGSocket::PrepareRecvData()
 				unsigned int nNewFiles = 0;
 				recv.Read(&nScannedFiles);
 				recv.Read(&nNewFiles);
-				//Notify(WM_SCANCOMPLETE, nScannedFiles, nNewFiles);
+				Notify(WM_SCANCOMPLETE, nScannedFiles, nNewFiles);
 				break;
 			}
 			case FILE_TRANS_COMPLETE: {
@@ -402,6 +402,9 @@ void CAGSocket::PrepareRecvData()
 				CString s = filename;
 				if (!bSending) {
 					pDoc->UpdateAllViews(NULL, NEW_FILE, (CObject *)&s);
+					if (pDoc->m_TransferStatus.GetDownloadCount() == 0) {
+						Notify(WM_QUEUEEMTPY, pDoc->m_TransferStatus.GetDownloadCount(), pDoc->m_TransferStatus.GetUploadCount());
+					}
 				}
 				break;
 			}
@@ -410,17 +413,19 @@ void CAGSocket::PrepareRecvData()
 				if (!bFileInfo) {
 					break;
 				}
-				//Notify(WM_FILESTATUS, (WPARAM)&m_TransferStatus);
+				
+				pDoc->m_TransferStatus.CheckUpdatedFlag();
 				pDoc->SetTransferRate(nTotalRecvSpeed, nTotalSendSpeed);
+				if (m_hFileStatusWnd) {
+					::PostMessage(m_hFileStatusWnd, WM_FILESTATUS, 0, 0);
+				}
+				Notify(WM_FILESTATUS, pDoc->m_TransferStatus.GetDownloadCount(), pDoc->m_TransferStatus.GetUploadCount());
 				nTotalRecvSpeed = nTotalSendSpeed = 0;
-				pDoc->UpdateAllViews(NULL, NEW_FILELIST);
-				//pDoc->m_TransferStatus.RemoveAll();
 				bFileInfo = FALSE;
 				break;
 			case VERSION_INFO:
 				unsigned char sVersion[256];
 				recv.Read(sVersion);
-				//TRACE("Version: %s\r\n", sVersion);
 				break;
 			case REJECTED_BY_SERVER: {
 				unsigned int rejectionReason = 0;
@@ -479,184 +484,16 @@ void CAGSocket::PrepareRecvData()
 			case MASTER_SERVER_CONN_STATE :
 				unsigned int nState;
 				recv.Read(&nState);
-				//TRACE("Master-Server connection state: %d\r\n", nState);
 				Notify(WM_MASTERSTATE, nState);
 				break;
 			case SERVER_CONN_STATE:
 				recv.Read(&nState);
-				//TRACE("Server connection state: %d\r\n", nState);
 				Notify(WM_SERVERSTATE, nState);
 				break;
 		}
+
+		recv.Release();
 	}
-/*void processRecvBuffer() {
-	int ID = 0;
-	int type = 0;
-	int numFilesScanned = 0;
-	int numNewFiles = 0;
-	char curFileName[255]; 
-	float percentDone = 0;
-	int filePos = 0;
-	int fileSize = 0;
-	int rate = 0;
-	unsigned char dataDirection = 0;
-	int i = 0;
-
-	char versionInfo[ 20 ];
-	char titleBar[ MAX_TITLE_BAR ];
-	int rejectionReason = 0;
-
-	char messageBuf[ MAX_SCANNING_MESSAGE_BUF_LEN ];
-
-	int status = 0;
-
-	while (checkCompleteMsg( &recvBuffer ) > 0 )
-	{
-		ID = readIBuffer( &recvBuffer );
-		type = readWBuffer( &recvBuffer );
-		switch( type) {
-		case FILE_TRANS_STATUS:
-			readSBuffer( &recvBuffer, curFileName ); 	
-			filePos = readIBuffer( &recvBuffer );
-			fileSize = readIBuffer( &recvBuffer );
-			rate = readIBuffer( &recvBuffer );
-			dataDirection = readBBuffer( &recvBuffer );
-
-			assert( dataDirection <= 2 );
-
-			if( statusHwnd != 0 ) {
-
-				if( transCounter >= MAX_NUM_VIS_TRANS ) {
-					continue;
-				}
-
-				if( fileSize == 0 ) {
-					percentDone = 0;
-				} else {
-					percentDone = ( ( (float) filePos ) * 100) / fileSize;
-				}
-
-				// save the string in the array
-				_snprintf( curTrans[ transCounter ], MAX_TRANS_DESC_LEN, "%s %s (%i%%, %i/%i, %i bytes/sec )",
-						transferTags[ dataDirection ], curFileName, (int)percentDone, filePos, fileSize, rate );
-
-				transCounter++;
-			}
-			break;
-
-		case FILE_SCAN_COMPLETE:
-			numFilesScanned = readIBuffer( &recvBuffer );
-			numNewFiles = readIBuffer( &recvBuffer );
-		
-			_snprintf( messageBuf, 
-				MAX_SCANNING_MESSAGE_BUF_LEN, 
-				"File scan complete: %i total files, %i new files.", numFilesScanned, numNewFiles );
-
-			if( statusHwnd != 0 ) {
-				SendDlgItemMessage( statusHwnd, IDC_LB_TRANSACTIONS, LB_RESETCONTENT, 0, 0 );
-				SendDlgItemMessage( statusHwnd, IDC_LB_TRANSACTIONS, LB_ADDSTRING, 0, (LPARAM) messageBuf );
-			}
-
-			fileScanComplete = 1;
-			break;
-
-		case FILE_TRANS_COMPLETE:
-
-			readSBuffer( &recvBuffer, curFileName ); 	
-			fileSize = readIBuffer( &recvBuffer );
-			rate = readIBuffer( &recvBuffer );
-			dataDirection = readBBuffer( &recvBuffer );
-
-			if( dataDirection == SEND ) {
-				numFilesSent++;
-				numKBSent += ( fileSize / 1024 );
-			} else { 
-				numFilesRecv++;
-				numKBRecv += ( fileSize / 1024 );
-			}
-
-			refreshTransferSums( numFilesSent, numFilesRecv, numKBSent, numKBRecv );
-
-			break;
-
-		case END_OF_TRANS_STATUS:
-			if( statusHwnd != 0 ) {
-				// disable redrawing 
-				SendDlgItemMessage( statusHwnd, IDC_LB_TRANSACTIONS, WM_SETREDRAW, FALSE, 0 );
-
-				//remove the current contents of the list box
-				SendDlgItemMessage( statusHwnd, IDC_LB_TRANSACTIONS, LB_RESETCONTENT, 0, 0 );
-
-				//dump the stuff into the list box
-				for( i = 0; i < transCounter; ++i ) {
-					SendDlgItemMessage( statusHwnd, IDC_LB_TRANSACTIONS, LB_ADDSTRING, 0, (LPARAM) curTrans[i] );
-				}
-				if( transCounter == 0 && fileScanComplete ) {
-					SendDlgItemMessage( statusHwnd, IDC_LB_TRANSACTIONS, LB_ADDSTRING, 0, (LPARAM) "no active transfers" );
-				}
-				//enable redrawing
-				SendDlgItemMessage( statusHwnd, IDC_LB_TRANSACTIONS, WM_SETREDRAW, TRUE, 0 );
-			}
-			transCounter = 0;
-			break;
-
-		case VERSION_INFO:
-			readSBuffer( &recvBuffer, versionInfo ); 
-			assert( versionInfo != 0 );
-			if( statusHwnd != 0 ) {
-				_snprintf( titleBar, MAX_TITLE_BAR, "Audiogalaxy Satellite - v%s, logged in as: %s", versionInfo, gCurAccountInfo.username );
-				SetWindowText( statusHwnd, titleBar );
-			}
-			break;
-		case REJECTED_BY_SERVER:
-			rejectionReason = readIBuffer( &recvBuffer );
-
-			if( rejectionReason == INVALID_ACCOUNT ) {
-				MessageBox( statusHwnd, "Could not find a matching account for the information you entered.  Please select the \"Change User\" option from the File menu and login with a valid account.", "Account Status", MB_OK | MB_ICONERROR );
-				continue;
-			} else if( rejectionReason == OLD_VERSION ) {
-				MessageBox( statusHwnd, "You are running an older version of this program.  Please download the latest version", "You need a new version", MB_OK | MB_ICONERROR );
-			} else if (rejectionReason == DUPE ) {
-				MessageBox( statusHwnd, "Another Audiogalaxy Satellite has come on with the same account information.  If you wish to run multiple Satellites please create separate accounts.", "Account Status", MB_OK | MB_ICONERROR );
-			} else {
-				MessageBox( statusHwnd, "Unable to login for an unknown reason", "Error", MB_OK | MB_ICONERROR );
-			}
-
-			SendMessage( statusHwnd, WM_DESTROY, 0, 0 );
-			break;
-
-		case CREATE_ACCOUNT_RESPONSE_TO_UI:
-			// set a global that the status window will pick up next time it's
-			// timer goes off
-			gAccountCreationStatus = readIBuffer( &recvBuffer );
-			break;
-
-		case TEST_ACCOUNT_RESPONSE_TO_UI:
-			// set a global that the status window will pick up next time it's
-			// timer goes off
-			gAccountTestStatus = readIBuffer( &recvBuffer );
-		break;
-
-		case PLAY_SONG_COMMAND_TO_UI:
-			playSong();	
-		break;
-
-		case PLAY_SONG_LIST_COMMAND_TO_UI:
-			playSongList();	
-		break;
-
-		//sets the text in the status bar
-		case MASTER_SERVER_CONN_STATE :
-			updateMasterServerState();	
-		break;
-
-		//sets the text in the status bar
-		case SERVER_CONN_STATE :
-			updateServerConnState();	
-		break;
-		}
-	}
-}*/
 }
 
 BOOL CAGSocket::Init()

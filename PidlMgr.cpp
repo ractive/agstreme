@@ -163,11 +163,13 @@ BOOL CPidlMgr::GetParentID(LPITEMIDLIST pidl)
 LPITEMIDLIST CPidlMgr::CopyFirst(const LPITEMIDLIST pidl, short n)
 {
     UINT cb = 0;
-	short c = n;
+	short c = n + 1;
 	LPITEMIDLIST cursor = pidl;
     if (pidl)
     {
-        cb += sizeof(cursor->mkid.cb);    // Null terminator
+		cb += sizeof(cursor->mkid.cb);
+
+		// Calculate the size of the new pidl
         while (cursor && c--)
         {
             cb += cursor->mkid.cb;
@@ -176,10 +178,15 @@ LPITEMIDLIST CPidlMgr::CopyFirst(const LPITEMIDLIST pidl, short n)
     }
 
     LPITEMIDLIST pidlRet = (LPITEMIDLIST)m_pMalloc->Alloc(cb);
+
     if (pidlRet) {
+		ZeroMemory(pidlRet, cb);
+		// Copy the content to the new pidl
         CopyMemory(pidlRet, pidl, cb);
 		cursor = pidlRet;
-
+		
+		// Walk to the last item and set it's size member to 0
+		// to terminate the list
 		while (cursor && n--) {
 			cursor = GetNextItem(cursor);
 		}

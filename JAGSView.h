@@ -52,6 +52,11 @@ public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual void OnNewWindow2(LPDISPATCH* ppDisp, BOOL* Cancel);
+	virtual void OnBeforeNavigate2(LPCTSTR lpszURL, DWORD nFlags, LPCTSTR lpszTargetFrameName, CByteArray& baPostedData, LPCTSTR lpszHeaders, BOOL* pbCancel);
+	virtual void OnNavigateComplete2(LPCTSTR strURL);
+	virtual void OnDocumentComplete(LPCTSTR lpszURL);
+	virtual void OnProgressChange(long nProgress, long nProgressMax);
+	virtual void OnDownloadBegin();
 	protected:
 	virtual void OnInitialUpdate(); // called first time after construct
 	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
@@ -59,6 +64,8 @@ public:
 
 // Implementation
 public:
+	CComboBoxEx * m_pAddressCombo;
+	void EnableFilteredSongs();
 	void GotoUserHome();
 	virtual ~CJAGSView();
 #ifdef _DEBUG
@@ -70,6 +77,9 @@ protected:
 
 // Generated message map functions
 protected:
+	BOOL m_bPageLoaded;
+	void RedirectProhibitedSearch();
+	void PrepareSongList();
 	//{{AFX_MSG(CJAGSView)
 	afx_msg void OnBrowserBack();
 	afx_msg void OnBrowserHome();
@@ -81,6 +91,9 @@ protected:
 	afx_msg void OnCddbsearch();
 	afx_msg void OnBrowserNotes();
 	afx_msg void OnLyrics();
+	afx_msg void OnCopy();
+	afx_msg void OnCut();
+	afx_msg void OnPaste();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

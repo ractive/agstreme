@@ -44,8 +44,6 @@ CGeneralPropPage::CGeneralPropPage() : CPropertyPage(CGeneralPropPage::IDD)
 	m_bAddToPlaylist = FALSE;
 	m_bStartWinamp = FALSE;
 	m_sWinAmpExe = _T("");
-	m_bAutoOrganize = FALSE;
-	m_nSameArtist = 0;
 	m_bKeepLog = FALSE;
 	//}}AFX_DATA_INIT
 }
@@ -62,8 +60,6 @@ void CGeneralPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_ADDTOPLAYLIST, m_bAddToPlaylist);
 	DDX_Check(pDX, IDC_STARTWINAMP, m_bStartWinamp);
 	DDX_Text(pDX, IDC_WINAMPEXE, m_sWinAmpExe);
-	DDX_Check(pDX, IDC_AUTOORGANIZE, m_bAutoOrganize);
-	DDX_Text(pDX, IDC_SAMEARTIST, m_nSameArtist);
 	DDX_Check(pDX, IDC_KEEPLOG, m_bKeepLog);
 	//}}AFX_DATA_MAP
 }

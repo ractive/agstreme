@@ -20,8 +20,13 @@
 #endif // _AFX_NO_AFXCMN_SUPPORT
 #include <afxhtml.h>			// MFC HTML view support
 #include <afxcview.h>
+#include <afxdao.h>			// MFC DAO database classes
 #include <afxsock.h>		// MFC socket extensions
+#include <afxinet.h>
+#include <afxole.h>
 
+#define _ATL_APARTMENT_THREADED
+#include <atlbase.h>
 
 #define _SCB_REPLACE_MINIFRAME
 #define _SCB_MINIFRAME_CAPTION

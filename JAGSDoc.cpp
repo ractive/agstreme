@@ -71,6 +71,11 @@ CJAGSDoc::CJAGSDoc(): rb("Settings")
 	rb.Bind(m_nSimDownloads, "Simultaneous downloads", 4);
 	rb.Bind(m_nConnectionType, "Connection type", 0);
 
+	rb.Bind(m_bHangupIdle, "Hangup idle", FALSE);
+	rb.Bind(m_uIdleMinutes, "Idle Minutes", 5);
+	rb.Bind(m_bDownloadQueueOnly, "Download idle", TRUE);
+	rb.Bind(m_bDBUpdateID3, "DB Update ID3", TRUE);
+	rb.Bind(m_sFilenameFormat, "Filename format", "<A> - <T>");
 	memset((void *)&m_Settings, 0, sizeof(m_Settings));
 	m_Settings.alwaysOnTop = FALSE;
 	m_Settings.bandwidthThrottle = 3;
@@ -82,6 +87,7 @@ CJAGSDoc::CJAGSDoc(): rb("Settings")
 
 CJAGSDoc::~CJAGSDoc()
 {
+	ResetSearchRes();
 }
 
 BOOL CJAGSDoc::OnNewDocument()
@@ -395,11 +401,17 @@ UINT CJAGSDoc::GetTransferSendRate()
 CString CJAGSDoc::GetFilePath()
 {
 	CString sFullPath = GetPathName();
+	CString sTitle = GetTitle();
+
+	if (sTitle.IsEmpty()) {
+		return sFullPath;
+	}
+	
 	if (sFullPath.Right(1) != "\\") {
 		sFullPath += "\\";
 	}
 
-	sFullPath += GetTitle();
+	sFullPath += sTitle;
 
 	return sFullPath;
 }
@@ -448,3 +460,40 @@ CString CJAGSDoc::GetSongName()
 	return sSongName;
 }
 
+
+void CJAGSDoc::AddSong(CString sArtist, CString sSongName, UINT nSongID, int nAvailability)
+{
+	searchRes *newSong = new searchRes;
+	newSong->nSongID = nSongID;
+	newSong->nAvailability = nAvailability;
+	lstrcpy(newSong->sArtist, sArtist);
+	lstrcpy(newSong->sSong, sSongName);
+
+	m_SearchRes.AddHead(newSong);
+}
+
+void CJAGSDoc::GetNextSearchRes(POSITION &pos, CString &sArtist, CString &sSong, UINT &nSongID, int &nAvailability)
+{
+	searchRes * pRes = (searchRes *)m_SearchRes.GetNext(pos);
+	sArtist = pRes->sArtist;
+	nAvailability = pRes->nAvailability;
+	sSong = pRes->sSong;
+	nSongID = pRes->nSongID;
+}
+
+void CJAGSDoc::ResetSearchRes()
+{
+	POSITION pos = m_SearchRes.GetHeadPosition();
+	while (pos) {
+		searchRes * pRes = (searchRes *)m_SearchRes.GetNext(pos);
+		delete pRes;
+	}
+
+	m_SearchRes.RemoveAll();
+}
+
+void CJAGSDoc::SetTitle(LPCTSTR lpszTitle) 
+{
+	m_strTitle = lpszTitle;
+	//CDocument::SetTitle(lpszTitle);
+}

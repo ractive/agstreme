@@ -1,0 +1,186 @@
+<html>
+<head>
+<meta name="GENERATOR" content="DevComponents.com HelpKit HTML Help Authoring Solution">
+</head>
+<body>
+<ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Preferences">
+		<param name="Name" value="Preferences">
+		<param name="Local" value="preferences.html">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Arrange panes">
+		<param name="Name" value="User interface">
+		<param name="Local" value="ui.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Search">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Download">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Cancel download">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Search for a whole album">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Search online">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="CDDB">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="album">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Features">
+		<param name="Name" value="Overview">
+		<param name="Local" value="Overview.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="new account">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="share">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Cancel downloads">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Cancel">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="panes">
+		<param name="Name" value="User interface">
+		<param name="Local" value="ui.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Shares">
+		<param name="Name" value="User interface">
+		<param name="Local" value="ui.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="WinAmp">
+		<param name="Name" value="User interface">
+		<param name="Local" value="ui.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="database">
+		<param name="Name" value="Music database">
+		<param name="Local" value="Musicdatabase.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Importance">
+		<param name="Name" value="Music database">
+		<param name="Local" value="Musicdatabase.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Filename format">
+		<param name="Name" value="Music database">
+		<param name="Local" value="Musicdatabase.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Filename">
+		<param name="Name" value="Music database">
+		<param name="Local" value="Musicdatabase.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="updating">
+		<param name="Name" value="Music database">
+		<param name="Local" value="Musicdatabase.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Building">
+		<param name="Name" value="Music database">
+		<param name="Local" value="Musicdatabase.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="multiple songs">
+		<param name="Name" value="Main functions">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="DAO">
+		<param name="Name" value="Music database">
+		<param name="Local" value="Musicdatabase.html">
+		</OBJECT>
+	<ul>
+	</ul>
+</ul>
+</body>
+</html>

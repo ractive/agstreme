@@ -1,8 +1,12 @@
 ======================================================================================
-                                   JAGS Readme
+                                   AGStreme Readme
+                                      (aka JAGS)
 ======================================================================================
 
-JAGS Version 1.1
+AGStreme Version 2.0
+
+I renamed the program to AGStreme, because there's already a project that uses the
+name JAGS.
 
 What's that?
 ======================================================================================
@@ -18,22 +22,22 @@ web-based. You search your songs on audiogalaxy's homepage and add them to your
 download queue within the webform.
 The client on your PC will then send and receive requested files.
 
-The main reason why I started with JAGS is the fact, that the original client is not
+The main reason why I started with AGStreme is the fact, that the original client is not
 really "state of the art" software: too many bugs and too less comfort!
 
-I hope JAGS will improve the whole audiogalaxy feeling :-)
+I hope AGStreme will improve the whole audiogalaxy feeling :-)
 
 
 
 LICENSE
 ======================================================================================
-JAGS is licensed under the GNU General Public License (GPL) and is therefore
+AGStreme is licensed under the GNU General Public License (GPL) and is therefore
 freely distributable. You can get the source-code at:
-http://www.ractive.ch/gpl/JAGS.html
+http://www.ractive.ch/gpl/AGStreme.html
 
 INSTALLATION
 ======================================================================================
-Run the installation program JAGS.exe :-) You can either install it
+Run the installation program AGStreme.exe :-) You can either install it
 in the directory where your previous installation of the audiogalaxy client was or
 choose a new place. If you install it in the old directory, the same settings will be
 used! 
@@ -48,12 +52,12 @@ If you install the program into a differen directory you may want to copy the fi
 into the new installation directory. This way wou can save your shares, settings etc.
 
 
-To start the the program you have to call AGSatellite.exe (not jags.exe!), but the 
+To start the the program you have to call AGSatellite.exe (not AGStreme.exe!), but the 
 installation program will set this up for you!
 
 PROBLEMS
 ======================================================================================
-- Some users reported that JAGS does not even start. I have no clue, why!?!?!
+- Some users reported that AGStreme does not even start. I have no clue, why!?!?!
   Please tell me if it works for you (yes, also then) or not!
   Include the version of your OS and Internet Explorer if possible, please!
 
@@ -67,20 +71,26 @@ PROBLEMS
   the taskbar (by clicking on the window button). To resolve this problem, click on the
   tray-icon!
 
-- many features are not implemented yet. Stay tuned for even more...
-  like i.e. full WinAmp integration, better MP3 management (maybe even with access to
-  cddb.org or so) etc...
-
 - If you create a new directory in a folder that has no subdirectories yet, the
   new item may be out of scope :-(
 
-- The "Shares" pane must be refreshed manually
+- You can't set the cursor in a tree of list if you are renaming an item
 
 If you find bugs or if you miss a feature, contact me (see below).
 
 
 CHANGE-LOG
 ======================================================================================
+Version 2.0
+====================
+- New name AGStreme
+- Music database implemented
+- Blocked songs are shown
+- CDDB integration
+- ID3v2 tag support
+- "Album search" added
+- much more....
+
 Version 1.1
 ====================
 - Full Drag and Drop support
@@ -116,6 +126,6 @@ Version 0.7
 CONTACT
 ======================================================================================
 Author:   Jean-Pierre Bergamin <james@ractive.ch>
-Homepage: http://www.ractive.ch/gpl/jags.html
-E-mail:   jags@ractive.ch
+Homepage: http://www.ractive.ch/gpl/AGStreme.html
+E-mail:   AGStreme@ractive.ch
 ======================================================================================
