@@ -1,8 +1,8 @@
 /*************************************************************************
-                     LaPlaya
+                     JAGS
 **************************************************************************
 
-Copyright (C) June, 2001 Jean-Pierre Bergamin, james@ractive.ch
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "resource.h"
 #include "Jagsdoc.h"
 #include "ExploListView.h"
+#include "AGSocket.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -116,6 +117,10 @@ void CExploListView::OnInitialUpdate()
 	ScanFiles();
 
 	m_bInitialized = TRUE;
+
+	DWORD dwExStyle = listCtrl.GetExtendedStyle();
+	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP);
+
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -522,9 +527,16 @@ void CExploListView::HandleAutoOrganize(CString *pString)
 	
 	// Now we actually move the files
 
+	BOOL bMoved = FALSE;
+
 	while (bFound) {
 		bFound = finder.FindNextFile();
-		MoveFile(finder.GetFilePath(), sFullPath + sArtist + "\\" + finder.GetFileName());
+		bMoved |= MoveFile(finder.GetFilePath(), sFullPath + sArtist + "\\" + finder.GetFileName());
+	}
+
+	if (bMoved) {
+		// If files have been moved, we have to tell that the satellite
+		CAGSocket::GetInstance()->SendInitRescan();
 	}
 
 	finder.Close();
@@ -549,6 +561,7 @@ void CExploListView::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult)
 
 void CExploListView::OnUpdateBrowser(CCmdUI* pCmdUI) 
 {
+	// Enable the item if a song is selected
 	POSITION pos = GetListCtrl().GetFirstSelectedItemPosition();
 	pCmdUI->Enable(pos != NULL);
 }

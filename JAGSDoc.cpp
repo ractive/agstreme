@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 // JAGSDoc.cpp : implementation of the CJAGSDoc class
 //
 
@@ -170,7 +192,7 @@ BOOL CJAGSDoc::SaveSettings() {
 
 	CFile settingsFile;
 	CFileException ex;
-	if (!settingsFile.Open(sFullPath, CFile::modeWrite | CFile::typeBinary, &ex)) {
+	if (!settingsFile.Open(sFullPath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary, &ex)) {
 		return FALSE;		
 	}
 	try {
@@ -216,6 +238,46 @@ void CJAGSDoc::GetFullPath(CString &sPath, TCHAR * sFileName)
 }
 
 #define ACCOUNT_FILE "config"
+
+BOOL CJAGSDoc::SaveAccountInfo()
+{
+	CString sFullPath;
+	GetFullPath(sFullPath, ACCOUNT_FILE);
+	
+	CFile file;
+	CFileException ex;
+	try {
+	if (!file.Open(sFullPath, CFile::modeWrite | CFile::modeCreate | CFile::typeBinary, &ex)) {
+		return FALSE;
+	}
+
+	TCHAR * sUserName = m_sUsername.GetBuffer(m_sUsername.GetLength());
+	TCHAR * sPassWord = m_sPassword.GetBuffer(m_sPassword.GetLength());
+	FlipText(sUserName);
+	FlipText(sPassWord);
+
+	file.Write(sUserName, m_sUsername.GetLength());
+	char delim = (char)0xFF;
+	file.Write(&delim, 1);
+	file.Write(sPassWord, m_sPassword.GetLength());
+	file.Write(&delim, 1);
+
+	file.Close();
+
+	FlipText(sUserName);
+	FlipText(sPassWord);
+
+	m_sUsername.ReleaseBuffer();
+	m_sPassword.ReleaseBuffer();
+
+	}
+	catch (CFileException) {
+		MessageBox(NULL, "The account information could not be saved to file", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 
 BOOL CJAGSDoc::LoadAccountInfo()
 {
@@ -385,3 +447,4 @@ CString CJAGSDoc::GetSongName()
 
 	return sSongName;
 }
+

@@ -26,6 +26,9 @@
 #define IDR_ADDRESSCOPY                 163
 #define IDD_CONNECTIONOPTIONS           163
 #define IDR_TREECONTEXTMENU             165
+#define IDD_WELCOME                     166
+#define IDB_BANNER                      167
+#define IDD_LOGIN                       168
 #define IDC_FILENAME                    1000
 #define IDC_VERSION                     1001
 #define IDC_TITLE                       1002
@@ -78,7 +81,9 @@
 #define IDC_SAVEID3                     1029
 #define IDC_SIMDOWNLOADS                1030
 #define IDC_URL                         1031
+#define IDC_NEWUSER                     1032
 #define IDC_PROXY_HOSTNAME              1033
+#define IDC_EXISTINGACCOUNT             1033
 #define IDC_PROXY_PORT                  1034
 #define IDC_PROXY_USERNAME              1035
 #define IDC_PROXY_PASSWORD              1036
@@ -136,6 +141,7 @@
 #define ID_WINAMPNEXT                   32810
 #define ID_WINAMPADDTOPL                32811
 #define ID_WINAMPDELETEPL               32812
+#define D_SHOWTRANSFERRATE              32815
 #define ID_MSSERVERSTATE                61204
 #define ID_SERVERSTATE                  61205
 
@@ -144,9 +150,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        166
-#define _APS_NEXT_COMMAND_VALUE         32814
-#define _APS_NEXT_CONTROL_VALUE         1032
+#define _APS_NEXT_RESOURCE_VALUE        169
+#define _APS_NEXT_COMMAND_VALUE         32816
+#define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

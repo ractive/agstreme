@@ -23,25 +23,13 @@ really "state of the art" software: too many bugs and too less comfort!
 
 I hope JAGS will improve the whole audiogalaxy feeling :-)
 
-... THIS SOFTWARE IS STILL IN ALPHA STATE AND IT comes with ABSOLUTELY NO WARRANTY!!!
+... THIS SOFTWARE IS IN BETA STATE AND IT comes with ABSOLUTELY NO WARRANTY!!!
 USE IT AT YOUR OWN RISK!
 
-This version is intended to gather input from users. Take the opportunity, try it out
-and tell me what could be done better!
-
-A fully working version should follow in a couple of days....
 
 NEWS
 ======================================================================================
-- Many bug-fixes :-)
-- Possibility to add shares and set the download directory
-- Create new accounts
-- Browser navigation
-  To i.e. search for a CD cover, click on a file in the MP3 list and hit the
-  "Search CD covers" in the toolbar
-- Transfer meter that works :-)
-- Better WinAmp support. If you hit play when a file is selected, the file is queued
-  in the WinAmp playlist. If you doubleclick on a file, it is played immediately.
+
 
 
 LICENSE
@@ -90,7 +78,27 @@ PROBLEMS
 
 If you find bugs or if you miss a feature, contact me (see below).
 
+CHANGE-LOG
+======================================================================================
+Version 0.9
+====================
+- Better handling if no configuration files are present
+- Context menu handling in the share tree fixed
+- Save ID3 tags
+- Removed bug with floating bars (no commend messages received...)
+- Help files added
 
+Version 0.7
+====================
+- Many bug-fixes :-)
+- Possibility to add shares and set the download directory
+- Create new accounts
+- Browser navigation
+  To i.e. search for a CD cover, click on a file in the MP3 list and hit the
+  "Search CD covers" in the toolbar
+- Transfer meter that works :-)
+- Better WinAmp support. If you hit play when a file is selected, the file is queued
+  in the WinAmp playlist. If you doubleclick on a file, it is played immediately.
 
 CONTACT
 ======================================================================================

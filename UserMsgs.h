@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 #define WM_TRAYNOTIFICATION	(WM_USER +  1)
 #define WM_STARTUP			(WM_USER +  2)
 #define WM_ACCOUNTSTATUS	(WM_USER +  3)
@@ -31,6 +53,13 @@
 #define ACS_DUPE_USERNAME 	4
 #define ACS_OLD_VERSION		8
 #define ACS_ERROR   		16
+
+#define ATS_UNKNOWN 		0
+#define ATS_SUCCESS 		1
+#define ATS_BAD_ACCOUNT 	2
+#define ATS_OLD_VERSION 	4
+#define ATS_ERROR 			8
+
 
 
 // Definitions when rejected by server is sent

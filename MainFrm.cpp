@@ -1,9 +1,31 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 // MainFrm.cpp : implementation of the CMainFrame class
 //
 
 #include "stdafx.h"
 #include "JAGS.h"
-
+#include <HtmlHelp.h>
 #include "MainFrm.h"
 #include "JAGSDoc.h"
 #include "JAGSView.h"
@@ -25,6 +47,8 @@
 #include "NewAccountPage.h"
 #include "ConnectionOptionsPage.h"
 #include "TryAccountCreationDlg.h"
+#include "LoginPage.h"
+#include "WelcomeDlg.h"
 
 #include "ViewBar.h"
 #include "TransferWnd.h"
@@ -63,8 +87,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_SHOWMP3INFO, OnShowMP3info)
 	ON_UPDATE_COMMAND_UI(ID_SHOWMP3INFO, OnUpdateShowMP3info)
 	ON_COMMAND(ID_PREFERENCES, OnPreferences)
-	ON_COMMAND(ID_SHOWTRANSFERBAR, OnShowTransferbar)
-	ON_UPDATE_COMMAND_UI(ID_SHOWTRANSFERBAR, OnUpdateShowTransferbar)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_ADDSHARE, OnAddshare)
 	ON_COMMAND(ID_NEWACCOUNT, OnNewAccount)
@@ -76,6 +98,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_WINAMPDELETEPL, OnWinampDeletePL)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPDELETEPL, OnUpdateWinampDeletePL)
 	ON_COMMAND(ID_WINAMPPLAY, OnWinampPlay)
+	ON_UPDATE_COMMAND_UI(ID_WINAMPPAUSE, OnUpdateWinampPause)
+	ON_UPDATE_COMMAND_UI(ID_WINAMPPLAY, OnUpdateWinampPlay)
+	ON_UPDATE_COMMAND_UI(ID_WINAMPSTOP, OnUpdateWinampStop)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERHOME, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERNEXT, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERREFRESH, OnUpdateEnabled)
@@ -84,9 +109,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERNOTES, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPNEXT, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPPREV, OnUpdateEnabled)
-	ON_UPDATE_COMMAND_UI(ID_WINAMPPAUSE, OnUpdateWinampPause)
-	ON_UPDATE_COMMAND_UI(ID_WINAMPPLAY, OnUpdateWinampPlay)
-	ON_UPDATE_COMMAND_UI(ID_WINAMPSTOP, OnUpdateWinampStop)
+	ON_COMMAND(ID_HELP, OnHelp)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -129,7 +152,6 @@ CMainFrame::~CMainFrame()
 		m_pImageListSmall->Detach();
 		delete m_pImageListSmall;
 	}
-
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -184,6 +206,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	UINT nID = 0, nStyle = 0;
 	int nWidth = 0;
+	m_wndStatusBar.GetPaneInfo(1, nID, nStyle, nWidth);
+	m_wndStatusBar.SetPaneInfo(1, nID, nStyle, 200);
 	m_wndStatusBar.GetPaneInfo(2, nID, nStyle, nWidth);
 	m_wndStatusBar.SetPaneInfo(2, nID, nStyle, 200);
 
@@ -200,6 +224,10 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	EnableDocking(CBRS_ALIGN_LEFT);
 	EnableDocking(CBRS_ALIGN_RIGHT);
 	EnableDocking(CBRS_ALIGN_BOTTOM);
+
+#ifdef _SCB_REPLACE_MINIFRAME
+    m_pFloatingFrameClass = RUNTIME_CLASS(CSCBMiniDockFrameWnd);
+#endif //_SCB_REPLACE_MINIFRAME
 
 	if (!AddDockViews((CCreateContext *)lpCreateStruct->lpCreateParams)) {
 		TRACE0("Failed to create dock views\n");
@@ -256,7 +284,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_BarMenu.LoadMenu(MAKEINTRESOURCE(IDR_BARS));
 
-	GetMenu()->GetSubMenu(2)->AppendMenu(MF_POPUP, (UINT)m_BarMenu.GetSubMenu(0)->m_hMenu, "Show bars");
+	GetMenu()->GetSubMenu(2)->AppendMenu(MF_POPUP, (UINT)m_BarMenu.GetSubMenu(0)->m_hMenu, "Show panes");
 
 	PostMessage(WM_STARTUP, 0, 0);
 
@@ -334,32 +362,51 @@ LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam)
 
 LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 {
-	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
-
-	pDoc->LoadSettings();
-		
-	if (!pDoc->LoadAccountInfo()) {
-	
-	}
-
-	if (pDoc && pDoc->m_bStartWinAmp && !pDoc->m_sWinAmpExe.IsEmpty()) {
-		ShellExecute(m_hWnd, "open", pDoc->m_sWinAmpExe, NULL, NULL, SW_SHOW);
-	}
-
-
-	ASSERT(pDoc);
 	try {
 		CAGSocket * pSocket = CAGSocket::GetInstance();
 		pSocket->SetNotificationWnd(&m_hWnd);
 		if (!pSocket->Init()) {
-			MessageBox("The local connection to the Satellite could not be established.\r\n\r\nPlease check if another version is running", "ERROR", MB_OK | MB_ICONERROR);
+			MessageBox("The local connection to the Satellite could not be established.\r\nYou have to start AGSatellite.exe, not only JAGS.exe!!!\r\n\r\nPlease also check if another version is running", "ERROR", MB_OK | MB_ICONERROR);
 		}
+		
+		CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
 
+		pDoc->LoadSettings();
+			
 		if (pSocket->IsConnected()) {
-			unsigned int nPort = atoi(pDoc->m_Settings.sProxyPort);
-			pSocket->SendProxySettings();
-			pSocket->SendLogin();
-			pSocket->SetLoggingStatus();
+			if (!pDoc->LoadAccountInfo()) {
+				while (1) {
+					// The settings file could not be loaded. This indicates probably that the 
+					// user uses this software for the first time
+					CWelcomeDlg dlg;
+					UINT nRet = dlg.DoModal();
+					if (nRet == IDC_NEWUSER) {
+						// Create a new user
+						if (!CreateNewAccount()) {
+							MessageBox("The new account could not be created. Plesae try again in a couple of minutes", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+							return 0;
+						}
+					}
+					else if (nRet == IDC_EXISTINGACCOUNT) {
+						if (TryToLogin()) {
+							break;
+						}
+					}
+					else {
+						return 0;
+					}
+				}
+			}
+			else {
+				ASSERT(pDoc);
+				unsigned int nPort = atoi(pDoc->m_Settings.sProxyPort);
+				pSocket->SendProxySettings();
+				pSocket->SendLogin();
+				pSocket->SetLoggingStatus();
+			}
+		}
+		if (pDoc && pDoc->m_bStartWinAmp && !pDoc->m_sWinAmpExe.IsEmpty()) {
+			ShellExecute(m_hWnd, "open", pDoc->m_sWinAmpExe, NULL, NULL, SW_SHOW);
 		}
 	}
 	catch (CSocketException * pEx) {
@@ -375,7 +422,7 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 
 	m_wndStatusBar.GetStatusBarCtrl().SetIcon(2, m_hStatusBarIconNotConnected);
 	m_wndStatusBar.SetPaneText(2, "Not connected");
-	m_wndStatusBar.SetPaneText(1, "Not connected");
+	m_wndStatusBar.SetPaneText(1, "Not connected to Master server");
 
 
 	return 1;
@@ -383,13 +430,13 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnSysCommand(UINT nID, LPARAM lParam) 
 {
-	/*if (nID == SC_CLOSE) {
+	if (nID == SC_CLOSE) {
 		// Only allow to close the app via ID_APP_EXIT
 
 		// Minimize it instead
 		ShowWindow(SW_MINIMIZE);
 		return;
-	}*/
+	}
 	CFrameWnd::OnSysCommand(nID, lParam);
 }
 
@@ -482,11 +529,6 @@ void CMainFrame::OnShowMP3info()
 	ToggleBar(3);	
 }
 
-void CMainFrame::OnShowTransferbar() 
-{
-	ToggleBar(4);	
-}
-
 void CMainFrame::OnUpdateShowShares(CCmdUI* pCmdUI) 
 {
 	UpdateViewState(0, pCmdUI);	
@@ -507,14 +549,12 @@ void CMainFrame::OnUpdateShowMP3info(CCmdUI* pCmdUI)
 	UpdateViewState(3, pCmdUI);	
 }
 
-void CMainFrame::OnUpdateShowTransferbar(CCmdUI* pCmdUI) 
-{
-	UpdateViewState(4, pCmdUI);	
-}
-
 void CMainFrame::ToggleBar(UINT nBar)
 {
 	CControlBar *pBar = m_wndDockView.GetBar(nBar);
+	if (pBar == NULL) {
+		return;
+	}
 	BOOL bShow = pBar->IsVisible();
 	ShowControlBar(pBar, !bShow, FALSE);
 }
@@ -540,7 +580,60 @@ LRESULT CMainFrame::OnFileStatus(WPARAM wParam, LPARAM lParam)
 LRESULT CMainFrame::OnMSServerStatus(WPARAM wParam, LPARAM lParam)
 {
 	CString sStatus;
-	sStatus.Format("MS: %d", wParam);
+
+	switch(wParam) {
+
+		case MS_UNKNOWN:
+			sStatus = "Connecting to master server";
+			break;
+
+		case MS_SUCCESS:
+			sStatus = "Connection to master server established";
+			break;
+
+		case MS_PROXY_S5_NO_AUTH_METHS :
+			sStatus = "No acceptable proxy authentication methods";
+			break;
+
+		case MS_PROXY_S5_AUTH_FAILED :
+			sStatus = "Proxy authentication failed";
+			break;
+
+		case MS_PROXY_S5_METH_READ_FAILED :
+		case MS_PROXY_S5_AUTH_READ_FAILED :
+		case MS_PROXY_S5_SEND_CONNECT_FAILED :
+		case MS_PROXY_S5_CONNECT_READ_FAILED :
+			sStatus.Format("Error handshaking with proxy (%i)", wParam );
+			break;
+
+		case MS_PROXY_S5_CONNECT_FAILED :
+		case MS_PROXY_S4_CONNECT_FAILED :
+			sStatus.Format("Unable to connect through proxy (%i)", wParam );
+			break;
+
+		case MS_PROXY_S4_HOSTNAME_LOOKUP_FAILED :
+		case MS_PROXY_S4_SEND_CONNECT_FAILED :
+		case MS_PROXY_S4_CONNECT_READ_FAILED :
+			sStatus.Format("Error connecting to master server (%i)", wParam );
+
+		case MS_PROXY_CONNECT_FAILED :
+			sStatus.Format("Error connecting to proxy server" );
+			break;
+
+		case MS_INVALID_PORT:
+		case MS_READ_FAILED:
+		case MS_CONNECT_FAILED:
+			sStatus.Format("Error connecting to master server (%i)", wParam );
+			break;
+
+		case MS_CONNECT_DELAYED:
+			break;
+
+		default:
+			sStatus.Format("Invalid master server state (%i)", wParam );
+			break;	
+	}
+
 	m_wndStatusBar.SetPaneText(1, sStatus);
 	return 1;
 }
@@ -572,9 +665,10 @@ LRESULT CMainFrame::OnServerStatus(WPARAM wParam, LPARAM lParam)
 
 BOOL CMainFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
 {
-	/*if (m_wndDockView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
+	// Pump command-messages through all panes
+	if (m_wndDockView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
 		return TRUE;
-	}*/
+	}
 	
 	return CFrameWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
@@ -647,7 +741,6 @@ BOOL CMainFrame::AddDockViews(CCreateContext *pContext)
 		return FALSE;
 	}
 
-	// Here you can add your dialogs and views and whatever you like....
 	if (pView->Insert(0, "MP3 Header", RUNTIME_CLASS(CMP3HeaderView), pContext) == -1) {
 		return FALSE;
 	}
@@ -768,6 +861,7 @@ void CMainFrame::OnPreferences()
 			pDoc->m_sUsername = accountPage.m_sUsername;
 			pDoc->m_sPassword = accountPage.m_sPassword;
 			pDoc->m_Settings.bandwidthThrottle = connectionPage.m_nBWThrottle;
+			pDoc->SaveAccountInfo();
 			// ...login again
 			pSocket->SendLogin();
 		}
@@ -803,7 +897,8 @@ void CMainFrame::OnClose()
 		delete m_pTransferWnd;
 	}
 
-	
+	SetActiveView(NULL, FALSE);
+
 	CFrameWnd::OnClose();
 }
 
@@ -819,6 +914,13 @@ void CMainFrame::OnAddshare()
 	CDirectoryPicker(m_hWnd, &sNewShare);
 
 	if (!sNewShare.IsEmpty()) {
+		// Check if this share already exists...
+		POSITION pos = pDoc->m_aShares.Find(sNewShare);
+		if (pos != NULL) {
+			// This share exists already...
+			MessageBox("This directory is already shared!", "Information", MB_OK | MB_ICONINFORMATION);
+			return;
+		}
 		pDoc->m_aShares.AddTail(sNewShare);
 
 		pDoc->UpdateAllViews(NULL, NEW_SHARE);
@@ -832,6 +934,61 @@ void CMainFrame::OnAddshare()
 		CAGSocket::GetInstance()->SendInitRescan();
 	}
 }
+
+
+BOOL CMainFrame::TryToLogin()
+{
+	CPropertySheet loginSheet("Login", this);
+	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+
+	CProxyPropPage proxyPage;
+	proxyPage.SetLoginPage(TRUE);
+	CLoginPage loginPage;
+
+	loginSheet.AddPage(&loginPage);
+	loginSheet.AddPage(&proxyPage);
+	
+	loginSheet.SetWizardMode();
+
+	if (loginSheet.DoModal() == ID_WIZFINISH) {
+		// Store the proxy settings
+		strcpy(pDoc->m_Settings.sProxyHost, proxyPage.m_sProxyHostname);
+		strcpy(pDoc->m_Settings.sProxyPass, proxyPage.m_sProxyPassword);
+		strcpy(pDoc->m_Settings.sProxyUser, proxyPage.m_sProxyUsername);
+		sprintf(pDoc->m_Settings.sProxyPort, "%d", proxyPage.m_nProxyPort);
+		pDoc->m_Settings.proxyType = proxyPage.m_nProxyType;
+		CAGSocket * pSocket = CAGSocket::GetInstance();
+
+		// Tell the satellite our proxy settings
+		//pSocket->SendProxySettings();
+
+		CTryAccountCreationDlg dlg;
+		dlg.SetLoginTest(TRUE);
+
+		pSocket->SetNotificationWnd(&dlg.m_hWnd);
+		// Try to create the new account
+
+		pSocket->SendAccountInfo(loginPage.m_sUsername, loginPage.m_sPassword);
+		int nRet = dlg.DoModal();
+		pSocket->SetNotificationWnd(&m_hWnd);
+
+		if (nRet == ATS_SUCCESS) {
+			pDoc->m_sUsername = loginPage.m_sUsername;
+			pDoc->m_sPassword = loginPage.m_sPassword;
+			if (!pDoc->SaveAccountInfo()) {
+				return FALSE;
+			}
+			if (!CheckForShares()) {
+				return FALSE;
+			}
+				
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
 
 BOOL CMainFrame::CreateNewAccount()
 {
@@ -892,46 +1049,57 @@ BOOL CMainFrame::CreateNewAccount()
 			pDoc->m_sUsername = pDoc->m_NewAccount.username;
 			pDoc->m_sPassword = pDoc->m_NewAccount.password;
 
-
-			// If there are no shares set, do so...
-			if (pDoc->m_aShares.GetCount() == 0) {
-				if (MessageBox("Please choose a directory you want to share with other users.\r\n\r\nYou later can add more shares via the toolbar button", "Choose share", MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL) {
-					return FALSE;
-				}
-
-				CString sShare;
-				CDirectoryPicker picker(m_hWnd, &sShare);
-				if (sShare.IsEmpty()) {
-					return FALSE;
-				}
-
-				pDoc->m_aShares.AddHead(sShare);
-
-				// Save the shares
-				if (!pDoc->SaveShares()) {
-					MessageBox("The information about the shared directories could not be stored!", "ERROR", MB_OK | MB_ICONEXCLAMATION);
-					return FALSE;	
-				}
-			}
-
-			// Save the settings
-			if (!pDoc->SaveSettings()) {
-				MessageBox("The settings could not be stored!", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+			if (!CheckForShares()) {
 				return FALSE;
 			}
-			
-			// Now we really start the satellite
-			pSocket->SendProxySettings();
-			pSocket->SendLogin();
-			pSocket->SetLoggingStatus();
-			pSocket->SendInitRescan();
-
 		}
-
 	}
 
 	return TRUE;
 }
+
+BOOL CMainFrame::CheckForShares()
+{
+	CJAGSDoc * pDoc = (CJAGSDoc *)GetActiveDocument();
+
+	// If there are no shares set, do so...
+	if (pDoc->m_aShares.GetCount() == 0) {
+		if (MessageBox("Please choose a directory you want to share with other users.\r\n\r\nYou later can add more shares via the toolbar button", "Choose share", MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL) {
+			return FALSE;
+		}
+
+		CString sShare;
+		CDirectoryPicker picker(m_hWnd, &sShare);
+		if (sShare.IsEmpty()) {
+			return FALSE;
+		}
+
+		pDoc->m_aShares.AddHead(sShare);
+
+		// Save the shares
+		if (!pDoc->SaveShares()) {
+			MessageBox("The information about the shared directories could not be stored!", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+			return FALSE;	
+		}
+	}
+
+	// Save the settings
+	if (!pDoc->SaveSettings()) {
+		MessageBox("The settings could not be stored!", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+		return FALSE;
+	}
+	
+	CAGSocket * pSocket = CAGSocket::GetInstance();
+
+	// Now we really start the satellite
+	pSocket->SendProxySettings();
+	pSocket->SendLogin();
+	pSocket->SetLoggingStatus();
+	pSocket->SendInitRescan();
+
+	return TRUE;
+}
+
 
 void CMainFrame::OnNewAccount() 
 {
@@ -960,7 +1128,7 @@ LRESULT CMainFrame::OnRejected(WPARAM wParam, LPARAM lParam)
 		MessageBox("Another Audiogalaxy Satellite has come on with the same account information.  If you wish to run multiple Satellites please create separate accounts.", "Account Status", MB_OK | MB_ICONERROR );
 	}
 	else {
-		MessageBox("Unable to login for an unknown reason", "Error", MB_OK | MB_ICONERROR );
+		//MessageBox("Unable to login for an unknown reason", "Error", MB_OK | MB_ICONERROR );
 	}
 	
 	return 1;
@@ -1038,4 +1206,9 @@ void CMainFrame::OnUpdateWinampStop(CCmdUI* pCmdUI)
 	CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
 
 	pCmdUI->SetCheck(pWinAmpCtrl->IsStopped());	
+}
+
+void CMainFrame::OnHelp() 
+{
+	HtmlHelp(m_hWnd,"jagshelp.chm",HH_DISPLAY_TOPIC,0);
 }

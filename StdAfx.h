@@ -23,8 +23,8 @@
 #include <afxsock.h>		// MFC socket extensions
 
 
-//#define _SCB_REPLACE_MINIFRAME
-//#define _SCB_MINIFRAME_CAPTION
+#define _SCB_REPLACE_MINIFRAME
+#define _SCB_MINIFRAME_CAPTION
 #include "sizecbar.h"
 #include "scbarg.h"
 #include "scbarcf.h"

@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 // JAGSView.cpp : implementation of the CJAGSView class
 //
 
@@ -148,8 +170,9 @@ void CJAGSView::OnBrowsersat()
 void CJAGSView::OnCdcover() 
 {
 	CString sArtist = GetDocument()->GetArtist();
-
-	Navigate2(_T("http://db.cdcovercentral.com/CDCCsearch/search.cfm?THEAREA=AUDIO&LETTER=" + sArtist));	
+	sArtist.Replace(" ", "%20");
+	CString sUrl = "http://205.134.188.156/wetsearch.php3?terms=" + sArtist + "&group=audio";
+	Navigate2(sUrl, 0, _T("_self"));	
 }
 
 void CJAGSView::OnCddbsearch() 
@@ -181,4 +204,12 @@ void CJAGSView::OnCddbsearch()
 void CJAGSView::OnBrowserNotes() 
 {
 	Navigate2(_T("http://www.audiogalaxy.com/user/allNotes.php?"));		
+}
+
+void CJAGSView::OnNewWindow2(LPDISPATCH* ppDisp, BOOL* Cancel) 
+{
+	// TODO: Add your specialized code here and/or call the base class
+//	*Cancel = TRUE;
+
+	CHtmlView::OnNewWindow2(ppDisp, Cancel);
 }

@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 // AGSocket.cpp : implementation file
 //
 
@@ -167,6 +189,8 @@ BOOL CAGSocket::Connect()
 		}
 	}
 
+	m_bConnected = TRUE;
+
 	return TRUE;
 }
 
@@ -224,6 +248,8 @@ BOOL CAGSocket::SendLogin()
 
 	AsyncSelect(FD_READ | FD_CLOSE | FD_WRITE);
 
+	pDoc->UpdateAllViews(NULL, CONNECTED);
+		
 	return TRUE;
 }
 
@@ -262,6 +288,22 @@ BOOL CAGSocket::SendNewAccount()
 	return TRUE;
 }
 
+
+BOOL CAGSocket::SendAccountInfo(CString sUsername, CString sPassword)
+{
+	if (!send.Init()) {
+		return FALSE;
+	}
+
+	send.AddType(TEST_ACCOUNT_FROM_UI);
+	send.Add((unsigned char *)(LPCTSTR)sUsername);
+	send.Add((unsigned char *)(LPCTSTR)sPassword);
+	send.CompleteMsg();
+
+	AsyncSelect(FD_READ | FD_CLOSE | FD_WRITE);
+
+	return TRUE;
+}
 
 BOOL CAGSocket::SendInitRescan()
 {
@@ -393,7 +435,7 @@ void CAGSocket::PrepareRecvData()
 				break;
 			}
 			case TEST_ACCOUNT_RESPONSE_TO_UI:{
-				unsigned int nStatus = ACS_UNKNOWN;
+				unsigned int nStatus = ATS_UNKNOWN;
 				recv.Read(&nStatus);
 				Notify(WM_ACCOUNTSTATUS, nStatus);
 				break;
@@ -624,11 +666,6 @@ BOOL CAGSocket::Init()
 	bRet &= CreateAGSocket();
 	bRet &= Connect();
 
-	SendLogin();
-
-	GetDocument()->UpdateAllViews(NULL, CONNECTED);
-
-
 	return bRet;
 }
 
@@ -654,4 +691,3 @@ CJAGSDoc * CAGSocket::GetDocument()
 {
 	return (CJAGSDoc *)((CFrameWnd *)AfxGetMainWnd())->GetActiveDocument();
 }
-

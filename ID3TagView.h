@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 #if !defined(AFX_ID3TAGVIEW_H__3F97938B_93EF_4734_884D_CDB3F52612A6__INCLUDED_)
 #define AFX_ID3TAGVIEW_H__3F97938B_93EF_4734_884D_CDB3F52612A6__INCLUDED_
 
@@ -13,6 +35,9 @@
 #ifndef __AFXEXT_H__
 #include <afxext.h>
 #endif
+
+#include "CMP3Info.h"
+
 
 class CID3TagView : public CFormView
 {
@@ -57,9 +82,12 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CID3TagView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnSaveTag();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+private:
+	CMP3Info mp3Info;
+
 };
 
 /////////////////////////////////////////////////////////////////////////////

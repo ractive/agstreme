@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 // ID3TagView.cpp : implementation file
 //
 
@@ -5,7 +27,6 @@
 #include "JAGS.h"
 #include "ID3TagView.h"
 #include "JAGSDoc.h"
-#include "CMP3Info.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,19 +62,26 @@ void CID3TagView::DoDataExchange(CDataExchange* pDX)
 	CFormView::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CID3TagView)
 	DDX_Text(pDX, IDC_ALBUM, m_sAlbum);
+	DDV_MaxChars(pDX, m_sAlbum, 32);
 	DDX_Text(pDX, IDC_ARTIST, m_sArtist);
+	DDV_MaxChars(pDX, m_sArtist, 32);
 	DDX_Text(pDX, IDC_COMMENT, m_sComment);
+	DDV_MaxChars(pDX, m_sComment, 32);
 	DDX_Text(pDX, IDC_GENRE, m_sGenre);
+	DDV_MaxChars(pDX, m_sGenre, 32);
 	DDX_Text(pDX, IDC_TITLE, m_sTitle);
+	DDV_MaxChars(pDX, m_sTitle, 32);
 	DDX_Text(pDX, IDC_TRACK, m_sTrack);
+	DDV_MaxChars(pDX, m_sTrack, 4);
 	DDX_Text(pDX, IDC_YEAR, m_sYear);
+	DDV_MaxChars(pDX, m_sYear, 8);
 	//}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CID3TagView, CFormView)
 	//{{AFX_MSG_MAP(CID3TagView)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	ON_BN_CLICKED(IDC_SAVEID3, OnSaveTag)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -83,8 +111,6 @@ void CID3TagView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	CJAGSDoc * pDoc = (CJAGSDoc *)GetDocument();
 	CString sFilePath = pDoc->GetFilePath();
-
-	CMP3Info mp3Info;
 
 	int loadstate = mp3Info.loadInfo((LPTSTR)(LPCTSTR)sFilePath); 
 
@@ -167,4 +193,26 @@ void CID3TagView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	m_sYear = year;
 
 	UpdateData(FALSE);
+}
+
+void CID3TagView::OnSaveTag() 
+{
+	UpdateData();
+	char tracknumber[4];
+	strncpy(tracknumber, m_sTrack, 4);
+
+	char year[8];
+	strncpy(year, m_sYear, 8);
+	char album[32];
+	strncpy(album, m_sAlbum, 32);
+	char artist[32];
+	strncpy(artist, m_sArtist, 32);
+	char comment[32];
+	strncpy(comment, m_sComment, 32);
+	char genre[32];
+	strncpy(genre, m_sGenre, 32);
+	char title[32];
+	strncpy(title, m_sTitle, 32);
+
+	mp3Info.saveTag(title,artist,album,year,comment,tracknumber,genre);
 }

@@ -1,8 +1,8 @@
 /*************************************************************************
-                     LaPlaya
+                     JAGS
 **************************************************************************
 
-Copyright (C) June, 2001 Jean-Pierre Bergamin, james@ractive.ch
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -608,7 +608,7 @@ void CExploTreeView::OnContextMenu(CWnd* pWnd, CPoint point)
 	}
 	else {
 		NoItemContextMenu(pWnd, point);
-		CTreeView::OnContextMenu(pWnd, point);
+		return;
 	}
 
 	if (m_hOldSelection != NULL) {

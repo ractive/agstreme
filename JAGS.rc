@@ -43,6 +43,7 @@ IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
 IDR_DOCKBARS            BITMAP  DISCARDABLE     "res\\dockbars.bmp"
 IDR_WINAMP              BITMAP  DISCARDABLE     "res\\winamp.bmp"
 IDR_BROWSER             BITMAP  DISCARDABLE     "res\\browser.bmp"
+IDB_BANNER              BITMAP  DISCARDABLE     "res\\client-startscreen2.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -51,7 +52,6 @@ IDR_BROWSER             BITMAP  DISCARDABLE     "res\\browser.bmp"
 
 IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
 BEGIN
-    BUTTON      ID_SHOWTRANSFERRATE
     BUTTON      ID_PREFERENCES
     SEPARATOR
     BUTTON      ID_ADDSHARE
@@ -67,6 +67,7 @@ BEGIN
     BUTTON      ID_SHOWMP3
     BUTTON      ID_SHOWTRANSFER
     BUTTON      ID_SHOWMP3INFO
+    BUTTON      ID_SHOWTRANSFERRATE
 END
 
 IDR_WINAMP TOOLBAR DISCARDABLE  22, 18
@@ -105,25 +106,17 @@ END
 
 IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
-    POPUP "&File"
+    POPUP "File"
     BEGIN
-        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
-        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
-        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
-        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
-        MENUITEM SEPARATOR
-        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM "Create a new account...",     ID_NEWACCOUNT
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
-        MENUITEM "Create a new account...",     ID_NEWACCOUNT
     END
-    POPUP "&Edit"
+    POPUP "Shares"
     BEGIN
-        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
-        MENUITEM SEPARATOR
-        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "Add new share",               ID_ADDSHARE
+        MENUITEM "Remove this share",           ID_REMOVESHARE
+        MENUITEM "Set as download directory",   ID_SETASDOWNLOADDIR
     END
     POPUP "&View"
     BEGIN
@@ -132,6 +125,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
+        MENUITEM "&Help...",                    ID_HELP
         MENUITEM "&About JAGS...",              ID_APP_ABOUT
     END
 END
@@ -151,7 +145,7 @@ BEGIN
         MENUITEM "Shares",                      ID_SHOWSHARES
         MENUITEM "MP3 files",                   ID_SHOWMP3
         MENUITEM "File transfer",               ID_SHOWTRANSFER
-        MENUITEM "Transfer statistics",         ID_SHOWTRANSFERBAR
+        MENUITEM "Transfer statistics",         ID_SHOWTRANSFERRATE
         MENUITEM "MP3 info",                    ID_SHOWMP3INFO
     END
 END
@@ -173,19 +167,20 @@ END
 
 IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
-    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
-    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
-    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
-    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
-    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
-    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
-    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
-    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT
-    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT
-    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL
-    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -200,7 +195,7 @@ CAPTION "About JAGS"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "JAGS Version 0.7",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "JAGS Version 0.9",IDC_STATIC,40,10,119,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2001 by J.P Bergamin",IDC_STATIC,40,25,
                     119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -313,35 +308,35 @@ BEGIN
     GROUPBOX        "General",IDC_STATIC,3,8,278,46
 END
 
-IDD_PROXY DIALOG DISCARDABLE  0, 0, 291, 170
+IDD_PROXY DIALOG DISCARDABLE  0, 0, 291, 130
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Proxy settings"
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_PROXY_HOSTNAME,73,69,199,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_PROXY_PORT,73,86,40,12,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_PROXY_USERNAME,73,103,199,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_PROXY_PASSWORD,73,121,199,12,ES_PASSWORD | 
+    EDITTEXT        IDC_PROXY_HOSTNAME,73,47,199,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PROXY_PORT,73,64,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_PROXY_USERNAME,73,81,199,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PROXY_PASSWORD,73,99,199,12,ES_PASSWORD | 
                     ES_AUTOHSCROLL
-    LTEXT           "Proxy Type:",IDC_STATIC,11,53,50,11
-    LTEXT           "Hostname or IP:",IDC_PROXY_HOSTNAME_LABEL,11,71,52,8
-    LTEXT           "Port:",IDC_PROXY_PORT_LABEL,11,88,50,11
-    LTEXT           "Username:",IDC_PROXY_USERNAME_LABEL,11,106,50,11
-    LTEXT           "Password:",IDC_PROXY_PASSWORD_LABEL,11,123,50,11
-    COMBOBOX        IDC_PROXY_TYPE_COMBO,73,53,199,91,CBS_DROPDOWNLIST | 
+    LTEXT           "Proxy Type:",IDC_STATIC,11,31,50,11
+    LTEXT           "Hostname or IP:",IDC_PROXY_HOSTNAME_LABEL,11,49,52,8
+    LTEXT           "Port:",IDC_PROXY_PORT_LABEL,11,66,50,11
+    LTEXT           "Username:",IDC_PROXY_USERNAME_LABEL,11,84,50,11
+    LTEXT           "Password:",IDC_PROXY_PASSWORD_LABEL,11,101,50,11
+    COMBOBOX        IDC_PROXY_TYPE_COMBO,73,31,199,91,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "(Usually 1080)",IDC_STATIC,120,88,77,8
+    LTEXT           "(Usually 1080)",IDC_STATIC,120,66,77,8
     LTEXT           "If you don't know what a proxy server is, don't change these settings.",
                     IDC_STATIC,11,12,218,8
-    GROUPBOX        "",IDC_STATIC,6,45,273,96
+    GROUPBOX        "",IDC_STATIC,6,23,273,96
     GROUPBOX        "",IDC_STATIC,6,5,273,19
-    GROUPBOX        "",IDC_STATIC,0,0,284,163
+    GROUPBOX        "",IDC_STATIC,2,0,284,123
 END
 
 IDD_CONNECTIONOPTIONS DIALOGEX 0, 0, 286, 170
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Connection options"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,0,0,284,163
     GROUPBOX        "Bandwidth Throttle",IDC_STATIC,3,8,278,59
@@ -365,6 +360,34 @@ BEGIN
                     WS_TABSTOP
 END
 
+IDD_WELCOME DIALOG DISCARDABLE  0, 0, 260, 117
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Welcome to JAGS"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "New User",IDC_NEWUSER,16,59,50,14
+    LTEXT           "Click here to create a new account ",IDC_STATIC,78,62,
+                    152,13
+    DEFPUSHBUTTON   "Existing User",IDC_EXISTINGACCOUNT,16,85,50,14
+    LTEXT           "Click here if you already have an account\r\nand would like to use it on this computer.",
+                    IDC_STATIC,78,84,153,20
+    CONTROL         167,IDC_STATIC,"Static",SS_BITMAP,0,0,340,27
+    LTEXT           "Welcome to JAGS\r\nYou are using JAGS for the first time. Please choose below:",
+                    IDC_STATIC,17,34,222,17
+END
+
+IDD_LOGIN DIALOG DISCARDABLE  0, 0, 286, 130
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Login"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Username:",IDC_STATIC,85,15,35,8
+    EDITTEXT        IDC_USERNAME,135,15,65,14,ES_AUTOHSCROLL
+    LTEXT           "Password:",IDC_STATIC,85,37,34,8
+    EDITTEXT        IDC_PASSWORD,135,34,65,14,ES_PASSWORD | ES_AUTOHSCROLL
+    GROUPBOX        "Account information",IDC_STATIC,7,0,272,57
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -373,8 +396,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 0,9,0,0
+ PRODUCTVERSION 0,9,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -387,17 +410,20 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904B0"
+        BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "\0"
+            VALUE "Comments", "For updates visit http://www.ractive.ch/gpl/JAGS.html\0"
+            VALUE "CompanyName", "@ractive Software\0"
             VALUE "FileDescription", "JAGS MFC Application\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "FileVersion", "0, 9, 0, 0\0"
             VALUE "InternalName", "JAGS\0"
-            VALUE "LegalCopyright", "Copyright (C) 2001\0"
+            VALUE "LegalCopyright", "Copyright (C) 2001 by Jean-Pierre Bergamin, licensed under the GPL\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "JAGS.EXE\0"
+            VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "JAGS Application\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "ProductVersion", "0, 9, 0, 0\0"
+            VALUE "SpecialBuild", "\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -462,7 +488,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 284
         TOPMARGIN, 7
-        BOTTOMMARGIN, 163
+        BOTTOMMARGIN, 123
     END
 
     IDD_CONNECTIONOPTIONS, DIALOG
@@ -471,6 +497,22 @@ BEGIN
         RIGHTMARGIN, 279
         TOPMARGIN, 7
         BOTTOMMARGIN, 163
+    END
+
+    IDD_WELCOME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 253
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 110
+    END
+
+    IDD_LOGIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 279
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 123
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -589,6 +631,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
     ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_HELP                 "Open the help file"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -813,17 +856,17 @@ BEGIN
                     IDC_STATIC,11,195,221,18
 END
 
-IDD_TRYCREATEACCOUNT DIALOGEX 0, 0, 186, 95
+IDD_TRYCREATEACCOUNT DIALOGEX 0, 0, 186, 105
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Account creation"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Cancel",IDCANCEL,64,74,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,64,84,50,14
     LTEXT           "Connection status:",IDC_STATIC,7,7,60,8
-    CTEXT           "Trying to connect...",IDC_STATUS,7,18,172,14,
-                    SS_CENTERIMAGE,WS_EX_STATICEDGE
+    CTEXT           "Trying to connect...",IDC_STATUS,7,18,172,23,0,
+                    WS_EX_STATICEDGE
     CONTROL         "Animate1",IDC_ANIMATION,"SysAnimate32",ACS_TRANSPARENT | 
-                    ACS_AUTOPLAY | WS_TABSTOP,7,36,172,20
+                    ACS_AUTOPLAY | WS_TABSTOP,7,48,172,20
 END
 
 
@@ -856,7 +899,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 179
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 98
     END
 END
 #endif    // APSTUDIO_INVOKED

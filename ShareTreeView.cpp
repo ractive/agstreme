@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 // ShareTreeView.cpp : implementation file
 //
 
@@ -162,7 +184,7 @@ void CShareTreeView::OnUpdateSetDownloadDir(CCmdUI* pCmdUI)
 
 void CShareTreeView::OnUpdateRemoveShare(CCmdUI* pCmdUI) 
 {
-	if (GetTreeCtrl().GetCount() <= 1) {
+	if (GetDocument()->m_aShares.GetCount() <= 1) {
 		// Don't allow the last share to be removed
 		pCmdUI->Enable(FALSE);
 		return;
@@ -216,7 +238,7 @@ void CShareTreeView::RemoveShare()
 	CJAGSDoc * pDoc = GetDocument();
 
 	CTreeCtrl &treeCtrl = GetTreeCtrl();
-	if(treeCtrl.GetCount() <= 1) {
+	if(pDoc->m_aShares.GetCount() <= 1) {
 		// Don't delete the last share...
 		return;
 	}

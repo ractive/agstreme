@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 // ViewBar.cpp: implementation of the CViewBar class.
 //
 //////////////////////////////////////////////////////////////////////
@@ -27,7 +49,7 @@ CViewBar::~CViewBar()
 
 }
 
-BEGIN_MESSAGE_MAP(CViewBar, CSizingControlBarCF)
+BEGIN_MESSAGE_MAP(CViewBar, baseClass)
 	//{{AFX_MSG_MAP(CMyBar)
 	ON_WM_SIZE()
 	ON_WM_CONTEXTMENU()
@@ -84,7 +106,7 @@ BOOL CViewBar::CreateView(CRuntimeClass *pViewClass, CCreateContext *pContext, U
 
 void CViewBar::OnSize(UINT nType, int cx, int cy) 
 {
-	CSizingControlBarCF::OnSize(nType, cx, cy);
+	baseClass::OnSize(nType, cx, cy);
 
 	// Move the view if it's already created
 	if (m_pView) {
@@ -130,10 +152,17 @@ void CViewBar::OnContextMenu(CWnd* pWnd, CPoint point)
 		menu.LoadMenu(IDR_BARS);
 
 		menu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN, point.x, point.y, m_pDockSite);
-	
+		return;
 	}
 	
 	SendMessageToDescendants(WM_CONTEXTMENU, (WPARAM)pWnd->m_hWnd, MAKELPARAM(point.x, point.y));
-//	GetView()->OnContextMenu(pWnd, point);
-	CSizingControlBarCF::OnContextMenu(pWnd, point);
+	//GetView()->SendMessage(WM_CONTEXTMENU, (WPARAM)pWnd->m_hWnd, MAKELPARAM(point.x, point.y));
+	baseClass::OnContextMenu(pWnd, point);
+}
+
+BOOL CViewBar::IsActive()
+{
+    CWnd* pFocus = GetFocus();
+
+    return (pFocus->GetSafeHwnd() && IsChild(pFocus));
 }

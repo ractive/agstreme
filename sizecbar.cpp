@@ -1269,7 +1269,7 @@ BEGIN_MESSAGE_MAP(CSCBMiniDockFrameWnd, baseCSCBMiniDockFrameWnd)
     ON_WM_GETMINMAXINFO()
     ON_WM_WINDOWPOSCHANGING()
     ON_WM_SIZE()
-    //}}AFX_MSG_MAP
+	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 BOOL CSCBMiniDockFrameWnd::Create(CWnd* pParent, DWORD dwBarStyle)
@@ -1279,7 +1279,7 @@ BOOL CSCBMiniDockFrameWnd::Create(CWnd* pParent, DWORD dwBarStyle)
     m_bInRecalcLayout = TRUE;
 
     DWORD dwStyle = WS_POPUP|WS_CAPTION|WS_SYSMENU|MFS_MOVEFRAME|
-        MFS_4THICKFRAME|MFS_SYNCACTIVE|MFS_BLOCKSYSMENU|
+        MFS_4THICKFRAME|MFS_BLOCKSYSMENU|
         FWS_SNAPTOBARS;
 
     if (dwBarStyle & CBRS_SIZE_DYNAMIC)
@@ -1409,3 +1409,4 @@ void CSCBMiniDockFrameWnd::OnWindowPosChanging(WINDOWPOS FAR* lpwndpos)
 }
 
 #endif //_SCB_REPLACE_MINIFRAME
+

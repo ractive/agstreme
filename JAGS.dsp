@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 /nologo /subsystem:windows /machine:I386
+# ADD LINK32 htmlhelp.lib /nologo /subsystem:windows /machine:I386
 
 !ELSEIF  "$(CFG)" == "JAGS - Win32 Debug"
 
@@ -66,6 +66,7 @@ LINK32=link.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
@@ -78,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 htmlhelp.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
 !ENDIF 
 
@@ -164,6 +165,10 @@ SOURCE=.\JAGSDoc.cpp
 # Begin Source File
 
 SOURCE=.\JAGSView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\LoginPage.cpp
 # End Source File
 # Begin Source File
 
@@ -260,6 +265,10 @@ SOURCE=.\ViewBar.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\WelcomeDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\WinAmpControl.cpp
 # End Source File
 # End Group
@@ -337,6 +346,10 @@ SOURCE=.\JAGSDoc.h
 # Begin Source File
 
 SOURCE=.\JAGSView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LoginPage.h
 # End Source File
 # Begin Source File
 
@@ -444,6 +457,10 @@ SOURCE=.\ViewBar.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\WelcomeDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\WinAmpControl.h
 # End Source File
 # End Group
@@ -453,6 +470,10 @@ SOURCE=.\WinAmpControl.h
 # Begin Source File
 
 SOURCE=.\res\browser.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=".\res\client-startscreen2.bmp"
 # End Source File
 # Begin Source File
 

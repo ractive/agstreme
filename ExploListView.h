@@ -1,8 +1,8 @@
 /*************************************************************************
-                     LaPlaya
+                     JAGS
 **************************************************************************
 
-Copyright (C) June, 2001 Jean-Pierre Bergamin, james@ractive.ch
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -85,6 +85,7 @@ protected:
 	afx_msg void OnWinampAddtoPL();
 	//}}AFX_MSG
 	afx_msg void OnStyleChanged(int nStyleType, LPSTYLESTRUCT lpStyleStruct);
+
 	DECLARE_MESSAGE_MAP()
 
 private:

@@ -207,24 +207,36 @@ BOOL CDockViewWnd::CreateView(UINT nView, LPCTSTR lpszBarTitle, CRuntimeClass *p
 
 	m_uLastID++;
 
-	//pViewBar->GetView()->SendMessage(WM_INITIALUPDATE);
-
 	return TRUE;
 }
 
-CWnd * CDockViewWnd::GetActiveView()
+CView * CDockViewWnd::GetActiveView()
 {
 	ASSERT_VALID(this);
 
 	// attempt to use active view of frame window
-	CWnd* pView = NULL;
+	/*CWnd* pView = NULL;
 	CFrameWnd* pFrameWnd = GetParentFrame();
 	ASSERT_VALID(pFrameWnd);
 	pView = pFrameWnd->GetActiveView();
 
 	// failing that, use the current focus
 	if (pView == NULL)
-		pView = GetFocus();
+		pView = GetFocus();*/
+
+	CView * pView = NULL;
+
+	POSITION pos = GetFirstBar();
+	while (pos) {
+		CViewBar * pBar = GetNextBar(pos);
+		if (!pBar->IsActive()) {
+			continue;
+		}
+		else {
+			pView = pBar->GetView();
+			break;
+		}
+	}
 
 	return pView;
 }
@@ -261,48 +273,30 @@ CViewBar * CDockViewWnd::GetBar(UINT nBar)
 }
 
 
-/*BOOL CDockViewWnd::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
+BOOL CDockViewWnd::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
 {
 	// Route the command messages through the views
+	// If the bar is floating
+	CView * pActiveView = GetActiveView();
+	if (pActiveView->GetSafeHwnd() && pActiveView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
+		return TRUE;
+	}
+	
 	POSITION pos = GetFirstBar();
 	while (pos) {
-		CViewBar * pView = (CViewBar *)GetNextBar(pos)->GetView();
-		if (pView && ::IsWindow(pView->m_hWnd) && pView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
+		CViewBar * pBar = (CViewBar *)GetNextBar(pos);
+		if (!pBar->IsFloating() || !pBar->IsActive()) {
+			continue;
+		}
+		CView * pView = pBar->GetView();
+		if (pView->GetSafeHwnd() && pView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
 			return TRUE;
 		}
 	}
 	
 	return FALSE;
-}*/
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CSplitterWnd command routing
-
-BOOL CDockViewWnd::OnCommand(WPARAM wParam, LPARAM lParam)
-{
-	if (CWnd::OnCommand(wParam, lParam))
-		return TRUE;
-
-	// route commands to the splitter to the parent frame window
-	/*POSITION pos = GetFirstBar();
-	while (pos) {
-		CViewBar * pBar = GetNextBar(pos);
-		pBar->GetView()->SendMessage(WM_COMMAND, wParam, lParam);
-	}*/
-	
-	return GetParentFrame()->SendMessage(WM_COMMAND, wParam, lParam);
 }
 
-BOOL CDockViewWnd::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
-{
-	if (CWnd::OnNotify(wParam, lParam, pResult))
-		return TRUE;
-
-	// route commands to the splitter to the parent frame window
-	*pResult = GetParentFrame()->SendMessage(WM_NOTIFY, wParam, lParam);
-	return TRUE;
-}
 
 void CDockViewWnd::OnInitialUpdate()
 {
@@ -321,3 +315,4 @@ void CDockViewWnd::OnInitialUpdate()
 		}
 	}
 }
+

@@ -16,6 +16,7 @@ Section "JAGS (required)"
 	File Release\JAGS.exe
 	File Release\ui.dll
 	File Release\AGSatellite.exe	
+	File Help\jagshelp.chm		
 	File ReadMe.txt
 	WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\JAGS" "DisplayName" "JAGS (remove only)"
 	WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\JAGS" "UninstallString" '"$INSTDIR\uninst-jags.exe"'

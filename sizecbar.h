@@ -230,7 +230,7 @@ public:
     afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
     afx_msg void OnWindowPosChanging(WINDOWPOS FAR* lpwndpos);
     afx_msg void OnSize(UINT nType, int cx, int cy);
-    //}}AFX_MSG
+	//}}AFX_MSG
     DECLARE_MESSAGE_MAP()
 };
 #endif //_SCB_REPLACE_MINIFRAME

@@ -1,3 +1,25 @@
+/*************************************************************************
+                     JAGS
+**************************************************************************
+
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+***************************************************************************/
+
+
 #if !defined(AFX_DOCKVIEWWND_H__682006F9_81DA_45E3_A5C2_8D79A5698851__INCLUDED_)
 #define AFX_DOCKVIEWWND_H__682006F9_81DA_45E3_A5C2_8D79A5698851__INCLUDED_
 
@@ -29,10 +51,7 @@ public:
 	//{{AFX_VIRTUAL(CDockViewWnd)
 	public:
 	virtual BOOL Create(CWnd* pParentWnd, CCreateContext* pContext = NULL, UINT nID = AFX_IDW_PANE_FIRST +64);
-	//virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
-	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult);
-
+	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -46,10 +65,12 @@ public:
 
 	// Generated message map functions
 protected:
-	CWnd * GetActiveView();
+	CView * GetActiveView();
 	//{{AFX_MSG(CDockViewWnd)
-	afx_msg void OnInitialUpdate();
+	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	//}}AFX_MSG
+	afx_msg void OnInitialUpdate();
+
 	DECLARE_MESSAGE_MAP()
 private:
 	CCreateContext* m_pCreateContext;

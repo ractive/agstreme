@@ -1,0 +1,46 @@
+<html>
+<head>
+<meta name="GENERATOR" content="DevComponents.com HelpKit HTML Help Authoring Solution">
+</head>
+<body>
+<ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Preferences">
+		<param name="Name" value="Preferences">
+		<param name="Local" value="preferences.html">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Arrange panes">
+		<param name="Name" value="User interface">
+		<param name="Local" value="ui.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Search">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Download">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Cancel download">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<ul>
+	</ul>
+</ul>
+</body>
+</html>

@@ -1,8 +1,8 @@
 /*************************************************************************
-                     ZipALot
+                     JAGS
 **************************************************************************
 
-Copyright (C) December, 2000 Jean-Pierre Bergamin, james@ractive.ch
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
