@@ -225,6 +225,8 @@ void CShareTreeView::SetDownloadDir()
 		hRoot = treeCtrl.GetNextSiblingItem(hRoot);
 	}
 
+	treeCtrl.Select(hTI, TVM_SELECTITEM | TVGN_FIRSTVISIBLE);
+
 	if (!pDoc->SaveShares()) {
 		MessageBox("The shares.txt could not be stored", "ERROR", MB_OK | MB_ICONEXCLAMATION);
 		return;

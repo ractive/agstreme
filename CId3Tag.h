@@ -64,7 +64,7 @@ class CId3Tag {
     void  setYear(int input);
 
     // functions to set & get the track number [1->255]
-    int  getTrackNumber() { return (version==1.1)?trackNumber:-1; };
+    int  getTrackNumber() { return (version==(float)1.1)?trackNumber:-1; };
     void setTrackNumber(int input); 
     
     // function to get the version [1.0/1.1]

@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define WM_TRAYNOTIFICATION	(WM_USER +  1)
 #define WM_STARTUP			(WM_USER +  2)
 #define WM_ACCOUNTSTATUS	(WM_USER +  3)
+#define WM_FILECHANGE		(WM_USER +  4)
 
 #define WM_SCANCOMPLETE		(WM_USER + 10)
 #define WM_SCANSTART		(WM_USER + 11)

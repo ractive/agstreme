@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ExploTreeView.h"
 #include "PidlMgr.h"
 #include "itemdata.h"
+#include <afxole.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -46,10 +47,10 @@ IMPLEMENT_DYNCREATE(CExploTreeView, CTreeView)
 
 BEGIN_MESSAGE_MAP(CExploTreeView, CTreeView)
 	//{{AFX_MSG_MAP(CExploTreeView)
-	ON_WM_CREATE()
 	ON_NOTIFY_REFLECT(TVN_ITEMEXPANDING, OnItemExpanding)
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONDOWN()
+	ON_NOTIFY_REFLECT(TVN_BEGINDRAG, OnBegindrag)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -73,7 +74,7 @@ CExploTreeView::~CExploTreeView()
 
 BOOL CExploTreeView::PreCreateWindow(CREATESTRUCT& cs)
 {
-	cs.style |= TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS;
+	cs.style |= TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS;
 
 	return CTreeView::PreCreateWindow(cs);
 }
@@ -158,14 +159,6 @@ BOOL CExploTreeView::InsertFolder(HTREEITEM hParentItem,IShellFolder* pParentFol
 	return false;
 }
 
-int CExploTreeView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
-{
-	if (CTreeView::OnCreate(lpCreateStruct) == -1)
-		return -1;
-	
-	return 0;
-}
-
 void CExploTreeView::OnItemExpanding(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
@@ -173,10 +166,12 @@ void CExploTreeView::OnItemExpanding(NMHDR* pNMHDR, LRESULT* pResult)
 	IShellFolder *pParentFolder;
 	CTreeCtrl &treeCtrl = GetTreeCtrl();
 	if(pNMTreeView->action == TVE_COLLAPSE) {
+		// If the node is collapsed, delete all children...
         treeCtrl.Expand(pNMTreeView->itemNew.hItem, TVE_COLLAPSE | TVE_COLLAPSERESET);
 	}
     else if(pNMTreeView->action == TVE_EXPAND)
 	{
+		// If the node is expanded, add the subdirectories
 		HCURSOR	 hCursor;
 		TVITEM   tvItem = {0};
 		tvItem.mask = TVIF_PARAM;
@@ -186,16 +181,22 @@ void CExploTreeView::OnItemExpanding(NMHDR* pNMHDR, LRESULT* pResult)
 		LPITEMDATA pItemInfo = (LPITEMDATA)tvItem.lParam;
 		hCursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 		
+		// Get the parent folder and bind it to the expanded folder
 		if(pItemInfo->pParentFolder == 0)
 		{
 			if(FAILED(SHGetDesktopFolder(&pParentFolder)))
 				return;
 		}
-		else if(FAILED(pItemInfo->pParentFolder->BindToObject(pItemInfo->pidlSelf, NULL, IID_IShellFolder, (void**)&pParentFolder)))
+		else if(FAILED(pItemInfo->pParentFolder->BindToObject(pItemInfo->pidlSelf, NULL, IID_IShellFolder, (void**)&pParentFolder))) {
 			return;
+		}
 	
 		treeCtrl.SetRedraw(FALSE);
+
+		// Add the subdirectories
 		InsertFolder(pNMTreeView->itemNew.hItem, pParentFolder, pItemInfo->pidlFullyQual);
+
+		// Sort the child items
 		TVSORTCB tvsort;
 		tvsort.hParent = pNMTreeView->itemNew.hItem;
 		tvsort.lParam = NULL;
@@ -210,6 +211,8 @@ void CExploTreeView::OnItemExpanding(NMHDR* pNMHDR, LRESULT* pResult)
 int CALLBACK CExploTreeView::CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	IShellFolder * pParentFolder = ((LPITEMDATA)lParam1)->pParentFolder;
+
+	// Use the IShellFolder CompareIDs method to determine the soring order
 	HRESULT nRet = pParentFolder->CompareIDs(0, ((LPITEMDATA)lParam1)->pidlSelf, ((LPITEMDATA)lParam2)->pidlSelf);
 	
 	if (FAILED (nRet))
@@ -274,6 +277,8 @@ BOOL CExploTreeView::GetFriendlyName(TCHAR pzDisplayName[_MAX_PATH], LPITEMIDLIS
 
 BOOL CExploTreeView::OpenFolder(LPCTSTR szPath)
 {
+	// To open a folder, we first get the pidl of this folder...
+
 	ITEMIDLIST* pidl;
 
 	if(SUCCEEDED(SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl)))
@@ -282,7 +287,9 @@ BOOL CExploTreeView::OpenFolder(LPCTSTR szPath)
 
 		if(FAILED(SHGetDesktopFolder(&pDesktop)))
 		{
-		   //TODO: free the pidl through IMalloc
+		   IMalloc * pMalloc;
+		   SHGetMalloc(&pMalloc);
+		   pMalloc->Free(pidl);
 		   return FALSE;
 		}
 
@@ -757,4 +764,84 @@ void CExploTreeView::NoItemContextMenu(CWnd * pWnd, CPoint point)
 {
 	// Override this method
 	return;
+}
+
+
+void CExploTreeView::OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
+
+	DoFileTransfer(pNMTreeView->itemNew.hItem, FALSE);
+
+	*pResult = 0;
+}
+
+BOOL CExploTreeView::DoFileTransfer(HTREEITEM hTI, BOOL bForClipBoard)
+{
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+	// The size of pFrom.
+	int nSize = 0;
+
+	char *pFrom = new char[(MAX_PATH) + 2];
+	// Set it to 0
+	memset(pFrom, '\0', (MAX_PATH) + 2);
+
+	// Get the filename of the CFileEntry
+	CString sPath = GetPath(hTI);
+	nSize += sPath.GetLength() + 1;
+	strcpy(pFrom, sPath);
+	nSize++; // The ending zero char
+
+	if (bForClipBoard) {
+		if (!OpenClipboard()) {
+			return FALSE;
+		}
+		if (!EmptyClipboard()) {
+			return FALSE;
+		}	
+	}
+
+	
+
+	// Create the data-source which holds the information about which files are dragged.
+	// Allocate memory for the data
+	HGLOBAL hDropFiles = GlobalAlloc(GMEM_SHARE | GMEM_MOVEABLE | GMEM_ZEROINIT, sizeof(DROPFILES) + nSize);
+	// Get the pointer of the allocated memory
+	DROPFILES* pDropData = (DROPFILES*)GlobalLock(hDropFiles);
+	pDropData->pFiles = sizeof(DROPFILES);
+
+	// Copy the filenames to the memory
+	memcpy((((char*)(pDropData)) + sizeof(DROPFILES)), pFrom, nSize);
+
+	// Unlock the memory
+	GlobalUnlock(hDropFiles);
+
+	DROPEFFECT dropEffect = DROPEFFECT_NONE;
+
+	if (bForClipBoard) {
+		// "Put the data to the clipboard" (if you know what I mean)
+		// FIXME: This is being used after the GlobalUnlock.  Is this alright?
+		SetClipboardData(CF_HDROP, hDropFiles);
+		CloseClipboard();
+	}
+	else {
+		COleDataSource * pDataSource = new COleDataSource;
+
+		// "Put the data to the clipboard" (if you know what I mean)
+		// FIXME: This is being used after the GlobalUnlock.  Is this alright?
+		pDataSource->CacheGlobalData(CF_HDROP, hDropFiles);
+
+		// Start dragging. This function only returns if the drag-operation is completed.
+		dropEffect = pDataSource->DoDragDrop(DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_SCROLL, NULL);
+		delete pDataSource;
+	}
+
+	if (dropEffect == DROPEFFECT_MOVE) {
+		// If files have been moved we rescan the directory
+		//ScanFiles();
+	}
+
+	delete pFrom;
+	return true;
 }

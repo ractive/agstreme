@@ -79,7 +79,7 @@ void CMP3HeaderView::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CMP3HeaderView, CFormView)
 	//{{AFX_MSG_MAP(CMP3HeaderView)
-		// NOTE - the ClassWizard will add and remove mapping macros here.
+	ON_BN_CLICKED(IDC_VBR, OnVbr)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -198,4 +198,11 @@ void CMP3HeaderView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	UpdateData(FALSE);	
 	
+}
+
+void CMP3HeaderView::OnVbr() 
+{
+	// Don't allow the value to be changed by clicking on the box
+	// Just put in the value again
+	((CButton *)GetDlgItem(IDC_VBR))->SetCheck(m_bVarBitrate);	
 }

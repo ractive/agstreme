@@ -243,12 +243,17 @@ void CId3Tag::genreString(char* input, BOOL get = true) {
 
         // if get operation then check whether it's supported
         // and if it is set it according table above
-        if (genre>=126)    strcpy(input, "not supported");
-        else               strcpy (input, table[genre]);
+        if (genre>=126)    
+			strcpy(input, "not supported");
+        else
+			strcpy (input, table[genre]);
 
     }
     else {
-
+		if (_stricmp(input, "not supported") == 0) {
+			genre = 255;
+			return;
+		}
         for (int i=0; i<126; i++) {
 
             // search table for match

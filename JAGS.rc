@@ -195,7 +195,7 @@ CAPTION "About JAGS"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "JAGS Version 0.9",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "JAGS Version 1.0",IDC_STATIC,40,10,119,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2001 by J.P Bergamin",IDC_STATIC,40,25,
                     119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -396,8 +396,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,0,0
- PRODUCTVERSION 0,9,0,0
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -415,14 +415,14 @@ BEGIN
             VALUE "Comments", "For updates visit http://www.ractive.ch/gpl/JAGS.html\0"
             VALUE "CompanyName", "@ractive Software\0"
             VALUE "FileDescription", "JAGS MFC Application\0"
-            VALUE "FileVersion", "0, 9, 0, 0\0"
+            VALUE "FileVersion", "1, 0, 0, 0\0"
             VALUE "InternalName", "JAGS\0"
             VALUE "LegalCopyright", "Copyright (C) 2001 by Jean-Pierre Bergamin, licensed under the GPL\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "JAGS.EXE\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "JAGS Application\0"
-            VALUE "ProductVersion", "0, 9, 0, 0\0"
+            VALUE "ProductVersion", "1, 0, 0, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END

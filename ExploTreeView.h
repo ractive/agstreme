@@ -1,8 +1,8 @@
 /*************************************************************************
-                     LaPlaya
+                     JAGS
 **************************************************************************
 
-Copyright (C) June, 2001 Jean-Pierre Bergamin, james@ractive.ch
+Copyright (C) July, 2001 Jean-Pierre Bergamin, james@ractive.ch
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -72,13 +72,14 @@ protected:
 
 // Generated message map functions
 protected:
+	BOOL DoFileTransfer(HTREEITEM hTI, BOOL bForClipboard);
 	void ShowContextMenu(IShellFolder * pFolder, LPCITEMIDLIST pidlItem, CPoint point);
 	void OpenPidl(const LPITEMIDLIST pidl);
 	//{{AFX_MSG(CExploTreeView)
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnItemExpanding(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
@@ -86,7 +87,7 @@ private:
 	HRESULT GetSHContextMenu(LPSHELLFOLDER psfFolder, LPCITEMIDLIST localPidl, void** ppCM, int* pcmType);
 	HRESULT ProcessCMCommand(LPCONTEXTMENU pCM, UINT idCmdOffset);
 
-	static LRESULT CALLBACK CExploTreeView::HookWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+	static LRESULT CALLBACK HookWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 	static LPCONTEXTMENU2 m_pIContext2;
 	static WNDPROC m_pOldWndProc; 
 

@@ -60,7 +60,8 @@ typedef enum {
 	NEW_SHARE		= 14, 
 	NEW_DOWNLOADDIR = 15, 
 	REMOVE_SHARE	= 16,
-	NEW_URL			= 17
+	NEW_URL			= 17,
+	NEW_DIRCREATED	= 18
 } HINT;
 
 

@@ -2,7 +2,7 @@
                                    JAGS Readme
 ======================================================================================
 
-JAGS Version 0.7
+JAGS Version 1.0
 
 What's that?
 ======================================================================================
@@ -23,27 +23,20 @@ really "state of the art" software: too many bugs and too less comfort!
 
 I hope JAGS will improve the whole audiogalaxy feeling :-)
 
-... THIS SOFTWARE IS IN BETA STATE AND IT comes with ABSOLUTELY NO WARRANTY!!!
-USE IT AT YOUR OWN RISK!
-
-
-NEWS
-======================================================================================
-
 
 
 LICENSE
 ======================================================================================
 JAGS is licensed under the GNU General Public License (GPL) and is therefore
 freely distributable. You can get the source-code at:
-not uploaded yet. Will follow soon on sourceforge.net .... ;-)
+http://www.ractive.ch/gpl/JAGS.html
 
 INSTALLATION
 ======================================================================================
 Run the installation program JAGS.exe :-) You can either install it
 in the directory where your previous installation of the audiogalaxy client was or
 choose a new place. If you install it in the old directory, the same settings will be
-used. !!!!!! 
+used! 
 
 
 If you install the program into a differen directory you may want to copy the files
@@ -55,7 +48,8 @@ If you install the program into a differen directory you may want to copy the fi
 into the new installation directory. This way wou can save your shares, settings etc.
 
 
-To start the the program you have to call AGSatellite.exe (not jags.exe!).
+To start the the program you have to call AGSatellite.exe (not jags.exe!), but the 
+installation program will set this up for you!
 
 PROBLEMS
 ======================================================================================
@@ -65,21 +59,29 @@ PROBLEMS
 
 - when your start the program for the first time, everything looks quite messy.
   Drag the panes to where you want them. I will see what I can do that a useful
-  window configuration is automatically set up
+  window configuration is automatically set up.
+  If you hold down CTRL while dragging the panes, they won't dock.
+  If you hold SHIFT, the will dock to the left/right side
 
 - Sometimes when the transfer meter is shown, the main window can't be restored from
   the taskbar (by clicking on the window button). To resolve this problem, click on the
   tray-icon!
 
 - many features are not implemented yet. Stay tuned for even more...
-  like i.e. WinAmp integration, better MP3 management (maybe even with access to
+  like i.e. full WinAmp integration, better MP3 management (maybe even with access to
   cddb.org or so) etc...
 
 
 If you find bugs or if you miss a feature, contact me (see below).
 
+
 CHANGE-LOG
 ======================================================================================
+Version 1.0
+====================
+- The "MP3-files" pane is automatically updated
+- Bug-fixes
+
 Version 0.9
 ====================
 - Better handling if no configuration files are present

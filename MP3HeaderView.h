@@ -81,7 +81,7 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CMP3HeaderView)
-		// NOTE - the ClassWizard will add and remove member functions here.
+	afx_msg void OnVbr();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

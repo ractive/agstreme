@@ -38,10 +38,20 @@ class CJAGSDoc;
 
 class CExploListView : public CListView
 {
+	struct watchThreadInfo {
+		TCHAR sDir[MAX_PATH];
+		HWND hWnd;
+		HANDLE hNewDir;
+		HANDLE hKillMe;
+	};
+	
+	typedef watchThreadInfo * LPWATCHTHREADINFO;
+
 protected: // create from serialization only
 	CExploListView();
 	DECLARE_DYNCREATE(CExploListView)
 	int GetIcon(LPCTSTR sFile, bool bSelected);
+	BOOL ShowExplorerMenu(LPCTSTR pszPath, POINT point);
 
 // Attributes
 public:
@@ -63,6 +73,7 @@ public:
 
 // Implementation
 public:
+	static UINT WatchChangeThreadProc(LPVOID pParam);
 	virtual ~CExploListView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -73,22 +84,39 @@ protected:
 
 // Generated message map functions
 protected:
+	CString BuildPath(int nItem);
+	BOOL PrepareData(BOOL bForClipBoard);
 	void HandleAutoOrganize(CString * pString);
-	void AddMovie(const CString sFilePath, DWORD ulSize, FILETIME * ft, MOV_TYPE type);
+
+
+	void AddFile(const CString sFilePath, DWORD ulSize, FILETIME * ft, MOV_TYPE type);
 	//{{AFX_MSG(CExploListView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDblclk(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnHeaderClick(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnClick(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnUpdateBrowser(CCmdUI* pCmdUI);
 	afx_msg void OnWinampAddtoPL();
+	afx_msg void OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnClose();
 	//}}AFX_MSG
 	afx_msg void OnStyleChanged(int nStyleType, LPSTYLESTRUCT lpStyleStruct);
+	afx_msg LRESULT OnFileChange(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 
 private:
+	HRESULT GetSHContextMenu(LPSHELLFOLDER psfFolder, LPCITEMIDLIST localPidl, void** ppCM, int* pcmType);
+	HRESULT ProcessCMCommand(LPCONTEXTMENU pCM, UINT idCmdOffset);
+	void ShowContextMenu(IShellFolder * pFolder, LPCITEMIDLIST pidlItem, CPoint point);
+
+	static LRESULT CALLBACK HookWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+	static LPCONTEXTMENU2 m_pIContext2;
+	static WNDPROC m_pOldWndProc; 
+
+	LPWATCHTHREADINFO m_pThreadInfo;
+	
 	void ScanFiles();
 
 	void PlayFile(int nNo);
@@ -100,6 +128,8 @@ private:
 	void Sort();
 	BOOL SortItems(int nCol, BOOL bAscending, int low, int high = -1);
 	int CmpItems(CString cstL, CString cstR, int nCol);
+
+	CWinThread * m_pThread;
 };
 
 #ifndef _DEBUG  // debug version in ExploListView.cpp

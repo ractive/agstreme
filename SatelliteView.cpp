@@ -453,7 +453,8 @@ void CSatelliteView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	}
 	else if (lHint == NEW_FILE) {
 		// We have to remove the completed file from our list
-
+		// Since we con't get any notification if a file stopped transferring
+		// we take the chance to clean up the whole list
 		CListCtrl& list = m_pPseudoThis->GetListCtrl();
 		CJAGSDoc * pDoc = GetDocument();
 
@@ -465,7 +466,6 @@ void CSatelliteView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 			if (pDoc->m_TransferStatus.FindEntry(sSong) == 0) {
 				// ... delete the item
 				list.DeleteItem(i);
-				break;
 			}
 		}
 	}

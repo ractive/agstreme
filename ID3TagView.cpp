@@ -110,6 +110,7 @@ void CID3TagView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	}
 
 	CJAGSDoc * pDoc = (CJAGSDoc *)GetDocument();
+
 	CString sFilePath = pDoc->GetFilePath();
 
 	int loadstate = mp3Info.loadInfo((LPTSTR)(LPCTSTR)sFilePath); 
