@@ -45,6 +45,7 @@ CGeneralPropPage::CGeneralPropPage() : CPropertyPage(CGeneralPropPage::IDD)
 	m_bStartWinamp = FALSE;
 	m_sWinAmpExe = _T("");
 	m_bKeepLog = FALSE;
+	m_bQuickScan = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -61,6 +62,7 @@ void CGeneralPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_STARTWINAMP, m_bStartWinamp);
 	DDX_Text(pDX, IDC_WINAMPEXE, m_sWinAmpExe);
 	DDX_Check(pDX, IDC_KEEPLOG, m_bKeepLog);
+	DDX_Check(pDX, IDC_QUICKSCAN, m_bQuickScan);
 	//}}AFX_DATA_MAP
 }
 

@@ -314,27 +314,42 @@ void CExploTreeView::OpenPidl(const LPITEMIDLIST pidl)
 {
 	CTreeCtrl &tree = GetTreeCtrl();
 
+	// Stop redrawing while traversing the tree
 	tree.SetRedraw(FALSE);
-	//tree.SelectItem(NULL);
 
 	HTREEITEM hRoot = tree.GetRootItem();
 	HTREEITEM hTIold = NULL;
 
+	// Walk through all root items (shared folders)
 	while (hRoot) {
 		HTREEITEM hTI = hRoot;
+		
+		// Walk through all items to see if we find the folder itself
+		// or a parent-folder
 		while (pidl && hTI) {
 			LPITEMDATA data = (LPITEMDATA)tree.GetItemData(hTI);
 	#ifdef _DEBUG
 			TRACE("TRAVERSING: %s\n", tree.GetItemText(hTI));
 	#endif
-			CPidlMgr mgr(NULL);
+			// Check if this is the pidl we were searching for
+			if (data->pParentFolder->CompareIDs(0, pidl, data->pidlFullyQual) == 0) {
+				// Select the found folder-item...
+				tree.SetItemState(hTIold, 0, TVIS_SELECTED);
+				tree.SetItemState(hTI, TVIS_SELECTED, TVIS_SELECTED);
+				// ...and quit
+				tree.SetRedraw(TRUE);
+				return;
+			}
+
 
 			if (PidlIsParentOf(data->pidlFullyQual, pidl)) {
-				// We found the next level. Expand the branch
+				// We found the next level. Expand the branch...
 				tree.Expand(hTI, TVE_EXPAND);
+				// ...and select the item
 				tree.SetItemState(hTIold, 0, TVIS_SELECTED);
 				tree.SetItemState(hTI, TVIS_SELECTED, TVIS_SELECTED);
 				hTIold = hTI;
+				// Get the child items of the found parent folder
 				hTI = tree.GetChildItem(hTI);
 				continue;
 			}
@@ -344,6 +359,7 @@ void CExploTreeView::OpenPidl(const LPITEMIDLIST pidl)
 		
 		hRoot = tree.GetNextSiblingItem(hRoot);
 	}
+
 	tree.EnsureVisible(hTIold);
 	tree.SelectItem(hTIold);
 	tree.SetRedraw(TRUE);
@@ -1085,9 +1101,16 @@ DROPEFFECT CExploTreeView::GetDropEffect(HTREEITEM hTI, DWORD dwKeyState)
 		dropEffect = DROPEFFECT_COPY;
 	}
 	else if (hTI) {
+		CString sItem = GetPath(hTI);
+		if (sItem.IsEmpty()) {
+			return DROPEFFECT_NONE;
+		}
+		if (m_sDraggedFile.IsEmpty()) {
+			return DROPEFFECT_NONE;
+		}
 		// It's a move operation if the file is on the same drive, otherwise
 		// it's a copy operation
-		dropEffect = (GetPath(hTI).GetAt(0) == m_sDraggedFile.GetAt(0)) ? DROPEFFECT_MOVE : DROPEFFECT_COPY;
+		dropEffect = (sItem.GetAt(0) == m_sDraggedFile.GetAt(0)) ? DROPEFFECT_MOVE : DROPEFFECT_COPY;
 	}
 	return dropEffect;
 }

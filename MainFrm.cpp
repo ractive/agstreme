@@ -151,6 +151,12 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_STARTWINAMP, OnUpdateStartwinamp)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPADDTOPL, OnUpdateWinampaddtopl)
 	ON_UPDATE_COMMAND_UI(ID_PLAYLISTGEN, OnUpdatePlaylistgen)
+	ON_COMMAND(ID_DOWNLOADLIST, OnDownloadList)
+	ON_COMMAND(ID_BROWSERHOME, OnBrowserHome)
+	ON_COMMAND(ID_BROWSERNOTES, OnBrowserNotes)
+	ON_COMMAND(ID_BROWSERREFRESH, OnBrowserRefresh)
+	ON_COMMAND(ID_BROWSERSAT, OnBrowserSat)
+	ON_COMMAND(ID_BROWSERUSER, OnBrowserUser)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERHOME, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERNEXT, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERREFRESH, OnUpdateEnabled)
@@ -159,7 +165,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_BROWSERNOTES, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPNEXT, OnUpdateEnabled)
 	ON_UPDATE_COMMAND_UI(ID_WINAMPPREV, OnUpdateEnabled)
-	ON_COMMAND(ID_DOWNLOADLIST, OnDownloadList)
+	ON_COMMAND(ID_CLOSECONNECTION, OnCloseConnection)
+	ON_UPDATE_COMMAND_UI(ID_CLOSECONNECTION, OnUpdateCloseConnection)
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_SCANCOMPLETE, OnScanComplete)
 	ON_MESSAGE(WM_QUEUEEMTPY, OnEmptyQueue)
@@ -168,8 +175,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(WM_FILESTATUS, OnFileStatus)
 	ON_MESSAGE(WM_MASTERSTATE, OnMSServerStatus)
 	ON_MESSAGE(WM_SERVERSTATE, OnServerStatus)
+	ON_MESSAGE(WM_REJECTED, OnRejected)
 	ON_MESSAGE(WM_BROWSERPROGSET, OnBrowserProgSet)
-	ON_MESSAGE(WM_SEND, OnSend)
 	ON_MESSAGE(WM_RECV, OnRecv)
 	ON_COMMAND(IDOK, OnNewAddressEnter)
 	ON_CBN_SELENDOK(AFX_IDW_TOOLBAR + 10,OnNewAddress)
@@ -206,6 +213,8 @@ CMainFrame::CMainFrame(): rb("Settings")
 	rb.Bind((int &)m_TransRect.bottom, "Transfer Window bottom", 60);
 
 	m_uTransState = NOTRANSFER;
+
+	m_bConnectedToServer = FALSE;
 }
 
 CMainFrame::~CMainFrame()
@@ -373,16 +382,13 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	if (!m_viewReBar.Create(this) ||	
 		!m_viewReBar.AddBar(&m_wndBrowserBar) ||
-		!m_viewReBar.AddBar(&m_wndAddress, "Address")/* ||
-		!m_viewReBar.AddBar(&m_wndDlgBar)*/) {
+		!m_viewReBar.AddBar(&m_wndAddress, "Address")) {
 		TRACE0("Failed to create rebar\n");
 		return -1;      // fail to create
 	}
 
+
 	m_wndBrowserBar.SetBarStyle(m_wndBrowserBar.GetBarStyle() | CBRS_TOOLTIPS);
-
-
-
 
 	//DockControlBar(&m_wndShowBars, AFX_IDW_DOCKBAR_TOP | AFX_IDW_DOCKBAR_LEFT);
 	DockControlBar(&m_wndWinAmpBar);
@@ -584,10 +590,8 @@ LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam)
 	return m_TrayIcon.OnTrayNotification(wParam, lParam);
 }
 
-LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
+BOOL CMainFrame::Login()
 {
-	SetWindowText("AGStreme");
-
 	try {
 		CAGSocket * pSocket = CAGSocket::GetInstance();
 
@@ -610,7 +614,7 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 						// Create a new user
 						if (!CreateNewAccount()) {
 							MessageBox("The new account could not be created. Plesae try again in a couple of minutes", "ERROR", MB_OK | MB_ICONEXCLAMATION);
-							return 0;
+							return FALSE;
 						}
 					}
 					else if (nRet == IDC_EXISTINGACCOUNT) {
@@ -619,7 +623,7 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 						}
 					}
 					else {
-						return 0;
+						return FALSE;
 					}
 				}
 			}
@@ -637,8 +641,9 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 
 			m_pScanDlg = new CScanDlg(this);
 			m_pScanDlg->Create(IDD_SCANWAIT, this);
-			//m_pScanDlg->CenterWindow();
-			m_pScanDlg->SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+			CRect wRect;
+			m_pScanDlg->GetWindowRect(&wRect);
+			m_pScanDlg->SetWindowPos(&wndTop, 20, 20, wRect.Width(), wRect.Height(), SWP_NOSIZE);
 			m_pScanDlg->ShowWindow(SW_SHOW);
 
 		}
@@ -649,7 +654,17 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 	catch (CSocketException * pEx) {
 		pEx->ReportError();
 		pEx->Delete();
+		return FALSE;
 	}
+
+	return TRUE;
+}
+
+LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
+{
+	SetWindowText("AGStreme");
+
+	Login();
 
 	CRect rc;
 	m_wndStatusBar.GetItemRect(3, rc);
@@ -686,8 +701,6 @@ LRESULT CMainFrame::OnStartup(WPARAM wParam, LPARAM lParam)
 	/*if (!InitCDDBInterface()) {
 		MessageBox("The CDDB-Interface could not be initialized.\r\n\r\nFunctions basing on CDDB won't work", "Error", MB_OK | MB_ICONEXCLAMATION);
 	}*/
-
-
 
 	return 1;
 }
@@ -915,6 +928,34 @@ LRESULT CMainFrame::OnMSServerStatus(WPARAM wParam, LPARAM lParam)
 	m_wndStatusBar.SetPaneText(2, sStatus);
 	return 1;
 }
+LRESULT CMainFrame::OnRejected(WPARAM wParam, LPARAM lParam)
+{
+	CString sMsg;
+	switch (wParam) {
+	case INVALID_ACCOUNT:
+		sMsg = "Could not find a matching account for the information you entered.  Please select the \"Change User\" option from the File menu and login with a valid account.";
+		break;
+	case DUPE:
+		sMsg = "Another Audiogalaxy Satellite has come on with the same account information.  If you wish to run multiple Satellites please create separate accounts.";
+		break;
+	case OLD_VERSION:
+		sMsg = "You are running an older version of this program.  Please download the latest version";
+		break;
+	case GOLD_ACCOUNT_EXPIRED:
+		sMsg = "Your Audiogalaxy Gold account has expired.  Please contact gold@audiogalaxy.com if you have any questions.";
+		break;
+	case NEVER_WAS_GOLD:
+		sMsg = "Your Audiogalaxy Gold account has not been activated.  Please contact gold@audiogalaxy.com if you have any questions.";
+		break;
+	default:
+		sMsg = "Unable to login for an unknown reason";
+		break;
+	}
+
+	MessageBox(sMsg, "Account status", MB_OK | MB_ICONINFORMATION);
+
+	return 0;
+}
 
 LRESULT CMainFrame::OnServerStatus(WPARAM wParam, LPARAM lParam)
 {
@@ -925,6 +966,7 @@ LRESULT CMainFrame::OnServerStatus(WPARAM wParam, LPARAM lParam)
 	if (wParam == serverWait) {
 		statusbar.SetIcon(3, m_hStatusBarIconConnected);
 		sStatus = "Connected";
+		m_bConnectedToServer = TRUE;
 	}
 	else {
 		if (wParam == connectFailed) {
@@ -937,6 +979,7 @@ LRESULT CMainFrame::OnServerStatus(WPARAM wParam, LPARAM lParam)
 			sStatus = "Trying to connect...";
 		}
 		statusbar.SetIcon(3, m_hStatusBarIconNotConnected);
+		m_bConnectedToServer = FALSE;
 	}
 	
 	statusbar.SetText(sStatus, 3, 0);
@@ -1123,7 +1166,7 @@ void CMainFrame::OnPreferences()
 	generalPage.m_bAddToPlaylist = pDoc->m_bAddToPlaylist;
 	generalPage.m_bStartWinamp = pDoc->m_bStartWinAmp;
 	generalPage.m_sWinAmpExe = pDoc->m_sWinAmpExe;
-
+	generalPage.m_bQuickScan = pDoc->m_bQuickScan;
 	
 	CAccountPropPage accountPage;
 	accountPage.m_sPassword = pDoc->m_sPassword;
@@ -1165,10 +1208,13 @@ void CMainFrame::OnPreferences()
 	if (nRet == IDOK || nRet == IDC_LOGIN) {
 		// If the user quit the dialog with OK
 		// we put the new values into the document
+		pDoc->m_bGoldAccount = accountPage.m_bGoldAccount;
 		pDoc->m_nConnectionType = connectionPage.m_nConnectionType;
 		pDoc->m_bAddToPlaylist = generalPage.m_bAddToPlaylist;
 		pDoc->m_bStartWinAmp = generalPage.m_bStartWinamp;
 		pDoc->m_sWinAmpExe = generalPage.m_sWinAmpExe;
+		pDoc->m_bQuickScan = generalPage.m_bQuickScan;
+
 		pDoc->m_nBandwidthUpstream = connectionPage.m_nUpStream;
 		pDoc->m_nBandwidthDownstream = connectionPage.m_nDownStream;
 		pDoc->m_HangupTime = connectionPage.m_HangupTime;
@@ -1176,6 +1222,7 @@ void CMainFrame::OnPreferences()
 		pDoc->m_bHangupIdle = connectionPage.m_bHangupIdle;
 		pDoc->m_bHangupAt = connectionPage.m_bHangupAt;
 		pDoc->m_uIdleMinutes = connectionPage.m_uIdleMinutes;
+		
 		pDoc->m_bDBUpdateID3 = fileorgPage.m_bDBUpdateID3;
 		pDoc->m_sFilenameFormat = fileorgPage.m_sFileFormat;
 		pDoc->m_bAutoOrganize = fileorgPage.m_bAutoOrganize;
@@ -1339,6 +1386,7 @@ BOOL CMainFrame::TryToLogin()
 
 		pDoc->m_sUsername = loginPage.m_sUsername;
 		pDoc->m_sPassword = loginPage.m_sPassword;
+		pDoc->m_bGoldAccount = loginPage.m_bGoldAccount;
 		if (!pDoc->SaveAccountInfo()) {
 			return FALSE;
 		}
@@ -1501,24 +1549,6 @@ void CMainFrame::OnNewAccount()
 	}
 
 	CreateNewAccount();		
-}
-
-LRESULT CMainFrame::OnRejected(WPARAM wParam, LPARAM lParam)
-{
-	if(wParam == INVALID_ACCOUNT ) {
-		MessageBox("Could not find a matching account for the information you entered. Please open the configuration and check your username and password", "Account Status", MB_OK | MB_ICONERROR );
-	}
-	else if(wParam == OLD_VERSION ) {
-		MessageBox("You are running an older version of the Satellite.  Please download the latest version", "You need a new version", MB_OK | MB_ICONERROR );
-	}
-	else if (wParam == DUPE ) {
-		MessageBox("Another Audiogalaxy Satellite has come on with the same account information.  If you wish to run multiple Satellites please create separate accounts.", "Account Status", MB_OK | MB_ICONERROR );
-	}
-	else {
-		//MessageBox("Unable to login for an unknown reason", "Error", MB_OK | MB_ICONERROR );
-	}
-	
-	return 1;
 }
 
 void CMainFrame::OnUpdateEnabled(CCmdUI* pCmdUI) 
@@ -1760,13 +1790,13 @@ LRESULT CMainFrame::OnBrowserProgSet(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CMainFrame::OnSend(WPARAM wParam, LPARAM lParam)
-{
-	SetTimer(SEND, 500, NULL);
-	m_uTransState |= SEND;
-	UpdateTransferIcon();
-	return 0;
-}
+//DEL LRESULT CMainFrame::OnSend(WPARAM wParam, LPARAM lParam)
+//DEL {
+//DEL 	SetTimer(SEND, 500, NULL);
+//DEL 	m_uTransState |= SEND;
+//DEL 	UpdateTransferIcon();
+//DEL 	return 0;
+//DEL }
 
 
 LRESULT CMainFrame::OnRecv(WPARAM wParam, LPARAM lParam)
@@ -1779,7 +1809,23 @@ LRESULT CMainFrame::OnRecv(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::UpdateTransferIcon()
 {
-	if (m_uTransState == NOTRANSFER) {
+	if (m_bConnectedToServer) {
+		if (m_uTransState == NOTRANSFER) {
+			m_TrayIcon.SetIcon(IDI_TRANSFERSEND);
+		}
+		else {
+			m_TrayIcon.SetIcon(IDI_TRANSFERSENDRECV);
+		}
+	}
+	else {
+		if (m_uTransState == NOTRANSFER) {
+			m_TrayIcon.SetIcon(IDI_NOTRANSFER);
+		}
+		else {
+			m_TrayIcon.SetIcon(IDI_TRANSFERRECV);
+		}
+	}
+	/*if (m_uTransState == NOTRANSFER) {
 		m_TrayIcon.SetIcon(IDI_NOTRANSFER);
 	}
 	else if (m_uTransState == BOTH) {
@@ -1790,7 +1836,7 @@ void CMainFrame::UpdateTransferIcon()
 	}
 	else if (m_uTransState == RECV) {
 		m_TrayIcon.SetIcon(IDI_TRANSFERRECV);
-	}
+	}*/
 }
 
 void CMainFrame::OnSearch()
@@ -1839,11 +1885,6 @@ BOOL CMainFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO*
 		return TRUE;
 	}
 	
-	/*CMainView * pView = (CMainView *)GetActiveView();
-	if (pView->GetSafeHwnd() && pView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
-		return TRUE;
-	}*/
-
 	return CFrameWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
@@ -1931,4 +1972,67 @@ void CMainFrame::OnDownloadList()
 {
 	CDownloadListDlg dlg;
 	dlg.DoModal();
+}
+
+
+void CMainFrame::OnBrowserHome() 
+{
+	CJAGSDoc* pDoc = GetDocument();
+
+	CString sUrl = 	"http://www.audiogalaxy.com/satellitelogin?loginUsername=" + pDoc->m_sUsername + "&loginPassword=" + pDoc->m_sPassword;
+	pDoc->UpdateAllViews(NULL, NEW_URL, (CObject *)&sUrl);
+	
+}
+
+void CMainFrame::OnBrowserNotes() 
+{
+	CString sUrl = 	"http://www.audiogalaxy.com/user/allNotes.php?";
+	GetDocument()->UpdateAllViews(NULL, NEW_URL, (CObject *)&sUrl);
+}
+
+void CMainFrame::OnBrowserRefresh() 
+{
+	
+}
+
+void CMainFrame::OnBrowserSat() 
+{
+	CString sUrl = 	"http://www.audiogalaxy.com/satellite/queue.php?";
+	GetDocument()->UpdateAllViews(NULL, NEW_URL, (CObject *)&sUrl);
+	
+}
+
+void CMainFrame::OnBrowserUser() 
+{
+	CString sUrl = 	"http://www.audiogalaxy.com/user/allNotes.php?";
+	GetDocument()->UpdateAllViews(NULL, NEW_URL, (CObject *)&sUrl);
+	
+}
+
+void CMainFrame::SetTrayText(LPCTSTR lpszTipText)
+{
+	m_TrayIcon.SetTip(lpszTipText);
+}
+
+void CMainFrame::OnCloseConnection() 
+{
+	if (MessageBox("If you close the connection, all current file transfers are interrupted!\r\n\r\nIf you want to reconnect, you have to restart the program\r\n\r\nAre you sure you want to disconnect?", "Are you sure?", MB_YESNO | MB_ICONINFORMATION) == IDNO) {
+		return;
+	}
+
+	// Destroy the socket.
+	CAGSocket::Destroy();	
+
+	CStatusBarCtrl &statusbar = m_wndStatusBar.GetStatusBarCtrl();
+	statusbar.SetText("", 2, 0);
+	statusbar.SetText("Connection closed!", 3, 0);
+	statusbar.SetIcon(3, m_hStatusBarIconNotConnected);
+	m_TrayIcon.SetIcon(IDR_MAINFRAME);
+	m_bConnectedToServer = FALSE;
+
+}
+
+void CMainFrame::OnUpdateCloseConnection(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(CAGSocket::GetInstance()->IsConnected());
 }

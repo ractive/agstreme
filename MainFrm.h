@@ -65,9 +65,11 @@ public:
 
 // Implementation
 public:
+	BOOL m_bConnectedToServer;
+	void SetTrayText(LPCTSTR lpszTipText);
 	void SetStatusBarText(int nIndex, LPCTSTR lpszText);
+	CJAGSDoc * GetDocument();
 	ICDDBControl * GetCDDBControl();
-	afx_msg LRESULT OnRejected(WPARAM wParam, LPARAM lParam);
 	virtual ~CMainFrame();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -91,11 +93,11 @@ protected:  // control bar embedded members
 
 // Generated message map functions
 protected:
+	BOOL Login();
 	CComboBoxEx m_wndAddress;
 	CScanDlg *m_pScanDlg;
 	unsigned short m_uTransState;
 	void UpdateTransferIcon();
-	CJAGSDoc * GetDocument();
 
 	BOOL CheckForShares();
 	BOOL TryToLogin();
@@ -154,6 +156,13 @@ protected:
 	afx_msg void OnUpdateWinampaddtopl(CCmdUI* pCmdUI);
 	afx_msg void OnUpdatePlaylistgen(CCmdUI* pCmdUI);
 	afx_msg void OnDownloadList();
+	afx_msg void OnBrowserHome();
+	afx_msg void OnBrowserNotes();
+	afx_msg void OnBrowserRefresh();
+	afx_msg void OnBrowserSat();
+	afx_msg void OnBrowserUser();
+	afx_msg void OnCloseConnection();
+	afx_msg void OnUpdateCloseConnection(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	afx_msg LRESULT OnEmptyQueue(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnTrayNotification(WPARAM wParam, LPARAM lParam);
@@ -162,9 +171,9 @@ protected:
 	afx_msg LRESULT OnMSServerStatus(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnServerStatus(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnBrowserProgSet(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnSend(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnRecv(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnScanComplete(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnRejected(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnNewAddressEnter();
 	afx_msg void OnNewAddress();
 

@@ -371,7 +371,9 @@ BOOL CID3TagCore::Link(LPCTSTR lpszFileName, flags_t flags)
 		m_pTag = new ID3_Tag;
 	}
 
-	return m_pTag->Link(lpszFileName, flags) > 0;
+	size_t prependedBytes = m_pTag->Link(lpszFileName, flags);
+	TRACE("ID3LIB %5ld\r\n", prependedBytes);
+	return prependedBytes > 0;
 }
 
 BOOL CID3TagCore::Link(LPCTSTR lpszFileName, BOOL bParseID3V1, BOOL bParseLyrics)

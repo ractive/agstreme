@@ -83,6 +83,25 @@ bool CTrayIcon::SetIcon(UINT uID)
 	return SetIcon(hIcon, NULL);
 }
 
+bool CTrayIcon::SetTip(LPCSTR lpTip) {
+	if (!lpTip) {
+		return FALSE;
+	}
+
+	UINT msg;
+	msg = NIM_MODIFY;
+	m_nid.uFlags = NIF_TIP;
+	strncpy(m_nid.szTip, lpTip, sizeof(m_nid.szTip));
+
+	// Use callback if any
+	if (m_nid.uCallbackMessage && m_nid.hWnd)
+		m_nid.uFlags |= NIF_MESSAGE;
+	
+	// Do it
+	return (Shell_NotifyIcon(msg, &m_nid) == TRUE);
+	
+}
+
 bool CTrayIcon::SetIcon(HICON hIcon, LPCSTR lpTip)
 {   
 	UINT msg;

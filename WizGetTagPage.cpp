@@ -147,7 +147,7 @@ BOOL CWizGetTagPage::OnInitDialog()
 
 
 	DWORD dwExStyle = m_FileList.GetExtendedStyle();
-	m_FileList.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP);
+	m_FileList.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT);
 
 	AddTool(IDC_OPENFILES);
 	AddTool(IDC_OPENDIRECTORY);

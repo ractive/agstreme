@@ -33,6 +33,7 @@
 #include "sizecbar.h"
 #include "scbarg.h"
 #include "scbarcf.h"
+#include "TipDlg.h"
 #define baseCMyBar CSizingControlBarCF
 
 //{{AFX_INSERT_LOCATION}}

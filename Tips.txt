@@ -1,0 +1,20 @@
+Switch to the "Song list" tab (besides the Browser) to see a list of songs you searched for.\r\nSelect the songs you want to download, right-click on the selection and choose the desired bitrate.
+
+Drag songs from the "Song list" tab to a folder in the "Share" tree!\r\nSelect the desired bitrate and create a new subdirectory if needed.\r\n\r\nThe songs will be moved to this directory after the download finished.
+
+Enter your searches in the "Download list" (in the toolbar).\r\n\r\nThis allows you to download different songs in one task!
+
+Switch to the "MP3 details" tab in the "MP3 files" window to see the length, bitrate and frequency of the songs.
+
+Use www.cddb.com to search for whole albums. Click on the "CDDB search" button in the browser toolbar and search for the album you want to download.\r\n\r\nGo the the "Song list" tab to downlaod the songs.
+
+To use the "music database" you have to update it.\r\n\r\nStart the wizard and choose "Update music-database".
+
+You can reorganize your music-database by dragging files on a specific item in the tree view.\r\n\r\nThis will categorize the files to this item.
+
+You can rearrange the single panes by dragging them in the toolbar.\r\nHold down "ctrl" while dragging the pane to avoid docking.
+
+It's recommended that you install WinAmp (http://www.winamp.com).\r\n\r\nYou can control WinAmp with the WinAmp toolbar. The random-playlist feature gives you new sound every day :-)
+
+Copy/move your MP3 files by dragging the songs form the "MP3 list" pane to the "Shares" tree!
+

@@ -97,7 +97,6 @@ protected:
 	BOOL DeleteFiles(BOOL bBin);
 	CString BuildPath(int nItem);
 	BOOL PrepareData(BOOL bForClipBoard);
-	BOOL HandleAutoOrganize(CString * pString);
 
 
 	//{{AFX_MSG(CExploListView)
@@ -105,7 +104,6 @@ protected:
 	afx_msg void OnDblclk(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnHeaderClick(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnUpdateBrowser(CCmdUI* pCmdUI);
 	afx_msg void OnWinampAddtoPL();
 	afx_msg void OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
@@ -154,6 +152,8 @@ private:
 
 	DROPEFFECT m_DropEffect;
 	BOOL HandleFileDrop(BOOL bCopy, HDROP hDrop);
+
+private:
 
 	COleDropTarget m_OleDropTarget;
 };

@@ -116,6 +116,7 @@ UINT CAGInet::QueueSongThreadProc(LPVOID lParam)
 			LeaveCriticalSection(&song_critical_section);
 
 			if (pQueueInfo->nTries > MAX_TRIES) {
+				EnterCriticalSection(&song_critical_section);
 				if (m_hNotificationWnd) {
 					PostMessage(m_hNotificationWnd, WM_SONGQUEUED, MAXTRIES, (LPARAM)pQueueInfo);
 				}
@@ -125,7 +126,7 @@ UINT CAGInet::QueueSongThreadProc(LPVOID lParam)
 #endif
 				
 				delete pQueueInfo;
-				LeaveCriticalSection(&critical_section);
+				LeaveCriticalSection(&song_critical_section);
 				continue;
 			}
 
@@ -136,6 +137,10 @@ UINT CAGInet::QueueSongThreadProc(LPVOID lParam)
 			sUrl += "searchStr=" + sSong;
 
 			DWORD dwSongID = 0;
+
+			if (m_hNotificationWnd) {
+				PostMessage(m_hNotificationWnd, WM_SONGQUEUED, FIND_ID, (LPARAM)pQueueInfo);
+			}
 
 			try {
 				if (!SearchSongID(hInet, sUrl, &dwSongID, pQueueInfo)) {
@@ -246,6 +251,10 @@ UINT CAGInet::QueueThreadProc(LPVOID lParam)
 			else {
 				sUrl.Format("http://www.audiogalaxy.com/satellite/queue.php?g=%lu&bitratePref=%d%%A0kbps", ulSongID, nBitRate);
 			}
+
+			if (m_hNotificationWnd) {
+				PostMessage(m_hNotificationWnd, WM_SONGQUEUED, QUEUE_SONG, (LPARAM)pQueueInfo);
+			}
 			
 			CString sPage;
 			if (!m_pInstance->ReadURL(hInet, sUrl, sPage)) {
@@ -272,15 +281,22 @@ UINT CAGInet::QueueThreadProc(LPVOID lParam)
 
 			if (sPage.Find("Blocked Song") != -1) {
 				EnterCriticalSection(&critical_section);
-				pQueueInfo->nBitRate = 0; // If the song is blocked, we get the most popular version
+				
+				// Since AG closed this hole, blocked songs can't be queued anymore :-(
+				/*pQueueInfo->nBitRate = 0; // If the song is blocked, we get the most popular version
 #ifdef _DEBUG
 				TRACE("\r\nAdding pQueueInfo BLOCKED: %x, %s\r\n", pQueueInfo, pQueueInfo->sSong);
 #endif
-				m_pInstance->m_RequestQueue.AddHead(pQueueInfo);
+				m_pInstance->m_RequestQueue.AddHead(pQueueInfo);*/
+
 				if (m_hNotificationWnd) {
 					PostMessage(m_hNotificationWnd, WM_SONGQUEUED, BLOCKED, (LPARAM)pQueueInfo);
 				}
+				
+				delete pQueueInfo;
+
 				LeaveCriticalSection(&critical_section);
+
 				bSuccess = FALSE;
 			}
 
@@ -293,6 +309,7 @@ UINT CAGInet::QueueThreadProc(LPVOID lParam)
 				TRACE("\r\nDELETING SUCCESS: %x, %s\r\n", pQueueInfo, pQueueInfo->sSong);
 #endif
 				delete pQueueInfo;
+
 				LeaveCriticalSection(&critical_section);
 
 				bSuccess = FALSE;
@@ -302,6 +319,7 @@ UINT CAGInet::QueueThreadProc(LPVOID lParam)
 
 		}
 	}
+
 	TRACE("Ending QueueThreadProc\r\n");
 
 	InternetCloseHandle(hInet);
@@ -439,6 +457,20 @@ void CAGInet::QueueSong(CAGInet::queueInfo *pQueueInfo)
 
 void CAGInet::QueueSong(CString sSong, int nBitRate /* = 0 */)
 {
+	// First we have to clean the songname from invalid characters
+	sSong.Replace("&",  "and"); // The & will cause problems on audiogalaxy's homepage
+	sSong.Replace("**", "uc");  // Guess what this fu**king replacement is for :-)
+	sSong.Replace("?",  "");
+	sSong.Replace("/",  "");
+	sSong.Replace("\\", "");
+	sSong.Replace(":",  "");
+	sSong.Replace("*",  "");
+	sSong.Replace("\"", "");
+	sSong.Replace("<",  "");
+	sSong.Replace(">",  "");
+	sSong.Replace("|",  "");
+
+
 	if (m_pInstance == NULL) {
 		m_pInstance = new CAGInet;
 		if (m_pInstance->m_hKillThread == NULL) {
@@ -486,6 +518,7 @@ BOOL CAGInet::SearchSongID(HINTERNET hInet, LPCTSTR sUrl, DWORD *pdwSongID, queu
 
 	TCHAR sNoResult[] = "No Results";
 	if (sPage.Find(sNoResult) != -1) {
+		EnterCriticalSection(&song_critical_section);
 		// No song was found
 		if (m_hNotificationWnd) {
 			PostMessage(m_hNotificationWnd, WM_SONGQUEUED, NOT_FOUND, (LPARAM)pQueueInfo);
@@ -497,7 +530,16 @@ BOOL CAGInet::SearchSongID(HINTERNET hInet, LPCTSTR sUrl, DWORD *pdwSongID, queu
 #endif
 
 		delete pQueueInfo;
+		LeaveCriticalSection(&song_critical_section);
 		return TRUE;
+	}
+
+	TCHAR sError[] = "An error occurred on";
+	if (sPage.Find(sError) != -1) {
+		// Grrr, an error on the homepage :-(
+		// Don't regard that as a "try"
+		pQueueInfo->nTries--;
+		return FALSE;
 	}
 
 	// Search for the URL of the song and extract the song ID

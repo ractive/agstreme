@@ -16,7 +16,7 @@
 
 #include "WizProcessPage.h"
 
-#include "MP3Header.h"
+#include <sys/stat.h>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -494,24 +494,25 @@ BOOL CMP3Organizer::FetchDBInfo()
 
 	try {
 		songs.Open();
+		// If the songs was not found in the DB, the filename is empty
+		if (!songs.m_filename.IsEmpty()) {
+			if (!m_bLockAlbum && !songs.m_album.IsEmpty())
+				m_sAlbum = songs.m_album;
+			if (!m_bLockArtist && !songs.m_artist.IsEmpty())
+				m_sArtist = songs.m_artist;
 
-		if (!m_bLockAlbum && !songs.m_album.IsEmpty())
-			m_sAlbum = songs.m_album;
-		if (!m_bLockArtist && !songs.m_artist.IsEmpty())
-			m_sArtist = songs.m_artist;
+			if (!m_bLockTitle && !songs.m_songtitle.IsEmpty())
+				m_sTitle = songs.m_songtitle;
 
-		if (!m_bLockTitle && !songs.m_songtitle.IsEmpty())
-			m_sTitle = songs.m_songtitle;
-
-		if (!m_bIncrementTrack && songs.m_track)
-			m_sTrackNum.Format("%d", songs.m_track);
-		
-		if (!songs.m_genre.IsEmpty())
-			m_sGenre = songs.m_genre;
-		
-		if (songs.m_year)
-			m_sYear.Format("%d", songs.m_year);
-
+			if (!m_bIncrementTrack && songs.m_track)
+				m_sTrackNum.Format("%d", songs.m_track);
+			
+			if (!songs.m_genre.IsEmpty())
+				m_sGenre = songs.m_genre;
+			
+			if (songs.m_year)
+				m_sYear.Format("%d", songs.m_year);
+		}
 		songs.Close();
 	}
 	catch (CDaoException * pEx) {
@@ -1062,11 +1063,12 @@ void CMP3Organizer::AddSongToDB(LPCTSTR lpszFileName)
 
 		m_SongsSet.m_year = atoi(m_sYear);
 		m_SongsSet.m_track = atoi(m_sTrackNum);
-		CMP3Header header;
-		header.Open(lpszFileName);
-		COleDateTime length;
-		length.SetTime(0, 0, header.seconds);
-		m_SongsSet.m_size = header.filesize;
+
+		// Determine the filesize
+		struct stat filestat;
+		stat(lpszFileName, &filestat);
+
+		m_SongsSet.m_size = filestat.st_size;
 		m_SongsSet.Update();
 
 		if (bOpened) {

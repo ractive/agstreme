@@ -77,23 +77,24 @@ protected:
 
 // Generated message map functions
 protected:
+	void FetchGroups();
 	BOOL m_bPageLoaded;
 	void RedirectProhibitedSearch();
 	void PrepareSongList();
 	//{{AFX_MSG(CJAGSView)
 	afx_msg void OnBrowserBack();
-	afx_msg void OnBrowserHome();
 	afx_msg void OnBrowserNext();
 	afx_msg void OnBrowserRefresh();
-	afx_msg void OnBrowserUserpage();
-	afx_msg void OnBrowsersat();
 	afx_msg void OnCdcover();
 	afx_msg void OnCddbsearch();
-	afx_msg void OnBrowserNotes();
 	afx_msg void OnLyrics();
 	afx_msg void OnCopy();
 	afx_msg void OnCut();
 	afx_msg void OnPaste();
+	afx_msg void OnBrowserHome();
+	afx_msg void OnBrowserNotes();
+	afx_msg void OnBrowserSat();
+	afx_msg void OnBrowserUser();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "JAGSDoc.h"
 #include "UserMsgs.h"
+#include "MapObject.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -76,6 +77,8 @@ CJAGSDoc::CJAGSDoc(): rb("Settings")
 	rb.Bind(m_bDownloadQueueOnly, "Download idle", TRUE);
 	rb.Bind(m_bDBUpdateID3, "DB Update ID3", TRUE);
 	rb.Bind(m_sFilenameFormat, "Filename format", "<A> - <T>");
+	rb.Bind(m_bQuickScan, "QuickScan", TRUE);
+	rb.Bind(m_bGoldAccount, "GoldAccount", FALSE);
 	memset((void *)&m_Settings, 0, sizeof(m_Settings));
 	m_Settings.alwaysOnTop = FALSE;
 	m_Settings.bandwidthThrottle = 3;
@@ -83,19 +86,21 @@ CJAGSDoc::CJAGSDoc(): rb("Settings")
 	m_Settings.keepLogFile = FALSE;
 	m_Settings.proxyType = 0;
 	m_Settings.showServerStatus = TRUE;
+
+	OpenMapFile();
 }
 
 CJAGSDoc::~CJAGSDoc()
 {
 	ResetSearchRes();
+	ResetGroups();
+	StoreMapFile();
 }
 
 BOOL CJAGSDoc::OnNewDocument()
 {
 	if (!CDocument::OnNewDocument())
 		return FALSE;
-
-	//::PostMessage(AfxGetMainWnd()->GetParentFrame()->m_hWnd, WM_STARTUP, 0, 0);
 
 	return TRUE;
 }
@@ -472,6 +477,17 @@ void CJAGSDoc::AddSong(CString sArtist, CString sSongName, UINT nSongID, int nAv
 	m_SearchRes.AddHead(newSong);
 }
 
+
+void CJAGSDoc::AddGroup(CString sGroupName, UINT nGroupID)
+{
+	group * pNewGroup = new group;
+	pNewGroup->nGroupID = nGroupID;
+	lstrcpy(pNewGroup->sGroupName, sGroupName);
+
+	m_Groups.AddTail(pNewGroup);
+}
+
+
 void CJAGSDoc::GetNextSearchRes(POSITION &pos, CString &sArtist, CString &sSong, UINT &nSongID, int &nAvailability)
 {
 	searchRes * pRes = (searchRes *)m_SearchRes.GetNext(pos);
@@ -479,6 +495,20 @@ void CJAGSDoc::GetNextSearchRes(POSITION &pos, CString &sArtist, CString &sSong,
 	nAvailability = pRes->nAvailability;
 	sSong = pRes->sSong;
 	nSongID = pRes->nSongID;
+}
+
+void CJAGSDoc::GetNextGroup(POSITION &pos, CString &sGroupName, UINT &nGroupID, UINT nCommandID)
+{
+	group * pRes = (group *)m_Groups.GetNext(pos);
+	nGroupID = pRes->nGroupID;
+	sGroupName = pRes->sGroupName;
+	pRes->nCommandID = nCommandID;
+}
+
+void CJAGSDoc::SetGroupCommandID(POSITION pos, UINT nID)
+{
+	group * pGroup = (group *)m_Groups.GetAt(pos);
+	pGroup->nCommandID = nID;
 }
 
 void CJAGSDoc::ResetSearchRes()
@@ -492,8 +522,105 @@ void CJAGSDoc::ResetSearchRes()
 	m_SearchRes.RemoveAll();
 }
 
+void CJAGSDoc::ResetGroups()
+{
+	POSITION pos = m_Groups.GetHeadPosition();
+	while (pos) {
+		group * pRes = (group *)m_Groups.GetNext(pos);
+		delete pRes;
+	}
+
+	m_Groups.RemoveAll();
+}
+
 void CJAGSDoc::SetTitle(LPCTSTR lpszTitle) 
 {
 	m_strTitle = lpszTitle;
 	//CDocument::SetTitle(lpszTitle);
 }
+
+BOOL CJAGSDoc::AddNewFolderMap(LPCTSTR sSongs, LPCTSTR sFolder)
+{
+	CMapObject * pNew = new CMapObject;
+	pNew->m_sFolder = sFolder;
+	pNew->m_sSong = sSongs;
+
+	return m_MapToFolder.AddHead(pNew) != NULL;
+}
+
+void CJAGSDoc::OpenMapFile()
+{
+	try {
+		CFile archive_file;
+		if (!archive_file.Open("filemapping.ags", CFile::modeRead)) {
+			return;
+		}
+
+		CArchive archive(&archive_file, CArchive::load);
+		
+		m_MapToFolder.Serialize(archive);
+		archive.Close();
+		archive_file.Close();
+	}
+	catch (CFileException * pEx) {
+		pEx->Delete();
+	}
+}
+
+void CJAGSDoc::StoreMapFile()
+{
+	try {
+		// Serialize the CObList
+		CFile archive_file;
+		if (!archive_file.Open("filemapping.ags", CFile::modeCreate | CFile::modeWrite)) {
+			return;
+		}
+
+		CArchive archive(&archive_file, CArchive::store);
+		
+		m_MapToFolder.Serialize(archive);
+		archive.Close();
+		archive_file.Close();
+
+		// Clean up
+		POSITION pos = m_MapToFolder.GetHeadPosition();
+		while (pos) {
+			CMapObject * pOb = (CMapObject *)m_MapToFolder.GetNext(pos);
+			delete pOb;
+		}
+
+		m_MapToFolder.RemoveAll();
+	}
+	catch (CFileException * pEx) {
+		pEx->Delete();
+	}
+
+}
+
+CString CJAGSDoc::GetMappedFolder(LPCTSTR lpszSong)
+{
+	POSITION pos = m_MapToFolder.GetHeadPosition();
+	while (pos) {
+		// Keep the old position in case we will remove it
+		POSITION oldPos = pos;
+		CMapObject * pOb = (CMapObject *)m_MapToFolder.GetNext(pos);
+		if (pOb->m_sSong.CompareNoCase(lpszSong) == 0) {
+			// The song was found
+			CString sRet = pOb->m_sFolder;
+			// Remove and delete the object
+			m_MapToFolder.RemoveAt(oldPos);
+			delete pOb;
+			// Return the folder string
+#ifndef _DEBUG
+			//MessageBox("GETMAPPEDFOLDER", "ACHTUNG!");
+#endif
+
+			sRet.Replace("D:\\Eigene Dateien", "G:\\");
+			return sRet;
+		}
+	}
+
+	// Not in list
+	return "";
+}
+

@@ -72,9 +72,10 @@ void CDownloadListDlg::OnRemoveFromList()
 BOOL CDownloadListDlg::OnInitDialog() 
 {
 	CWhiteDialog::OnInitDialog();
-	
-	m_SongList.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
+	DWORD dwExStyle = m_SongList.GetExtendedStyle();
+	m_SongList.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT);
+	
 	m_SongList.InsertColumn(0, "Artist", LVCFMT_LEFT, 192, 0);	
 	m_SongList.InsertColumn(1, "Song", LVCFMT_LEFT, 192, 1);	
 	m_SongList.InsertColumn(2, "Bitrate", LVCFMT_LEFT, 92, 2);	

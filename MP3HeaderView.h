@@ -54,6 +54,7 @@ public:
 	CString	m_sMode;
 	BOOL	m_bVarBitrate;
 	CString	m_sVersion;
+	CString	m_sFrames;
 	//}}AFX_DATA
 
 // Attributes
@@ -72,6 +73,8 @@ public:
 
 // Implementation
 protected:
+	CString m_sFullPath;
+	BOOL ScanFile(LPCTSTR lpszFileName, BOOL bFullScan);
 	virtual ~CMP3HeaderView();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -81,6 +84,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CMP3HeaderView)
 	afx_msg void OnVbr();
+	afx_msg void OnFullScan();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

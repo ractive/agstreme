@@ -48,6 +48,7 @@ public:
 	BOOL SetMRUDirName(UINT n);
 	BOOL GetMRUDirName(int n, CString &sName);
 	void RemoveMRU(int nIndex);
+	static TCHAR AGStremeClipboardFormat[32];
 
 	CJAGSApp();
 
@@ -59,6 +60,7 @@ public:
 	virtual void WinHelp(DWORD dwData, UINT nCmd = HELP_CONTEXT);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual int ExitInstance();
+	virtual BOOL OnIdle(LONG lCount);
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -69,8 +71,11 @@ public:
 	DECLARE_MESSAGE_MAP()
 
 private:
+	void ShowTipAtStartup(void);
+	void ShowTipOfTheDay(void);
 	BOOL FirstInstance();
 	static BOOL m_bClassRegistered;
+	// This defines the name of our internal clipboard format.
 };
 
 

@@ -47,7 +47,9 @@ BEGIN_MESSAGE_MAP(CSongListView, CListView)
 	ON_COMMAND(ID_QUEUE192, OnQueue192)
 	ON_COMMAND(ID_QUEUE256, OnQueue256)
 	ON_COMMAND(ID_QUEUE320, OnQueue320)
+	ON_NOTIFY_REFLECT(LVN_BEGINDRAG, OnBeginDrag)
 	//}}AFX_MSG_MAP
+	ON_COMMAND_RANGE(ID_GROUP, ID_GROUP + 128, OnSendGroup)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -239,12 +241,34 @@ void CSongListView::OnContextMenu(CWnd* pWnd, CPoint point)
 		CMenu menu;
 		VERIFY(menu.LoadMenu(IDR_SONGCONTEXT));
 		CMenu * pPopupMenu = menu.GetSubMenu(0);
+		CMenu groupMenu;
+		groupMenu.CreateMenu();
+
+		// If more than one item is selected we have to disable some elements in the menu
 		if (listCtrl.GetSelectedCount() > 1) {
 			pPopupMenu->EnableMenuItem(ID_CHOOSEVERSION, MF_BYCOMMAND | MF_GRAYED);
 			pPopupMenu->EnableMenuItem(ID_SONGINFO, MF_BYCOMMAND | MF_GRAYED);
 		}
+
+		// If there are groups, we add them to the menu
+		CJAGSDoc * pDoc = GetDocument();
+		if (pDoc->m_Groups.GetCount()) {
+			POSITION pos = pDoc->m_Groups.GetHeadPosition();
+			int n = 0;
+			while (pos) {
+				UINT nGroupID = 0;
+				CString sGroupName;
+				UINT nCommandID = ID_GROUP + n++;
+				pDoc->GetNextGroup(pos, sGroupName, nGroupID, nCommandID);
+				groupMenu.AppendMenu(MF_STRING, nCommandID, sGroupName);
+			}
+
+			pPopupMenu->AppendMenu(MF_POPUP, (UINT)groupMenu.m_hMenu, "Send to &Group");
+		}
+		
 		ClientToScreen(&point);
 		pPopupMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
+		groupMenu.DestroyMenu();
 	}
 	
 	
@@ -285,6 +309,13 @@ void CSongListView::OnSongInfo()
 void CSongListView::OnUpdateSongInfo(CCmdUI* pCmdUI) 
 {
 	pCmdUI->Enable(GetListCtrl().GetSelectedCount() == 1);	
+}
+
+void CSongListView::OnSendGroup(UINT nID)
+{
+	ASSERT(nID >= ID_GROUP && nID < ID_GROUP + 128);
+
+	//http://www.audiogalaxy.com/groups/sendSongToGroup.php?&gID=<your_group_number_goes_here>&g=<the_song_number_goes_here>
 }
 
 void CSongListView::OnQueueSongs() 
@@ -340,4 +371,83 @@ void CSongListView::QueueSongs(int nBitRate)
 			CAGInet::QueueSong(nSongID, sSongName, nBitRate);
 		}
 	}
+}
+
+void CSongListView::OnBeginDrag(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	CListCtrl &ListCtrl = GetListCtrl();
+
+	int nCount = ListCtrl.GetSelectedCount();
+
+	// The size of pFrom.
+	int nSize = 0;
+
+	char *pFrom = new char[nCount * (_MAX_PATH + 1) + 1];
+	// Set it to 0
+	memset(pFrom, '\0', nCount * (_MAX_PATH + 1) + 1);
+	char *cursor = pFrom;
+
+	POSITION pos;
+	pos = ListCtrl.GetFirstSelectedItemPosition();
+	
+	if (pos == NULL) {
+		// No items were selected.
+		return;
+	}
+
+	// Iterate through the ListView with the entries that will be dragged
+	while (pos) {
+		int nItem = ListCtrl.GetNextSelectedItem(pos);
+
+		// Get the filename of the CFileEntry
+		CString sSong = ListCtrl.GetItemText(nItem, 0);
+		sSong += " - " + ListCtrl.GetItemText(nItem, 1) + ".mp3";
+		nSize += sSong.GetLength() + 1;
+
+		char elem[_MAX_PATH];
+		strcpy(elem, sSong);
+		// Copy the filename to pFrom
+		strcpy(cursor, elem);
+		cursor += strlen(elem) + 1;
+	}
+
+	nSize++; // The ending zero char
+
+	NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+
+    // Allocate global memory to hold the clipInfostruct.
+	const int options = GMEM_SHARE | GMEM_MOVEABLE | GMEM_ZEROINIT;
+	HGLOBAL hGlobalClipInfo = GlobalAlloc(options, nSize);
+
+	// Get the ptr to the global allocated memory.
+	char * pGlobalClipInfo = (char *)GlobalLock(hGlobalClipInfo);
+
+	// Copy the list to the global memory.
+	memcpy(pGlobalClipInfo, pFrom, nSize);
+
+	GlobalUnlock(hGlobalClipInfo);
+
+	// We register a new clipboard format to transfer the file as a CFilerList.
+	UINT cb_format = RegisterClipboardFormat(CJAGSApp::AGStremeClipboardFormat);
+
+	DROPEFFECT dropEffect = DROPEFFECT_NONE;
+
+	COleDataSource * pDataSource = new COleDataSource;
+
+	// "Put the data to the clipboard" (if you know what I mean)
+	pDataSource->CacheGlobalData(cb_format, hGlobalClipInfo);
+
+	// Start dragging. This function only returns if the drag-operation is completed.
+	dropEffect = pDataSource->DoDragDrop(DROPEFFECT_LINK, NULL);
+
+	if (dropEffect == DROPEFFECT_LINK) {
+		// Now we queue the songs
+		QueueSongs(GetDocument()->m_nPrefBitrate);	
+	}
+
+	delete pDataSource;
+
+	delete [] pFrom;
+
+	*pResult = 0;
 }

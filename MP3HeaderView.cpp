@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "JAGS.h"
 #include "MP3HeaderView.h"
 #include "JAGSDoc.h"
-#include "MP3Header.h"
+#include "MP3HeaderInfo.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,6 +52,7 @@ CMP3HeaderView::CMP3HeaderView()
 	m_sMode = _T("");
 	m_bVarBitrate = FALSE;
 	m_sVersion = _T("");
+	m_sFrames = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -71,6 +72,7 @@ void CMP3HeaderView::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_MODE, m_sMode);
 	DDX_Check(pDX, IDC_VBR, m_bVarBitrate);
 	DDX_Text(pDX, IDC_VERSION, m_sVersion);
+	DDX_Text(pDX, IDC_FRAMES, m_sFrames);
 	//}}AFX_DATA_MAP
 }
 
@@ -78,6 +80,7 @@ void CMP3HeaderView::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CMP3HeaderView, CFormView)
 	//{{AFX_MSG_MAP(CMP3HeaderView)
 	ON_BN_CLICKED(IDC_VBR, OnVbr)
+	ON_BN_CLICKED(IDC_FULLSCAN, OnFullScan)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -117,10 +120,29 @@ void CMP3HeaderView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		sFilePath = *(CString *)pHint;
 	}
 
-	CMP3Header mp3Info;
+	m_sFullPath = sFilePath;
 
-	if (!mp3Info.Open((LPTSTR)(LPCTSTR)sFilePath))
+	if (!ScanFile(sFilePath, FALSE)) {
 		return;
+	}
+
+	UpdateData(FALSE);	
+	
+}
+
+void CMP3HeaderView::OnVbr() 
+{
+	// Don't allow the value to be changed by clicking on the box
+	// Just put in the value again
+	((CButton *)GetDlgItem(IDC_VBR))->SetCheck(m_bVarBitrate);	
+}
+
+BOOL CMP3HeaderView::ScanFile(LPCTSTR lpszFileName, BOOL bFullScan)
+{
+	CMP3HeaderInfo mp3Info;
+
+	if (!mp3Info.Open((LPTSTR)lpszFileName, bFullScan ? SCAN_FULL : SCAN_QUICK, bFullScan, bFullScan ? 4 : 1))
+		return FALSE;
 
 	char bitrate[16] = {"n/a"};
 	char filesize[16] = {"n/a"};
@@ -132,23 +154,27 @@ void CMP3HeaderView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 	char mpegversion[32] = {"n/a"};
 
 
-	m_sBitrate.Format("%d kbps", mp3Info.bitrate);
-	m_sFileName = sFilePath;
+	m_sBitrate.Format("%d kbps", mp3Info.GetBitrate());
+	m_sFileName = lpszFileName;
 	m_sFileName = m_sFileName.Mid(m_sFileName.ReverseFind('\\') + 1);
+	m_sFileName.Replace("&", "&&");
 	//m_bVarBitrate = mp3Info.isVBitRate();
-	m_sFileSize.Format("%ld", mp3Info.filesize);
-	m_sFrequency.Format("%d", mp3Info.frequency);
-	m_sLength.Format("%02d:%02d", mp3Info.seconds / 60, mp3Info.seconds % 60);
-	m_sMode = mp3Info.Mode();
-	m_sVersion.Format("MPEG %s Layer %s", mp3Info.Version(), mp3Info.Layer());
+	m_sFileSize.Format("%ld", mp3Info.GetFileSize());
+	m_sFrequency.Format("%d", mp3Info.GetFrequency());
+	m_sLength.Format("%02d:%02d", mp3Info.m_nSeconds / 60, mp3Info.m_nSeconds % 60);
+	m_sMode = mp3Info.GetMode();
+	m_sVersion = mp3Info.GetLayerInfo();
+	m_bVarBitrate = mp3Info.m_bVbr;
+	m_sFrames.Format("%d", mp3Info.m_nFrames);
 
-	UpdateData(FALSE);	
-	
+	return TRUE;
 }
 
-void CMP3HeaderView::OnVbr() 
+void CMP3HeaderView::OnFullScan() 
 {
-	// Don't allow the value to be changed by clicking on the box
-	// Just put in the value again
-	((CButton *)GetDlgItem(IDC_VBR))->SetCheck(m_bVarBitrate);	
+	CWaitCursor wait;
+
+	if (ScanFile(m_sFullPath, TRUE)) {
+		UpdateData(FALSE);
+	}
 }

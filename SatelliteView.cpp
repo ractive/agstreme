@@ -29,6 +29,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SatelliteView.h"
 #include "UserMsgs.h"
 #include "TransferStatus.h"
+#include "WinAmpControl.h"
+#include "MP3Organizer.h"
+#include "MP3HeaderInfo.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -112,7 +115,7 @@ void CSatelliteView::OnInitialUpdate()
 	AddHeaders();
 	
 	DWORD dwExStyle = listCtrl.GetExtendedStyle();
-	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP);
+	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT);
 
 }
 
@@ -140,7 +143,7 @@ void CSatelliteView::AddHeaders()
 
 	lvc.fmt = LVCFMT_RIGHT;
 	lvc.iSubItem = nSubItem++;
-	lvc.cx = 100;
+	lvc.cx = 80;
 	lvc.pszText = _T("Size");
 	listCtrl.InsertColumn(2, &lvc);
 
@@ -149,6 +152,14 @@ void CSatelliteView::AddHeaders()
 
 	lvc.pszText = _T("Time left");
 	listCtrl.InsertColumn(4, &lvc);
+
+	lvc.pszText = _T("Bitrate");
+	lvc.cx = 70;
+	listCtrl.InsertColumn(5, &lvc);
+
+	lvc.pszText = _T("Est. songlength");
+	lvc.cx = 90;
+	listCtrl.InsertColumn(6, &lvc);
 
 }
 
@@ -256,6 +267,12 @@ int CSatelliteView::CmpItems(CString cstL, CString cstR, int nCol)
 		return cstL.CompareNoCase(cstR);
 	}
 	else if (nCol == 4) {
+		if (cstL[0] == '?') {
+			return 1;
+		}
+		if (cstR[0] == '?') {
+			return -1;
+		}
 		COleDateTime odtL;
 		COleDateTime odtR;
 		odtL.ParseDateTime(cstL, VAR_TIMEVALUEONLY);
@@ -360,7 +377,6 @@ void CSatelliteView::AddFileEntry(fileEntry *entry)
 		lvi.iItem = nInserted;
 		lvi.pszText = sSize;
 		listCtrl.SetItem(&lvi);
-	
 	}
 	else {
 		lvi.iItem = nFind;
@@ -397,13 +413,8 @@ void CSatelliteView::AddFileEntry(fileEntry *entry)
 	if (entry->nSpeed > 0) {
 		// How many seconds left?
 		nSeconds = (entry->nSize - entry->nPos) / entry->nSpeed;
-		//if (nSeconds > 3600) {
-			// Takes over an hour:-(
-			sprintf(s, "%d:%02d:%02d", nSeconds / 3600, (nSeconds % 3600) / 60, nSeconds % 60);
-		/*}
-		else {
-			sprintf(s, "%d:%02d", nSeconds / 60, nSeconds % 60);
-		}*/
+
+		sprintf(s, "%d:%02d:%02d", nSeconds / 3600, (nSeconds % 3600) / 60, nSeconds % 60);
 	}
 	else {
 		sprintf(s, "??:??");
@@ -412,6 +423,42 @@ void CSatelliteView::AddFileEntry(fileEntry *entry)
 	lvi.iSubItem = 4;
 	lvi.pszText = s;
 	listCtrl.SetItem(&lvi);
+
+	// Now we try to determine the bitrate of the downloaded song 
+	// every 10th time
+	if ((entry->nUpdateCounter % 10) == 0 && entry->nUpdateCounter <= 30) {
+		CMP3HeaderInfo mp3Header;
+		CString sFileName = GetDocument()->m_aShares.GetHead();
+		if (sFileName.Right(1) != "\\") {
+			sFileName += "\\";
+		}
+		
+		sFileName += entry->sFileName;
+		sFileName += ".temp";
+		
+		if (mp3Header.Open((LPTSTR)(LPCTSTR)sFileName, SCAN_QUICK, FALSE)) {
+			entry->nBitrate = mp3Header.GetBitrate();
+			int nSeconds = mp3Header.EstimateSeconds(entry->nSize);
+			sprintf(entry->sPlayLength, "%d:%02d:%02d", nSeconds / 3600, (nSeconds % 3600) / 60, nSeconds % 60);
+		}
+	}
+
+	lvi.iSubItem = 5;
+	CString sBitrate;
+	if (entry->nBitrate == -1) {
+		sBitrate = "";
+	}
+	else {
+		sBitrate.Format("%d", entry->nBitrate);
+	}
+	lvi.pszText = (LPTSTR)(LPCTSTR)sBitrate;
+	listCtrl.SetItem(&lvi);
+
+	lvi.iSubItem = 6;
+	lvi.pszText = entry->sPlayLength;
+	listCtrl.SetItem(&lvi);
+
+	entry->nUpdateCounter++;
 
 	m_Mutex.Unlock();
 }
@@ -442,13 +489,52 @@ void CSatelliteView::ShowNoTransfer()
 
 void CSatelliteView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint) 
 {
-	if (lHint == NEW_FILELIST && !m_bFillingList) {
-		CJAGSDoc * pDoc = GetDocument();
-/*		FillList();
-		CleanUpList();*/
-	}
-	else if (lHint == NEW_FILE) {
+	if (lHint == NEW_FILE) {
 		CleanUpList();
+
+		if (pHint) {
+			BOOL bMoved = FALSE;
+
+			CJAGSDoc * pDoc = GetDocument();
+
+			CString * psFile = (CString *)pHint;
+			// Check if the file is mapped to a directory by a drag operation
+
+			CString sFolder = pDoc->GetMappedFolder(*psFile);
+			if (!sFolder.IsEmpty()) {
+				// Now we try to move the file to the 
+				CString sDownloadDir = pDoc->m_aShares.GetHead();
+				if (sDownloadDir.Right(1) != "\\") {
+					sDownloadDir += "\\";
+				}
+				if (sFolder.Right(1) != "\\") {
+					sFolder += "\\";
+				}
+
+				bMoved = MoveFile(sDownloadDir + *psFile, sFolder + *psFile);
+			}
+
+			if (!bMoved) {
+				// There was no specific folder 
+				// Try to handle the file automatically
+				if (pDoc->m_bAutoOrganize) {
+					HandleAutoOrganize(psFile);
+				}
+			}
+
+			if (pDoc->m_bAddToPlaylist) {
+				CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
+				pWinAmpCtrl->AddToPlaylist(*psFile);
+			}
+
+			// Add the file to the music database
+			CMP3Organizer organizer;
+			organizer.m_Action = UPDATE_DB;
+			organizer.m_pSharesList = &pDoc->m_aShares;
+			organizer.AddSongToDB(*psFile);
+
+		}
+
 	}
 }
 
@@ -531,3 +617,98 @@ void CSatelliteView::OnPaint()
 	dc.DrawText(szStr, Rect, nFormat); 
 }
 
+
+void CSatelliteView::HandleAutoOrganize(CString *pString)
+{
+	CJAGSDoc * pDoc = GetDocument();
+	// First we check if this file exists :-)
+	
+	CString sFullPath = pDoc->m_aShares.GetHead();
+	if (sFullPath.Right(1) != "\\") {
+		sFullPath += "\\";
+	}
+
+	CFileFind finder;
+	if (!finder.FindFile(sFullPath + *pString)) {
+		// Hmmpf. the file does not exist
+		return;
+	}
+
+	finder.Close();
+
+	// Now we extract the artist name from the filename
+
+	// The file name always looks like:
+	//      artistname - song name.mp3
+	CString sArtist = pString->Left(pString->Find('-'));
+	sArtist.TrimLeft();
+	sArtist.TrimRight();
+
+	BOOL bDirExists = FALSE;
+	// Let's see if the directory already exists
+	BOOL bFound = finder.FindFile(sFullPath + sArtist);
+	
+	if (bFound) {
+		// There is such an object...
+		finder.FindNextFile();
+		// ...check if it's really a directory
+		bDirExists = finder.IsDirectory();
+	}
+	finder.Close();
+
+
+	if (!bDirExists) {
+		// If the directory doesn't exist, we check if there
+		// are enough file to create one
+
+		bFound = finder.FindFile(sFullPath + sArtist + "*");
+		
+		// Count how many files of the same artist are present
+		int nFound = 0;
+		while (bFound) {
+			bFound = finder.FindNextFile();
+			nFound++;
+			if (nFound >= pDoc->m_nSameArtist) {
+				// Enough files found
+				break;
+			}
+		}
+		finder.Close();
+
+		if (nFound < pDoc->m_nSameArtist) {
+			// Not enough files to make an own folder
+			// Leave now...
+			return;
+		}
+
+		// There isn't a dir yet, but enough files
+		// Create a new directory for this artist
+		if (!CreateDirectory(sFullPath + sArtist, NULL)) {
+			// Ooops
+			return;
+		}
+
+		//pDoc->UpdateAllViews(this, NEW_DIRCREATED, (CObject *)&sFullPath);
+	}
+
+	bFound = finder.FindFile(sFullPath + sArtist + "*.mp3");
+	
+	// Now we actually move the files
+
+	BOOL bMoved = FALSE;
+	BOOL bRet = FALSE;
+
+	while (bFound) {
+		bFound = finder.FindNextFile();
+		CString sFileName = finder.GetFileName();
+		bMoved |= MoveFile(finder.GetFilePath(), sFullPath + sArtist + "\\" + sFileName);
+		if (bMoved && *pString == sFileName) {
+			// The new file was moved
+			// Update the String
+			*pString = sFullPath + sArtist + "\\" + sFileName;
+			bRet = TRUE;
+		}
+	}
+
+	finder.Close();
+}

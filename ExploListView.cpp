@@ -53,7 +53,6 @@ BEGIN_MESSAGE_MAP(CExploListView, CListView)
 	ON_NOTIFY_REFLECT(NM_DBLCLK, OnDblclk)
 	ON_NOTIFY(HDN_ITEMCLICK, 0, OnHeaderClick)
 	ON_NOTIFY_REFLECT(LVN_ITEMCHANGED, OnItemChanged)
-	ON_UPDATE_COMMAND_UI(ID_CDCOVER, OnUpdateBrowser)
 	ON_COMMAND(ID_WINAMPADDTOPL, OnWinampAddtoPL)
 	ON_NOTIFY_REFLECT(LVN_BEGINDRAG, OnBegindrag)
 	ON_WM_CONTEXTMENU()
@@ -68,8 +67,6 @@ BEGIN_MESSAGE_MAP(CExploListView, CListView)
 	ON_WM_TIMER()
 	ON_COMMAND(ID_ADDTOFAVORITES, OnAddToFavorites)
 	ON_WM_DESTROY()
-	ON_UPDATE_COMMAND_UI(ID_LYRICS, OnUpdateBrowser)
-	ON_UPDATE_COMMAND_UI(ID_CDDBSEARCH, OnUpdateBrowser)
 	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_FILECHANGE, OnFileChange)
@@ -184,30 +181,7 @@ void CExploListView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 	CJAGSDoc * pDoc = GetDocument();
 	
-	if (lHint == NEW_FILE && !m_bDBView) {
-		if (pHint) {
-			CString * psFile = (CString *)pHint;
-			if (pDoc->m_bAutoOrganize) {
-				HandleAutoOrganize(psFile);
-			}
-			if (pDoc->m_bAddToPlaylist) {
-				CWinAmpControl * pWinAmpCtrl = CWinAmpControl::GetInstance();
-				pWinAmpCtrl->AddToPlaylist(*psFile);
-			}
-
-			// Add the file to the music database
-			CMP3Organizer organizer;
-			organizer.m_Action = UPDATE_DB;
-			organizer.m_pSharesList = &pDoc->m_aShares;
-			organizer.AddSongToDB(*psFile);
-
-		}
-		else {
-			ScanFiles();
-		}
-	}
-
-	else if (lHint == NEW_DIR) {
+	if (lHint == NEW_DIR) {
 		m_bDBView = FALSE;
 		ScanFiles();
 		strcpy(m_pThreadInfo->sDir, pDoc->GetPathName());
@@ -277,6 +251,17 @@ void CExploListView::ScanFiles()
 {
 	CJAGSDoc * pDoc = GetDocument();
 	CListCtrl &listCtrl = GetListCtrl();
+
+	// First we get the selected item to restore the scroll position afterwards
+	int nSel = -1;
+	CString sSelItem;
+	int nPos = 0;
+	POSITION pos = listCtrl.GetFirstSelectedItemPosition();
+	if (pos) {
+		nSel = listCtrl.GetNextSelectedItem(pos);
+		sSelItem = listCtrl.GetItemText(nSel, 0);
+	}
+
 	listCtrl.DeleteAllItems();
 
 
@@ -293,7 +278,7 @@ void CExploListView::ScanFiles()
 	while (bFound) {
 		bFound = finder.FindNextFile();
 		FILETIME ft;
-		finder.GetLastWriteTime(&ft);
+		finder.GetCreationTime(&ft);
 		AddFile(finder.GetFileName(), finder.GetLength(), &ft, MP3);
 		AddFile(finder.GetFilePath());
 	}
@@ -301,6 +286,27 @@ void CExploListView::ScanFiles()
 	finder.Close();
 
 	SortItems(m_nSortedCol, m_bSortAscending, 0);
+
+	if (!sSelItem.IsEmpty()) {
+		// Try to locate the previously selected item again
+		LVFINDINFO lvfi;
+		lvfi.flags = LVFI_STRING;
+		lvfi.psz = sSelItem;
+		int nNewSel = listCtrl.FindItem(&lvfi);
+		if (nNewSel != -1) {
+			// The ol selection was found in the new list
+			// This will be the new selection as well
+			nSel = nNewSel;
+		}
+	}
+
+	if (nSel != -1) {
+		// Select the item again
+		listCtrl.SetItemState(nSel, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+		// Make it visible
+		listCtrl.EnsureVisible(nSel, FALSE);
+		return;
+	}
 }
 
 void CExploListView::AddFile(const CString sFileName, DWORD ulSize, FILETIME * ft, MOV_TYPE type, DWORD dwParam /* = 0 */)
@@ -533,107 +539,107 @@ int CExploListView::CmpItems(CString cstL, CString cstR, int nCol)
 
 }
 
-BOOL CExploListView::HandleAutoOrganize(CString *pString)
-{
-	CJAGSDoc * pDoc = GetDocument();
-	// First we check if this file exists :-)
-	
-	CString sFullPath = pDoc->m_aShares.GetHead();
-	if (sFullPath.Right(1) != "\\") {
-		sFullPath += "\\";
-	}
-
-	CFileFind finder;
-	if (!finder.FindFile(sFullPath + *pString)) {
-		// Hmmpf. the file does not exist
-		return FALSE;
-	}
-
-	finder.Close();
-
-	// Now we extract the artist name from the filename
-
-	// The file name always looks like:
-	//      artistname - song name.mp3
-	CString sArtist = pString->Left(pString->Find('-'));
-	sArtist.TrimLeft();
-	sArtist.TrimRight();
-
-	BOOL bDirExists = FALSE;
-	// Let's see if the directory already exists
-	BOOL bFound = finder.FindFile(sFullPath + sArtist);
-	
-	if (bFound) {
-		// There is such an object...
-		finder.FindNextFile();
-		// ...check if it's really a directory
-		bDirExists = finder.IsDirectory();
-	}
-	finder.Close();
-
-
-	if (!bDirExists) {
-		// If the directory doesn't exist, we check if there
-		// are enough file to create one
-
-		bFound = finder.FindFile(sFullPath + sArtist + "*");
-		
-		// Count how many files of the same artist are present
-		int nFound = 0;
-		while (bFound) {
-			bFound = finder.FindNextFile();
-			nFound++;
-			if (nFound >= pDoc->m_nSameArtist) {
-				// Enough files found
-				break;
-			}
-		}
-		finder.Close();
-
-		if (nFound < pDoc->m_nSameArtist) {
-			// Not enough file to make an own folder
-			// Leave now...
-			return FALSE;
-		}
-
-		// There isn't a dir yet, but enough files
-		// Create a new directory for this artist
-		if (!CreateDirectory(sFullPath + sArtist, NULL)) {
-			// Ooops
-			return FALSE;
-		}
-
-		//pDoc->UpdateAllViews(this, NEW_DIRCREATED, (CObject *)&sFullPath);
-	}
-
-	bFound = finder.FindFile(sFullPath + sArtist + "*.mp3");
-	
-	// Now we actually move the files
-
-	BOOL bMoved = FALSE;
-	BOOL bRet = FALSE;
-
-	while (bFound) {
-		bFound = finder.FindNextFile();
-		CString sFileName = finder.GetFileName();
-		bMoved |= MoveFile(finder.GetFilePath(), sFullPath + sArtist + "\\" + sFileName);
-		if (bMoved && *pString == sFileName) {
-			// The new file was moved
-			// Update the String
-			*pString = sFullPath + sArtist + "\\" + sFileName;
-			bRet = TRUE;
-		}
-	}
-
-	if (bMoved) {
-		// If files have been moved, we have to tell that the satellite
-		CAGSocket::GetInstance()->SendInitRescan();
-	}
-
-	finder.Close();
-
-	return bRet;
-}
+//DEL BOOL CExploListView::HandleAutoOrganize(CString *pString)
+//DEL {
+//DEL 	CJAGSDoc * pDoc = GetDocument();
+//DEL 	// First we check if this file exists :-)
+//DEL 	
+//DEL 	CString sFullPath = pDoc->m_aShares.GetHead();
+//DEL 	if (sFullPath.Right(1) != "\\") {
+//DEL 		sFullPath += "\\";
+//DEL 	}
+//DEL 
+//DEL 	CFileFind finder;
+//DEL 	if (!finder.FindFile(sFullPath + *pString)) {
+//DEL 		// Hmmpf. the file does not exist
+//DEL 		return FALSE;
+//DEL 	}
+//DEL 
+//DEL 	finder.Close();
+//DEL 
+//DEL 	// Now we extract the artist name from the filename
+//DEL 
+//DEL 	// The file name always looks like:
+//DEL 	//      artistname - song name.mp3
+//DEL 	CString sArtist = pString->Left(pString->Find('-'));
+//DEL 	sArtist.TrimLeft();
+//DEL 	sArtist.TrimRight();
+//DEL 
+//DEL 	BOOL bDirExists = FALSE;
+//DEL 	// Let's see if the directory already exists
+//DEL 	BOOL bFound = finder.FindFile(sFullPath + sArtist);
+//DEL 	
+//DEL 	if (bFound) {
+//DEL 		// There is such an object...
+//DEL 		finder.FindNextFile();
+//DEL 		// ...check if it's really a directory
+//DEL 		bDirExists = finder.IsDirectory();
+//DEL 	}
+//DEL 	finder.Close();
+//DEL 
+//DEL 
+//DEL 	if (!bDirExists) {
+//DEL 		// If the directory doesn't exist, we check if there
+//DEL 		// are enough file to create one
+//DEL 
+//DEL 		bFound = finder.FindFile(sFullPath + sArtist + "*");
+//DEL 		
+//DEL 		// Count how many files of the same artist are present
+//DEL 		int nFound = 0;
+//DEL 		while (bFound) {
+//DEL 			bFound = finder.FindNextFile();
+//DEL 			nFound++;
+//DEL 			if (nFound >= pDoc->m_nSameArtist) {
+//DEL 				// Enough files found
+//DEL 				break;
+//DEL 			}
+//DEL 		}
+//DEL 		finder.Close();
+//DEL 
+//DEL 		if (nFound < pDoc->m_nSameArtist) {
+//DEL 			// Not enough file to make an own folder
+//DEL 			// Leave now...
+//DEL 			return FALSE;
+//DEL 		}
+//DEL 
+//DEL 		// There isn't a dir yet, but enough files
+//DEL 		// Create a new directory for this artist
+//DEL 		if (!CreateDirectory(sFullPath + sArtist, NULL)) {
+//DEL 			// Ooops
+//DEL 			return FALSE;
+//DEL 		}
+//DEL 
+//DEL 		//pDoc->UpdateAllViews(this, NEW_DIRCREATED, (CObject *)&sFullPath);
+//DEL 	}
+//DEL 
+//DEL 	bFound = finder.FindFile(sFullPath + sArtist + "*.mp3");
+//DEL 	
+//DEL 	// Now we actually move the files
+//DEL 
+//DEL 	BOOL bMoved = FALSE;
+//DEL 	BOOL bRet = FALSE;
+//DEL 
+//DEL 	while (bFound) {
+//DEL 		bFound = finder.FindNextFile();
+//DEL 		CString sFileName = finder.GetFileName();
+//DEL 		bMoved |= MoveFile(finder.GetFilePath(), sFullPath + sArtist + "\\" + sFileName);
+//DEL 		if (bMoved && *pString == sFileName) {
+//DEL 			// The new file was moved
+//DEL 			// Update the String
+//DEL 			*pString = sFullPath + sArtist + "\\" + sFileName;
+//DEL 			bRet = TRUE;
+//DEL 		}
+//DEL 	}
+//DEL 
+//DEL 	if (bMoved) {
+//DEL 		// If files have been moved, we have to tell that the satellite
+//DEL 		CAGSocket::GetInstance()->SendInitRescan();
+//DEL 	}
+//DEL 
+//DEL 	finder.Close();
+//DEL 
+//DEL 	return bRet;
+//DEL }
 
 void CExploListView::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult) 
 {
@@ -674,13 +680,6 @@ void CExploListView::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult)
 		}
 	}
 	*pResult = 0;
-}
-
-void CExploListView::OnUpdateBrowser(CCmdUI* pCmdUI) 
-{
-	// Enable the item if a song is selected
-	POSITION pos = GetListCtrl().GetFirstSelectedItemPosition();
-	pCmdUI->Enable(pos != NULL);
 }
 
 void CExploListView::OnWinampAddtoPL() 
@@ -796,7 +795,7 @@ BOOL CExploListView::PrepareData(BOOL bForClipBoard)
 		delete pDataSource;
 	}
 
-	delete pFrom;
+	delete [] pFrom;
 	return true;
 }
 
@@ -999,6 +998,11 @@ void CExploListView::ShowContextMenu(IShellFolder * pFolder, LPCITEMIDLIST *pidl
 	LPCONTEXTMENU pCMx;
 	// m_psfFolder: active IShellFolder; m_localPidl: selected item
 	HRESULT hr = GetSHContextMenu(pFolder, pidlItems, nCount, (void**)&pCMx, &cmType);
+	
+	if (!pCMx) {
+		return;
+	}
+	
 	// fill the menu with the standard shell items
 	hr = pCMx->QueryContextMenu(menu, 0, MIN_SHELL_ID, MAX_SHELL_ID, CMF_EXPLORE);
 
@@ -1184,7 +1188,7 @@ UINT CExploListView::WatchChangeThreadProc(LPVOID pParam)
 
 LRESULT CExploListView::OnFileChange(WPARAM wParam, LPARAM lParam)
 {
-	GetDocument()->UpdateAllViews(NULL, NEW_FILE);
+	ScanFiles();
 	return 1;
 }
 
@@ -1378,7 +1382,7 @@ void CExploListView::OnDragLeave()
 BOOL CExploListView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point) 
 {
 	BOOL bRet = FALSE;
-	
+
 	if (m_bDBView) {
 		// Don't allow drag and drop operations if a DB selection is shown
 		return bRet;
@@ -1597,11 +1601,12 @@ void CExploListView::OnPaint()
 	} 
 	
 	CPaintDC dc(this); // device context for painting
-	
+
 	CRect Rect; 
 	GetClientRect(Rect); 
-	CString szStr = _T("No MP3 files in this directory"); 
+	CString szStr = _T("No MP3 files found"); 
 	UINT nFormat = DT_CENTER | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP | DT_VCENTER | DT_SINGLELINE; 
 	dc.SelectStockObject(ANSI_VAR_FONT); 
 	dc.DrawText(szStr, Rect, nFormat); 
 }
+

@@ -115,8 +115,8 @@ void CViewBar::OnSize(UINT nType, int cx, int cy)
 		CRect rc;
 
 		GetClientRect(rc);
-		m_pView->SetWindowPos(NULL, rc.left, rc.top, rc.Width(), rc.Height(), SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-		//m_pView->MoveWindow(rc);
+		//m_pView->SetWindowPos(NULL, rc.left, rc.top, rc.Width(), rc.Height(), SWP_NOZORDER | SWP_SHOWWINDOW);
+		m_pView->MoveWindow(rc);
 	}
 }
 

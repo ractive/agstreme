@@ -69,6 +69,7 @@ protected:
 
 	// Generated message map functions
 protected:
+	void HandleAutoOrganize(CString *pString);
 	void CleanUpList();
 	int FindSong(LPCTSTR lpszSongName);
 	//{{AFX_MSG(CSatelliteView)

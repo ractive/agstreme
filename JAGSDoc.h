@@ -72,6 +72,7 @@ typedef enum {
 
 #include "TransferStatus.h"
 #include "RegBinding.h"
+#include "MapToFolderList.h"	// Added by ClassView
 
 class CJAGSDoc : public CDocument
 {
@@ -80,6 +81,12 @@ class CJAGSDoc : public CDocument
 		TCHAR sSong[256];
 		UINT nSongID;
 		int nAvailability;
+	};
+
+	struct group {
+		TCHAR sGroupName[256];
+		UINT nGroupID;
+		UINT nCommandID;
 	};
 
 //basic UI settings -- this is written out to a file
@@ -149,10 +156,13 @@ public:
 
 	CString m_sSearch;
 	CPtrList m_SearchRes;
+	CPtrList m_Groups;
 protected:
 
 // Generated message map functions
 protected:
+	void StoreMapFile();
+	void OpenMapFile();
 	//{{AFX_MSG(CJAGSDoc)
 		// NOTE - the ClassWizard will add and remove member functions here.
 		//    DO NOT EDIT what you see in these blocks of generated code !
@@ -166,13 +176,24 @@ private:
 	UINT m_nTransferRecvRate;
 	UINT m_nTransferSendRate;
 
+	CMapToFolderList m_MapToFolder;
 
 public:
+	void SetGroupCommandID(POSITION pos, UINT nID);
+	void AddGroup(CString sGroupName, UINT nGroupID);
+	CString m_sAlbum;
+	int m_nPrefBitrate;
+	CString GetMappedFolder(LPCTSTR lpszSong);
+	BOOL AddNewFolderMap(LPCTSTR sSongs, LPCTSTR sFolder);
 	BOOL m_bDBUpdateID3;
 	CString m_sFilenameFormat;
 
 	void ResetSearchRes();
+	void ResetGroups();
+
 	void GetNextSearchRes(POSITION &pos, CString &sArtist, CString &sSong, UINT &nSongID, int &nAvailability);
+	void GetNextGroup(POSITION &pos, CString &sGroupName, UINT &nGroupID, UINT nCommandID);
+
 	void AddSong(CString sArtist, CString sSongName, UINT nSongID, int nAvailability);
 	int m_uIdleMinutes;
 	BOOL m_bHangupIdle;
@@ -195,6 +216,9 @@ public:
 
 	int m_nSameArtist;
 
+	BOOL m_bQuickScan;
+	BOOL m_bGoldAccount;
+		
 	CRegBinding rb;
 	CString GetFilePath();
 	UINT GetTransferRecvRate();

@@ -76,7 +76,7 @@ void CFavoriteListView::OnInitialUpdate()
 	CListCtrl &listCtrl = GetListCtrl();
 	
 	DWORD dwExStyle = listCtrl.GetExtendedStyle();
-	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP);
+	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT);
 
 
 	m_wndToolBar.SetParent(GetParentFrame());

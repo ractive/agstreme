@@ -127,8 +127,8 @@ BEGIN
     SEPARATOR
     BUTTON      ID_QUEUESONGS
     SEPARATOR
-    BUTTON      ID_CDCOVER
     BUTTON      ID_CDDBSEARCH
+    BUTTON      ID_CDCOVER
     BUTTON      ID_LYRICS
 END
 
@@ -153,6 +153,8 @@ BEGIN
         MENUITEM "Create a new account...",     ID_NEWACCOUNT
         MENUITEM SEPARATOR
         MENUITEM "Preferences...",              ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "Close connection",            ID_CLOSECONNECTION
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
@@ -179,8 +181,22 @@ BEGIN
         MENUITEM "&Reset connection",           ID_EXTRAS_RESETCONNECTION
         MENUITEM "&Create random playlist",     ID_PLAYLISTGEN
     END
+    POPUP "Browser"
+    BEGIN
+        MENUITEM "Search album on CDDB",        ID_CDDBSEARCH
+        MENUITEM "Search for a CD-Cover",       ID_CDCOVER
+        MENUITEM "Search for lyrics",           ID_LYRICS
+        MENUITEM "Download most popular version", ID_QUEUESONGS
+        MENUITEM SEPARATOR
+        MENUITEM "Audiogalaxy homepage",        ID_BROWSERHOME
+        MENUITEM "Personal page",               ID_BROWSERUSER
+        MENUITEM "Satellite queue",             ID_BROWSERSAT
+        MENUITEM "Personal messages",           ID_BROWSERNOTES
+    END
     POPUP "&Help"
     BEGIN
+        MENUITEM "Tip of the day...",           CG_IDS_TIPOFTHEDAY
+        MENUITEM SEPARATOR
         MENUITEM "&Help...",                    ID_HELP
         MENUITEM "&About AGStreme...",          ID_APP_ABOUT
     END
@@ -231,6 +247,7 @@ BEGIN
             MENUITEM "256 kbps version",            ID_QUEUE256
             MENUITEM "320 kbps version",            ID_QUEUE320
         END
+        MENUITEM "Send to &group",              65535
     END
 END
 
@@ -258,6 +275,7 @@ BEGIN
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_LEFT,        ID_ACCEL32852,          VIRTKEY, NOINVERT
     VK_RETURN,      ID_PROPERTY,            VIRTKEY, ALT, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
@@ -269,20 +287,22 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 71
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 236, 90
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About AGStreme"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,25,21,20
-    LTEXT           "AGStreme Version 2.0\r\n26. Sept. 2001",IDC_STATIC,41,
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,25,20,20
+    LTEXT           "AGStreme Version 2.22\r\n28. April 2001",IDC_STATIC,41,
                     10,119,18,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2001 by J.P Bergamin",IDC_STATIC,41,30,
-                    119,8
-    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
-    LTEXT           "http://www.ractive.ch/gpl/AGStreme.html",IDC_URL,41,56,
+    LTEXT           "Copyright (C) 2001-2002 by J.P Bergamin",IDC_STATIC,41,
+                    30,179,8
+    DEFPUSHBUTTON   "OK",IDOK,179,7,50,14,WS_GROUP
+    LTEXT           "http://www.ractive.ch/gpl/AGStreme.html",IDC_URL,41,54,
                     134,8
     LTEXT           "For the full source code visit:",IDC_STATIC,41,45,91,8
+    LTEXT           "Visit the AGStreme-forum under:",IDC_STATIC,41,65,101,8
+    LTEXT           "http://forum.ractive.ch",IDC_FORUM,41,75,72,8
 END
 
 IDR_MAINFRAME DIALOG DISCARDABLE  0, 0, 203, 16
@@ -294,32 +314,37 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_MP3HEADER DIALOGEX 0, 0, 207, 95
+IDD_MP3HEADER DIALOGEX 0, 0, 207, 108
 STYLE WS_CHILD
 FONT 7, "Small Fonts", 0, 0, 0x1
 BEGIN
     CONTROL         "Variable BitRate",IDC_VBR,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,46,35,70,10
+                    WS_TABSTOP,46,33,70,10
     LTEXT           "Filename:",IDC_STATIC,2,4,40,8,SS_CENTERIMAGE
     LTEXT           "Version:",IDC_STATIC,2,18,39,8,SS_CENTERIMAGE
-    LTEXT           "Bitrate:",IDC_STATIC,2,53,39,8,SS_CENTERIMAGE
-    LTEXT           "Length:",IDC_STATIC,109,67,25,8,SS_CENTERIMAGE
-    LTEXT           "Frequency:",IDC_STATIC,2,67,44,8,SS_CENTERIMAGE
-    LTEXT           "Size:",IDC_STATIC,109,53,30,8,SS_CENTERIMAGE
-    LTEXT           "Mode:",IDC_STATIC,2,81,30,8,SS_CENTERIMAGE
+    LTEXT           "Bitrate:",IDC_STATIC,2,49,39,8,SS_CENTERIMAGE
+    LTEXT           "Length:",IDC_STATIC,109,63,25,8,SS_CENTERIMAGE
+    LTEXT           "Frequency:",IDC_STATIC,2,63,44,8,SS_CENTERIMAGE
+    LTEXT           "Size:",IDC_STATIC,109,49,30,8,SS_CENTERIMAGE
+    LTEXT           "Mode:",IDC_STATIC,2,77,30,8,SS_CENTERIMAGE
     LTEXT           "",IDC_FILENAME,46,2,154,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
     LTEXT           "",IDC_VERSION,46,16,154,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_BITRATE,46,51,55,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_BITRATE,46,47,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_FREQUENCY,46,65,55,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_FREQUENCY,46,61,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_LENGTH,147,65,55,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_LENGTH,147,61,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_FILESIZE,147,51,55,12,SS_CENTERIMAGE,
+    LTEXT           "",IDC_FILESIZE,147,47,55,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    LTEXT           "",IDC_MODE,46,80,55,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    LTEXT           "",IDC_MODE,46,76,55,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
+    LTEXT           "Frames:",IDC_STATIC,109,77,28,8
+    LTEXT           "",IDC_FRAMES,147,76,55,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    PUSHBUTTON      "Full scan (for precise results)",IDC_FULLSCAN,2,93,200,
+                    14
 END
 
 IDD_ACCOUNT DIALOG DISCARDABLE  0, 0, 291, 127
@@ -327,14 +352,17 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Account"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Username:",IDC_STATIC,83,15,35,8
-    EDITTEXT        IDC_USERNAME,133,15,65,14,ES_AUTOHSCROLL
-    LTEXT           "Password:",IDC_STATIC,83,37,34,8
-    EDITTEXT        IDC_PASSWORD,133,34,65,14,ES_PASSWORD | ES_AUTOHSCROLL
-    PUSHBUTTON      "Create new account",IDC_CREATEACCOUNT,81,75,129,14
-    PUSHBUTTON      "Login",IDC_LOGIN,81,54,129,14
+    LTEXT           "Username:",IDC_STATIC,83,12,35,8
+    EDITTEXT        IDC_USERNAME,132,12,65,14,ES_AUTOHSCROLL
+    LTEXT           "Password:",IDC_STATIC,83,34,34,8
+    EDITTEXT        IDC_PASSWORD,132,31,65,14,ES_PASSWORD | ES_AUTOHSCROLL
+    PUSHBUTTON      "Create new account",IDC_CREATEACCOUNT,81,83,129,14
+    PUSHBUTTON      "Login",IDC_LOGIN,81,64,129,14
     GROUPBOX        "",IDC_STATIC,0,0,284,120
-    PUSHBUTTON      "I forgot my password :-(",IDC_LOSTPASSWORD,81,97,129,14
+    PUSHBUTTON      "I forgot my password :-(",IDC_LOSTPASSWORD,81,103,129,
+                    14
+    CONTROL         "Gold account",IDC_GOLDACCOUNT,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,81,49,59,10
 END
 
 IDD_OPTIONS DIALOG DISCARDABLE  0, 0, 286, 170
@@ -344,17 +372,22 @@ FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Add downloaded files to current WinAmp play list",
                     IDC_ADDTOPLAYLIST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    9,94,169,10
+                    9,132,169,10
     CONTROL         "Start WinAmp at startup",IDC_STARTWINAMP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,9,82,91,10
-    LTEXT           "Executable:",IDC_STATIC,7,67,38,8
-    EDITTEXT        IDC_WINAMPEXE,48,64,204,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_OPENWINAMPEXE,260,64,19,14
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,120,91,10
+    LTEXT           "Executable:",IDC_STATIC,7,105,38,8
+    EDITTEXT        IDC_WINAMPEXE,48,102,204,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_OPENWINAMPEXE,260,102,19,14
     GROUPBOX        "",IDC_STATIC,0,0,284,163
     CONTROL         "Keep log file",IDC_KEEPLOG,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,19,55,10
-    GROUPBOX        "Winamp",IDC_STATIC,3,56,278,52
-    GROUPBOX        "General",IDC_STATIC,3,8,278,46
+    GROUPBOX        "Winamp",IDC_STATIC,3,94,278,52
+    GROUPBOX        "General",IDC_STATIC,3,8,278,73
+    CONTROL         "Use quick scan to calculate bitrate in the ""MP3 details"" list",
+                    IDC_QUICKSCAN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,33,
+                    200,10
+    LTEXT           "When unchecking this box, the listing of the MP3 files will take much longer,\r\nbut the results are more adequate.\r\nIn 99% of all cases a ""quick scan"" brings good enough results.",
+                    IDC_STATIC,20,48,247,28
 END
 
 IDD_PROXY DIALOG DISCARDABLE  0, 0, 291, 130
@@ -445,10 +478,12 @@ CAPTION "Login"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Username:",IDC_STATIC,85,15,35,8
-    EDITTEXT        IDC_USERNAME,135,15,65,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_USERNAME,139,15,95,14,ES_AUTOHSCROLL
     LTEXT           "Password:",IDC_STATIC,85,37,34,8
-    EDITTEXT        IDC_PASSWORD,135,34,65,14,ES_PASSWORD | ES_AUTOHSCROLL
-    GROUPBOX        "Account information",IDC_STATIC,7,0,272,57
+    EDITTEXT        IDC_PASSWORD,139,34,95,14,ES_PASSWORD | ES_AUTOHSCROLL
+    GROUPBOX        "Account information",IDC_STATIC,7,0,272,69
+    CONTROL         "Gold account?",IDC_ISGOLD,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,84,54,63,10
 END
 
 IDD_EMAILOPTIONS DIALOG DISCARDABLE  0, 0, 291, 226
@@ -542,7 +577,7 @@ BEGIN
                     BS_MULTILINE,118,113,230,15
     CONTROL         "Update the music database",IDC_UPDATEDB,"Button",
                     BS_AUTORADIOBUTTON | BS_VCENTER,118,133,103,15
-    CONTROL         "Organize my MP3 collection",IDC_ORGANIZE,"Button",
+    CONTROL         "Organize my MP3 files",IDC_ORGANIZE,"Button",
                     BS_AUTORADIOBUTTON | BS_VCENTER | BS_MULTILINE | NOT 
                     WS_VISIBLE,118,153,235,15
     CONTROL         177,IDC_STATIC,"Static",SS_BITMAP,0,0,100,185
@@ -614,7 +649,7 @@ BEGIN
                     WS_TABSTOP,111,29,186,10
 END
 
-IDD_TIPDLG DIALOG DISCARDABLE  0, 0, 282, 128
+IDD_TIPPOPDLG DIALOG DISCARDABLE  0, 0, 282, 128
 STYLE DS_CONTROL | WS_POPUP | WS_DISABLED
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -902,8 +937,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,0,0
- PRODUCTVERSION 1,1,0,0
+ FILEVERSION 2,2,2,0
+ PRODUCTVERSION 2,2,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -918,17 +953,17 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "For updates visit http://www.ractive.ch/gpl/JAGS.html\0"
+            VALUE "Comments", "For updates visit http://www.ractive.ch/gpl/AGStreme.html\0"
             VALUE "CompanyName", "@ractive Software\0"
-            VALUE "FileDescription", "JAGS MFC Application\0"
-            VALUE "FileVersion", "1, 1, 0, 0\0"
-            VALUE "InternalName", "JAGS\0"
+            VALUE "FileDescription", "AGStreme AudioGalaxy Satellite\0"
+            VALUE "FileVersion", "2, 2, 2, 0\0"
+            VALUE "InternalName", "AGStreme\0"
             VALUE "LegalCopyright", "Copyright (C) 2001 by Jean-Pierre Bergamin, licensed under the GPL\0"
             VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "JAGS.EXE\0"
+            VALUE "OriginalFilename", "AGStreme.EXE\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "JAGS Application\0"
-            VALUE "ProductVersion", "1, 1, 0, 0\0"
+            VALUE "ProductName", "AGStreme\0"
+            VALUE "ProductVersion", "2, 2, 2, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -952,9 +987,9 @@ BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 228
+        RIGHTMARGIN, 229
         TOPMARGIN, 7
-        BOTTOMMARGIN, 64
+        BOTTOMMARGIN, 83
     END
 
     IDD_MP3HEADER, DIALOG
@@ -962,7 +997,7 @@ BEGIN
         LEFTMARGIN, 2
         RIGHTMARGIN, 205
         TOPMARGIN, 2
-        BOTTOMMARGIN, 93
+        BOTTOMMARGIN, 106
     END
 
     IDD_ACCOUNT, DIALOG
@@ -1045,7 +1080,7 @@ BEGIN
         BOTTOMMARGIN, 214
     END
 
-    IDD_TIPDLG, DIALOG
+    IDD_TIPPOPDLG, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 275
@@ -1707,6 +1742,12 @@ IDR_SEARCHTREE          AVI     DISCARDABLE     "res\\searchtree.avi"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+    CG_IDS_TIPOFTHEDAY      "Displays a Tip of the Day."
+    CG_IDS_TIPOFTHEDAYMENU  "Ti&p of the Day..."
+    CG_IDS_DIDYOUKNOW       "Did you know..."
+    CG_IDS_FILE_ABSENT      "Tips file does not exist in the prescribed directory"
+    CG_IDP_FILE_CORRUPT     "Trouble reading the tips file"
+    CG_IDS_TIPOFTHEDAYHELP  "&Help"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -1883,6 +1924,7 @@ BEGIN
     ID_MOVEFAVUP            "Move favorite up\nMove up"
     ID_MOVEFAVDOWN          "Move favorite down\nMove down"
     ID_WIZARD               "Open the MP3 Wizard\nMP3 Wizard"
+    ID_MP3WIZARD            "Start the mighty Wizard\nWizard"
     ID_CHOOSEVERSION        "Choose a special version of this song\nChoose version"
     ID_SONGINFO             "Show information about this song and choose a version\nSong info"
     ID_QUEUE128             "Queue 128 kbps version\nQueue 128 kbps version"
@@ -1906,6 +1948,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_STARTWINAMP          "Start winamp\nStart Winamp"
     ID_DOWNLOADLIST         "Specifiy songs you want to download\nDownload list"
+    ID_TIPOFTHEDAY          "Show the Tip of the day\nTip of the day"
+    ID_CLOSECONNECTION      "Close the connection to audiogalaxy, but keep the program open\nClose connection"
 END
 
 #endif    // English (U.S.) resources
@@ -1920,6 +1964,13 @@ END
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN_SWISS
 #pragma code_page(1252)
 #endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LIGHTBULB           BITMAP  DISCARDABLE     "res\\litebulb.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2069,7 +2120,7 @@ END
 IDD_DOWNLOADLISTDLG DIALOGEX 0, 0, 338, 254
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Download list"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_ARTIST,49,20,151,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_SONG,49,36,151,12,ES_AUTOHSCROLL
@@ -2090,6 +2141,49 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "",IDC_STATUS,7,216,324,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
+END
+
+IDD_TIP DIALOG DISCARDABLE  0, 0, 231, 164
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tip of the Day"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",-1,"Static",SS_BLACKFRAME,12,11,207,123
+    LTEXT           "Some String",IDC_TIPSTRING,28,63,177,60
+    CONTROL         "&Show Tips on StartUp",IDC_STARTUP,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,13,146,85,10
+    PUSHBUTTON      "&Next Tip",IDC_NEXTTIP,109,143,50,14,WS_GROUP
+    DEFPUSHBUTTON   "&Close",IDOK,168,143,50,14,WS_GROUP
+    CONTROL         "",IDC_BULB,"Static",SS_BITMAP,20,17,190,111
+END
+
+IDD_DRAGCHOOSEDLG DIALOGEX 0, 0, 207, 161
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Specify download options"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,78,140,50,14
+    LTEXT           "Please specify the download options for the choosen songs",
+                    IDC_STATIC,7,7,188,8
+    LTEXT           "",IDC_FOLDER,16,91,173,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    GROUPBOX        "Desired bitrate",IDC_STATIC,7,23,193,52
+    CONTROL         "Most popular version",IDC_MOSTPOPULAR,"Button",
+                    BS_AUTORADIOBUTTON,16,34,81,10
+    CONTROL         "128 kbps",IDC_128,"Button",BS_AUTORADIOBUTTON,16,47,45,
+                    10
+    CONTROL         "160 kbps",IDC_160,"Button",BS_AUTORADIOBUTTON,16,60,45,
+                    10
+    CONTROL         "192 kbps",IDC_192,"Button",BS_AUTORADIOBUTTON,146,34,45,
+                    10
+    CONTROL         "256 kbps",IDC_256,"Button",BS_AUTORADIOBUTTON,146,47,45,
+                    10
+    CONTROL         "320 kbps",IDC_320,"Button",BS_AUTORADIOBUTTON,146,60,45,
+                    10
+    CONTROL         "Create new sufolder:",IDC_CREATESUBFOLDER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,16,106,81,10
+    EDITTEXT        IDC_SUBFOLDER,16,119,172,12,ES_AUTOHSCROLL
+    GROUPBOX        "Download folder",IDC_STATIC,7,78,193,60
 END
 
 
@@ -2155,6 +2249,22 @@ BEGIN
         RIGHTMARGIN, 331
         TOPMARGIN, 7
         BOTTOMMARGIN, 247
+    END
+
+    IDD_TIP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 224
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 157
+    END
+
+    IDD_DRAGCHOOSEDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 154
     END
 END
 #endif    // APSTUDIO_INVOKED

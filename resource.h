@@ -4,7 +4,15 @@
 //
 #define IDC_CANCELALL                   3
 #define IDD_ABOUTBOX                    100
+#define IDB_LIGHTBULB                   103
 #define IDP_SOCKETS_INIT_FAILED         104
+#define IDD_TIP                         105
+#define CG_IDS_TIPOFTHEDAY              106
+#define CG_IDS_TIPOFTHEDAYMENU          107
+#define CG_IDS_DIDYOUKNOW               108
+#define CG_IDS_FILE_ABSENT              109
+#define CG_IDP_FILE_CORRUPT             110
+#define CG_IDS_TIPOFTHEDAYHELP          111
 #define IDR_MAINFRAME                   128
 #define IDR_JAGSTYPE                    129
 #define IDI_RECEIVING                   131
@@ -45,6 +53,7 @@
 #define IDW_FILEIDOPTIONS               178
 #define IDI_DEL                         179
 #define IDD_TIPDLG                      179
+#define IDD_TIPPOPDLG                   179
 #define IDI_UP                          180
 #define IDW_RESOLVEFUZZY                180
 #define IDR_SEARCHTREE                  180
@@ -73,16 +82,22 @@
 #define IDD_SCANWAIT                    198
 #define IDD_DAOERROR                    199
 #define IDD_DOWNLOADLISTDLG             200
+#define IDD_DRAGCHOOSEDLG               201
+#define ID_GROUP						400
 #define IDC_FILENAME                    1000
+#define IDC_BULB                        1000
 #define IDC_VERSION                     1001
+#define IDC_STARTUP                     1001
 #define IDC_TITLE                       1002
 #define IDC_BITRATE                     1002
+#define IDC_NEXTTIP                     1002
 #define IDC_ARTIST                      1003
 #define IDC_FREQUENCY                   1003
 #define IDC_NEW_PASSWORD                1003
 #define IDC_ALBUM                       1004
 #define IDC_FRAMES                      1004
 #define IDC_NEW_PASSWORD2               1004
+#define IDC_TIPSTRING                   1004
 #define IDC_GENRE                       1005
 #define IDC_LENGTH                      1005
 #define IDC_NEW_EMAIL                   1005
@@ -237,6 +252,21 @@
 #define IDC_REMOVEFROMLIST              1138
 #define IDC_ADDTOQUEUE                  1140
 #define IDC_BUTTON1                     1142
+#define IDC_FULLSCAN                    1142
+#define IDC_FOLDER                      1143
+#define IDC_MOSTPOPULAR                 1144
+#define IDC_128                         1145
+#define IDC_160                         1146
+#define IDC_192                         1147
+#define IDC_256                         1148
+#define IDC_320                         1149
+#define IDC_CREATESUBFOLDER             1150
+#define IDC_SUBFOLDER                   1151
+#define IDC_QUICKSCAN                   1152
+#define IDC_ISGOLD                      1153
+#define IDC_FORUM                       1154
+#define IDC_GOLDACCOUNT                 1155
+#define IDC_EDIT1                       1156
 #define ID_SHOWTREE                     32771
 #define ID_SHOWMP3                      32772
 #define ID_BUTTON32773                  32773
@@ -306,6 +336,9 @@
 #define ID_EXTRAS_RESETCONNECTION       32847
 #define ID_STARTWINAMP                  32848
 #define ID_DOWNLOADLIST                 32849
+#define ID_TIPOFTHEDAY                  32850
+#define ID_CLOSECONNECTION              32851
+#define ID_ACCEL32852                   32852
 #define ID_MSSERVERSTATE                61204
 #define ID_SERVERSTATE                  61205
 #define ID_BROWSER_PROGRESS             61206
@@ -316,9 +349,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        201
-#define _APS_NEXT_COMMAND_VALUE         32850
-#define _APS_NEXT_CONTROL_VALUE         1143
-#define _APS_NEXT_SYMED_VALUE           103
+#define _APS_NEXT_RESOURCE_VALUE        202
+#define _APS_NEXT_COMMAND_VALUE         32853
+#define _APS_NEXT_CONTROL_VALUE         1157
+#define _APS_NEXT_SYMED_VALUE           112
 #endif
 #endif

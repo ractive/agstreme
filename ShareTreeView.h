@@ -52,6 +52,10 @@ public:
 	//{{AFX_VIRTUAL(CShareTreeView)
 	public:
 	virtual void OnInitialUpdate();
+	virtual DROPEFFECT OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
+	virtual void OnDragLeave();
+	virtual DROPEFFECT OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
+	virtual BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 	protected:
 	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 	//}}AFX_VIRTUAL
@@ -66,6 +70,8 @@ protected:
 
 	// Generated message map functions
 protected:
+	BOOL m_bInternalCF;
+	UINT m_CBFormat;
 	//{{AFX_MSG(CShareTreeView)
 	afx_msg void OnSelchanged(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnUpdateSetDownloadDir(CCmdUI* pCmdUI);
@@ -75,6 +81,7 @@ protected:
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnAddToFavorites();
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult);
@@ -87,6 +94,8 @@ private:
 	BOOL m_bInitialized;
 
 	BOOL InitializeTree();
+
+	COleDropTarget m_OleDropTarget;
 
 };
 

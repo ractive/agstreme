@@ -19,7 +19,6 @@ protected:
 
 // Attributes:
 public:
-	CBitmap m_bitmap;
 
 // Operations
 public:

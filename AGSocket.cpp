@@ -54,6 +54,7 @@ CAGSocket * CAGSocket::GetInstance()
 void CAGSocket::Destroy()
 {
 	if (m_pInstance != NULL) {
+		m_pInstance->Close();
 		delete m_pInstance;
 		m_pInstance = NULL;
 	}
@@ -162,7 +163,7 @@ void CAGSocket::OnSend(int nErrorCode)
 			send.AdjustBuffer(n);
 		}
 
-		Notify(WM_SEND, 0, 0);
+		//Notify(WM_SEND, 0, 0);
 	}
 	
 
@@ -235,6 +236,14 @@ BOOL CAGSocket::ResetServerConnection()
 BOOL CAGSocket::SendLogin()
 {
 	CJAGSDoc * pDoc = GetDocument();
+	
+	if (!send.Init()) {
+		return FALSE;
+	}
+	
+	send.Add((unsigned short)GOLD_STATUS);
+	send.Add(pDoc->m_bGoldAccount);
+	send.CompleteMsg();
 
 	if (!send.Init()) {
 		return FALSE;
@@ -374,7 +383,7 @@ void CAGSocket::PrepareRecvData()
 					nTotalRecvSpeed += nSpeed;
 				}
 				// Skip this dummy entry
-				if (strcmp((LPTSTR)filename, "proxy test") == 0) {
+				if (strcmp((LPTSTR)filename, "proxy test") == 0 || strcmp((LPTSTR)filename, "new proxy test") == 0) {
 					break;
 				}
 				pDoc->m_TransferStatus.AddFile((LPTSTR)filename, nFilePos, nFileSize, nSpeed, bSending);
@@ -490,6 +499,29 @@ void CAGSocket::PrepareRecvData()
 				recv.Read(&nState);
 				Notify(WM_SERVERSTATE, nState);
 				break;
+			case SET_GO_BUTTON_TO_UI:
+				/*readSBuffer( &recvBuffer, g_goButtonParameter ); 
+				EnableWindow( GetDlgItem( statusHwnd, IDC_BTN_WEBPAGE ), TRUE );*/
+			break;
+
+			//make sure that the UI and the core both agree on being gold or not
+			//being gold.  
+			//
+			//see the message VERSION_INFO for another case concerning this.
+			//
+			//the UI must also send the core the UI gold status before sending any
+			//login info
+			case GOLD_STATUS: {
+				int nGoldStatus = -1;
+				recv.Read(&nGoldStatus);
+				if (nGoldStatus == 1 && pDoc->m_bGoldAccount == 0) {
+					MessageBox(NULL, "Please make sure you have the Satellite installed properly.  It appears that you are running a regular version of ui.dll, but a Gold version of AGSatellite.exe", "UI Error", MB_OK | MB_ICONSTOP | MB_SETFOREGROUND | MB_TOPMOST );
+				} else if( nGoldStatus == 0 && pDoc->m_bGoldAccount == 1 ) {
+					MessageBox(NULL, "Please make sure you have the Satellite installed properly.  It appears that you are running a Gold version of ui.dll, but a regular version of AGSatellite.exe", "UI Error", MB_OK | MB_ICONSTOP | MB_SETFOREGROUND | MB_TOPMOST );
+				}
+			}
+
+			break;
 		}
 
 		recv.Release();

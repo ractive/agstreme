@@ -48,18 +48,18 @@ IMPLEMENT_DYNCREATE(CJAGSView, CHtmlView)
 BEGIN_MESSAGE_MAP(CJAGSView, CHtmlView)
 	//{{AFX_MSG_MAP(CJAGSView)
 	ON_COMMAND(ID_BROWSERBACK, OnBrowserBack)
-	ON_COMMAND(ID_BROWSERHOME, OnBrowserHome)
 	ON_COMMAND(ID_BROWSERNEXT, OnBrowserNext)
 	ON_COMMAND(ID_BROWSERREFRESH, OnBrowserRefresh)
-	ON_COMMAND(ID_BROWSERUSER, OnBrowserUserpage)
-	ON_COMMAND(ID_BROWSERSAT, OnBrowsersat)
 	ON_COMMAND(ID_CDCOVER, OnCdcover)
 	ON_COMMAND(ID_CDDBSEARCH, OnCddbsearch)
-	ON_COMMAND(ID_BROWSERNOTES, OnBrowserNotes)
 	ON_COMMAND(ID_LYRICS, OnLyrics)
 	ON_COMMAND(ID_EDIT_COPY, OnCopy)
 	ON_COMMAND(ID_EDIT_CUT, OnCut)
 	ON_COMMAND(ID_EDIT_PASTE, OnPaste)
+	ON_COMMAND(ID_BROWSERHOME, OnBrowserHome)
+	ON_COMMAND(ID_BROWSERNOTES, OnBrowserNotes)
+	ON_COMMAND(ID_BROWSERSAT, OnBrowserSat)
+	ON_COMMAND(ID_BROWSERUSER, OnBrowserUser)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -141,8 +141,13 @@ void CJAGSView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 void CJAGSView::GotoUserHome()
 {
 	CJAGSDoc* pDoc = GetDocument();
+	if (pDoc->m_bGoldAccount) {
+		Navigate2(_T("http://fast.audiogalaxy.com/satellitegolduser"),NULL,NULL);
 
-	Navigate2(_T("http://www.audiogalaxy.com/satellitelogin?loginUsername=" + pDoc->m_sUsername + "&loginPassword=" + pDoc->m_sPassword),NULL,NULL);
+	}
+	else {
+		Navigate2(_T("http://www.audiogalaxy.com/satellitelogin?loginUsername=" + pDoc->m_sUsername + "&loginPassword=" + pDoc->m_sPassword),NULL,NULL);
+	}
 }
 
 void CJAGSView::OnBrowserBack() 
@@ -165,12 +170,12 @@ void CJAGSView::OnBrowserRefresh()
 	Refresh2(REFRESH_COMPLETELY);	
 }
 
-void CJAGSView::OnBrowserUserpage() 
+void CJAGSView::OnBrowserUser() 
 {
 	GotoUserHome();	
 }
 
-void CJAGSView::OnBrowsersat() 
+void CJAGSView::OnBrowserSat() 
 {
 	Navigate2(_T("http://www.audiogalaxy.com/satellite/queue.php?"));	
 }
@@ -214,11 +219,6 @@ void CJAGSView::OnCddbsearch()
 
 void CJAGSView::OnBrowserNotes() 
 {
-	/*CString sHeader(_T("Content-Type: application/x-www-form-urlencoded"));
-
-
-	CString sPost = "ruid=4434522&note=hello&rAD=321654987";
-	Navigate2(_T("http://www.audiogalaxy.com/user/profile.php?&uid=4434522"), 0, NULL, sHeader,(LPVOID)(LPCTSTR) sPost, sPost.GetLength());*/
 	Navigate2(_T("http://www.audiogalaxy.com/user/allNotes.php?"));		
 }
 
@@ -255,6 +255,7 @@ void CJAGSView::OnNavigateComplete2(LPCTSTR strURL)
 
 void CJAGSView::PrepareSongList()
 {
+	BOOL bCDDBTd = false;
 	CJAGSDoc * pDoc = GetDocument();
 
 	pDoc->ResetSearchRes();
@@ -304,7 +305,19 @@ void CJAGSView::PrepareSongList()
 		if (FAILED(hr) || pDisp.p == NULL) {
 			continue;
 		}
-
+#ifdef _DEBUG
+		// Grab the Interface pointer to the HTMLElement
+		CComQIPtr<IHTMLElement, &IID_IHTMLElement> pD(pDisp);
+		if (pD.p) {
+			CComBSTR bstrTagName;
+			pD->get_tagName(&bstrTagName);
+			CString sHTML;
+			if (bstrTagName.m_str) {
+				sHTML = bstrTagName.m_str;
+			}
+			TRACE("outerHTML: %s\r\n", sHTML);
+		}
+#endif
 		CComQIPtr<IHTMLImgElement, &IID_IHTMLImgElement> pImg(pDisp);
 		if (pImg.p) {
 			// Store the image name. If the next anchor is a song, this
@@ -312,12 +325,15 @@ void CJAGSView::PrepareSongList()
 			CComBSTR bstrAvailability;
 			pImg->get_src(&bstrAvailability);
 
-			if (bstrAvailability == L"http://www.audiogalaxy.com/images/list/play.gif" ||
+			if (bstrAvailability == L"http://www.audiogalaxy.com/images/buttons/filtered_song.gif" ||
+				bstrAvailability == L"http://www.audiogalaxy.com/images/list/play.gif" ||
 				bstrAvailability == L"http://www.audiogalaxy.com/images/buttons/dish_green.gif"    ) {
 				// We already downloaded this song or it is in the queue already
 				// Get the next one.
+				bstrArtist.Empty();
+
 				nAvailability = -1;
-				i += 3;
+				i += 4;
 				continue;
 			}
 
@@ -346,6 +362,8 @@ void CJAGSView::PrepareSongList()
 				bstrArtist.Empty();
 				nAvailability = -1;
 			}
+
+			continue;
 		}
 
 
@@ -369,6 +387,65 @@ void CJAGSView::PrepareSongList()
 			pElement->get_innerText(&bstrArtist);
 		}
 
+
+		CComQIPtr<IHTMLTableCell, &IID_IHTMLTableCell> pTD(pDisp);
+		if (pTD.p) {
+			// Check for a valid CDDB song entry
+			CComBSTR bstrTD;
+			CString sTD;
+
+			pElement->get_innerText(&bstrTD);
+			if (!bstrTD) {
+				continue;
+			}
+
+			sTD = bstrTD.m_str;
+			if (sTD.Find("Tracks on this CD")) {
+				bCDDBTd = true;
+			}
+			else {
+				bCDDBTd = false;
+				bstrTD.Empty();
+				continue;
+			}
+
+			bstrTD.Empty();
+		}
+
+		if (bCDDBTd) {
+			CComQIPtr<IHTMLLIElement, &IID_IHTMLLIElement> pLI(pDisp);
+			if (pLI.p) {
+				CComBSTR bstrLI;
+				pElement->get_innerText(&bstrLI);
+				if (!bstrLI) {
+					continue;
+				}
+
+				sSongName = bstrLI.m_str;
+				bstrLI.Empty();
+
+				CComBSTR bstrTitle;
+				if (SUCCEEDED(pHTMLDocument2->get_title(&bstrTitle)) && bstrTitle) {
+					// The title of the page is "Artistname / Albumname"
+					sArtist = bstrTitle.m_str;
+					int nPos = sArtist.Find(" / ");
+					pDoc->m_sAlbum.Empty();
+					if (nPos != -1 && nPos + 3 < sArtist.GetLength()) {
+						pDoc->m_sAlbum = sArtist.Mid(nPos + 3);
+					}
+					sArtist = sArtist.Left(nPos);
+					pDoc->AddSong(sArtist, sSongName, -1, 6);
+					nAvailability = -1;
+					// If the pic was not read yet, we have to wait until the pic will be read
+					// at the beginning of the next loop
+
+					bstrArtist.Empty();
+				}
+				
+				continue;
+			}
+		}
+
 		// Grab the Interface pointer to the Anchor Element
 		CComQIPtr<IHTMLAnchorElement, &IID_IHTMLAnchorElement> pAnchor(pDisp);
 
@@ -388,41 +465,6 @@ void CJAGSView::PrepareSongList()
 			sHref = bstrHref.m_str;
 		}
 		
-		if (sHref.Find("http://www.cddb.com/xm/search?") == 0) {
-			// This is a link of the cddb homepage
-			// Song are listed as link that look like this:
-			// <A HREF="/xm/search?q=Mein+Weg&f=track">Song Name</A>
-			// Check if the &f=track part is present...
-			TCHAR sTrack[] = "&f=track";
-			if (sHref.Right(strlen(sTrack)) != sTrack) {
-				// This is another search link, not a track
-				continue;
-			}
-
-			pElement->get_innerText(&bstrArtist);
-			if (!bstrArtist) {
-				continue;
-			}
-
-			// The inner text is the song title
-			sSongName = bstrArtist.m_str;
-			CComBSTR bstrTitle;
-			if (SUCCEEDED(pHTMLDocument2->get_title(&bstrTitle)) && bstrTitle) {
-				// The title of the page is "Artistname / Albumname"
-				sArtist = bstrTitle.m_str;
-				sArtist = sArtist.Left(sArtist.Find(" / "));
-				pDoc->AddSong(sArtist, sSongName, -1, 6);
-
-				nAvailability = -1;
-				// If the pic was not read yet, we have to wait until the pic will be read
-				// at the beginning of the next loop
-
-				bstrArtist.Empty();
-			}
-			
-			continue;
-		}
-
 		if (sHref.Find("http://www.audiogalaxy.com/list/artistInfo.php") == 0) {
 			pElement->get_innerText(&bstrArtist);
 		}
@@ -495,14 +537,21 @@ void CJAGSView::OnDocumentComplete(LPCTSTR lpszURL)
 		// This prevents the parsing of the page when a banner
 		// was loaded in a frame
 		PrepareSongList();
-		EnableFilteredSongs();
+		//EnableFilteredSongs();
 
-		RedirectProhibitedSearch();
+		//RedirectProhibitedSearch();
 	}
 
-	TCHAR sCDDB[] = "http://www.cddb.com";
+	TCHAR sHOME[] = "http://www.audiogalaxy.com/user/home.php?";
+	if (strncmp(lpszURL, sHOME, lstrlen(sHOME)) == 0) {
+		FetchGroups();
+	}
 
-	if (strncmp(lpszURL, sCDDB, lstrlen(sCDDB)) == 0) {
+
+	TCHAR sCDDB[] = "http://www.cddb.com";
+	TCHAR sGRACENOTE[] = "http://www.gracenote.com";
+
+	if (strncmp(lpszURL, sCDDB, lstrlen(sCDDB)) == 0 || strncmp(lpszURL, sGRACENOTE, lstrlen(sGRACENOTE)) == 0) {
 		PrepareSongList();
 	}
 	
@@ -691,3 +740,124 @@ void CJAGSView::OnPaste()
 	ExecWB(OLECMDID_PASTE, OLECMDEXECOPT_DONTPROMPTUSER, NULL, NULL); 	
 }
 
+
+void CJAGSView::FetchGroups()
+{
+	CJAGSDoc * pDoc = GetDocument();
+
+	pDoc->ResetGroups();
+	
+	// Get the IDispatch pointer of the document
+	CComPtr<IDispatch> pDocDispatch = GetHtmlDocument();
+	if (!pDocDispatch) {
+		return;
+	}
+	// Query the IHTMLDocument2 Interface
+	CComQIPtr<IHTMLDocument2, &IID_IHTMLDocument2> pHTMLDocument2(pDocDispatch);
+	if (!pHTMLDocument2.p) {
+		MessageBox("The document Interface could not be loaded!", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+		return;
+	}
+
+	// Get the element collection
+	CComPtr<IHTMLElementCollection> pAnchors;
+
+	HRESULT hr = pHTMLDocument2->get_all(&pAnchors);
+	if (FAILED(hr) || pAnchors.p == NULL) {
+		return;
+	}
+	long iNumElements = 0;
+	hr = pAnchors->get_length(&iNumElements);
+	if (!(SUCCEEDED(hr) && iNumElements)) {
+		return;
+	}
+
+	CString sGroupName;
+	UINT nGroupID = 0;
+	CComBSTR bstrGroupName;
+
+	// Loop through all the elements and query the
+	// IHTMLElement interface
+	for (long i = 0; pAnchors && i < iNumElements; i++) {
+		CComVariant varName(i);
+		varName.ChangeType(VT_UINT);
+		
+		CComVariant varIndex;
+		CComPtr<IDispatch> pDisp;
+		// Get the item's IDispatch pointer
+		hr = pAnchors->item(varName, varIndex, &pDisp);
+		if (FAILED(hr) || pDisp.p == NULL) {
+			continue;
+		}
+#ifdef _DEBUG
+		// Grab the Interface pointer to the HTMLElement
+		CComQIPtr<IHTMLElement, &IID_IHTMLElement> pD(pDisp);
+		if (pD.p) {
+			CComBSTR bstrTagName;
+			pD->get_tagName(&bstrTagName);
+			CString sHTML;
+			if (bstrTagName.m_str) {
+				sHTML = bstrTagName.m_str;
+			}
+			TRACE("outerHTML: %s\r\n", sHTML);
+		}
+#endif
+
+		// Grab the Interface pointer to the HTMLElement
+		CComQIPtr<IHTMLElement, &IID_IHTMLElement> pElement(pDisp);
+		if (!pElement.p) {
+			continue;
+		}
+
+		CString sClass;
+		CComBSTR bstrClass;
+		// Get the class name of the anchor
+
+
+		// Grab the Interface pointer to the Anchor Element
+		CComQIPtr<IHTMLAnchorElement, &IID_IHTMLAnchorElement> pAnchor(pDisp);
+
+		if (!pAnchor.p) {
+			// Check if the next element is an anchor
+			continue;
+		}
+
+		if (FAILED(pElement->get_className(&bstrClass)) || !bstrClass) {
+			continue;
+		}
+		else {
+			sClass = bstrClass.m_str;
+		}
+
+		// Check if we have a group name
+		if (sClass.CompareNoCase("group") != 0) {
+			continue;
+		}
+		
+		// The inner text is the group name
+		if (FAILED(pElement->get_innerText(&bstrGroupName)) || !bstrGroupName) {
+			continue;
+		}
+		else {
+			sGroupName = bstrGroupName.m_str;
+		}
+
+		CComBSTR bstrHref;
+		CString sHref;
+		// Get the URL of the anchor
+		if (FAILED(pAnchor->get_href(&bstrHref)) || !bstrHref) {
+			continue;
+		}
+		else {
+			sHref = bstrHref.m_str;
+		}
+		
+
+		// Extract the songid of the URL.
+		swscanf(bstrHref, L"http://www.audiogalaxy.com/groups/group.php?&gID=%ud", &nGroupID);
+
+		pDoc->AddGroup(sGroupName, nGroupID);
+	}	
+	
+	//pDoc->UpdateAllViews(this, NEW_SEARCHRES);
+}

@@ -79,7 +79,7 @@ void CTipButton::OnMouseMove(UINT nFlags, CPoint point)
 BOOL CTipButton::ShowTip()
 {
 	if (m_pTipDlg == 0) {
-		m_pTipDlg = new CTipDlg();
+		m_pTipDlg = new CTipPopDlg();
 
 		m_pTipDlg->m_sTipText = m_sTipText;
 		m_pTipDlg->Create(IDD_TIPDLG, this);

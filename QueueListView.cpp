@@ -69,6 +69,9 @@ LRESULT CQueueListView::OnSongQueued(WPARAM wParam, LPARAM lParam)
 	fi.lParam = lParam;
 	int nItem = listCtrl.FindItem(&fi);
 
+	TCHAR sBlocked[] = "Song Blocked :-(";
+	TCHAR sBlocked2[] = "Queuing blocked song";
+
 	CAGInet::Enter();
 
 	if (wParam == SONG_ADDED || wParam == ID_ADDED) {
@@ -92,7 +95,12 @@ LRESULT CQueueListView::OnSongQueued(WPARAM wParam, LPARAM lParam)
 		}
 	}
 	else if (wParam == PROCESSED) {
-		listCtrl.SetItemText(nItem, 1, "Song successfully queued!");
+		if (listCtrl.GetItemText(nItem, 1) == sBlocked2) {
+			listCtrl.SetItemText(nItem, 1, "Song is blocked!");
+		}
+		else {
+			listCtrl.SetItemText(nItem, 1, "Song successfully queued!");
+		}
 		listCtrl.SetItemData(nItem, 0);
 
 		LVITEM lvi;
@@ -109,13 +117,25 @@ LRESULT CQueueListView::OnSongQueued(WPARAM wParam, LPARAM lParam)
 		listCtrl.SetItemText(nItem, 1, "Searching delayed...");
 	}
 	else if (wParam == BLOCKED) {
-		listCtrl.SetItemText(nItem, 1, "Song Blocked :-(, getting most popular version");
+		listCtrl.SetItemText(nItem, 1, sBlocked);
 	}
 	else if (wParam == MAXTRIES) {
 		listCtrl.SetItemText(nItem, 1, "The song could not be queued! Too many tries");
 	}
 	else if (wParam == NOT_FOUND) {
-		listCtrl.SetItemText(nItem, 1, "Not found!");
+		listCtrl.SetItemText(nItem, 1, "Song not found!");
+	}
+	else if (wParam == FIND_ID) {
+		listCtrl.SetItemText(nItem, 1, "Trying to find song...");
+		listCtrl.SetItemState(nItem, LVIS_FOCUSED, LVIS_FOCUSED);
+	}
+	else if (wParam == QUEUE_SONG) {
+		if (listCtrl.GetItemText(nItem, 1) == sBlocked) {
+			listCtrl.SetItemText(nItem, 1, sBlocked2);
+		}
+		else {
+			listCtrl.SetItemText(nItem, 1, "Queuing song...");
+		}
 	}
 
 	CAGInet::Leave();
@@ -127,11 +147,15 @@ void CQueueListView::OnInitialUpdate()
 {
 	CListView::OnInitialUpdate();
 	CListCtrl &listCtrl = GetListCtrl();
+
+	DWORD dwExStyle = listCtrl.GetExtendedStyle();
+	listCtrl.SetExtendedStyle(dwExStyle | LVS_EX_INFOTIP |LVS_EX_FULLROWSELECT);
+
 	m_ImageList.Create(IDB_YESNO, 10, 0, RGB(0, 0, 0));
 	listCtrl.SetImageList(&m_ImageList, LVSIL_SMALL);
 
 	listCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 250, 0);	
-	listCtrl.InsertColumn(1, "Status", LVCFMT_LEFT, 150, 1);	
+	listCtrl.InsertColumn(1, "Status", LVCFMT_LEFT, 250, 1);	
 }
 
 BOOL CQueueListView::PreCreateWindow(CREATESTRUCT& cs) 

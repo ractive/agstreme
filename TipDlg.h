@@ -1,34 +1,7 @@
-/*************************************************************************
-                     ZipALot
-**************************************************************************
+#if !defined(TIPDLG_H_INCLUDED_)
+#define TIPDLG_H_INCLUDED_
 
-Copyright (C) December, 2000 Jean-Pierre Bergamin, james@ractive.ch
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-***************************************************************************/
-
-#if !defined(AFX_TIPDLG_H__17E8F931_863F_4646_9DAB_8513492C328A__INCLUDED_)
-#define AFX_TIPDLG_H__17E8F931_863F_4646_9DAB_8513492C328A__INCLUDED_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-// TipDlg.h : header file
-//
-
-#include "resource.h"
+// CG: This file added by 'Tip of the Day' component.
 
 /////////////////////////////////////////////////////////////////////////////
 // CTipDlg dialog
@@ -37,15 +10,16 @@ class CTipDlg : public CDialog
 {
 // Construction
 public:
-	CString m_sTipText;
-	CTipDlg(CWnd* pParent = NULL);   // standard constructor
+	CTipDlg(CWnd* pParent = NULL);	 // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CTipDlg)
-	enum { IDD = IDD_TIPDLG };
-		// NOTE: the ClassWizard will add data members here
+	// enum { IDD = IDD_TIP };
+	BOOL	m_bStartup;
+	CString	m_strTip;
 	//}}AFX_DATA
 
+	FILE* m_pStream;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -55,23 +29,21 @@ public:
 	//}}AFX_VIRTUAL
 
 // Implementation
-protected:
+public:
+	virtual ~CTipDlg();
 
+protected:
 	// Generated message map functions
 	//{{AFX_MSG(CTipDlg)
+	afx_msg void OnNextTip();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	virtual void OnOK();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-private:
-	CFont m_Font;
-	CRgn m_WindowRgn;
-	CRgn m_Rgn1;
-	CRgn m_Rgn2;
-	CRgn m_Rgn3;
+
+	void GetNextTipString(CString& strNext);
 };
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
-
-#endif // !defined(AFX_TIPDLG_H__17E8F931_863F_4646_9DAB_8513492C328A__INCLUDED_)
+#endif // !defined(TIPDLG_H_INCLUDED_)

@@ -93,6 +93,8 @@ BOOL CCDDBInfo::LookupFile(LPCTSTR lpszFileName, long *pTrackNum)
 	}
 	catch (_com_error e)
 	{
+		_bstr_t error = e.Description();
+		LPCTSTR p = e.ErrorMessage();
 		return FALSE;
 	}
 

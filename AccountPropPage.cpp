@@ -43,6 +43,7 @@ CAccountPropPage::CAccountPropPage() : CPropertyPage(CAccountPropPage::IDD)
 	//{{AFX_DATA_INIT(CAccountPropPage)
 	m_sPassword = _T("");
 	m_sUsername = _T("");
+	m_bGoldAccount = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -56,6 +57,7 @@ void CAccountPropPage::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CAccountPropPage)
 	DDX_Text(pDX, IDC_PASSWORD, m_sPassword);
 	DDX_Text(pDX, IDC_USERNAME, m_sUsername);
+	DDX_Check(pDX, IDC_GOLDACCOUNT, m_bGoldAccount);
 	//}}AFX_DATA_MAP
 }
 

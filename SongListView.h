@@ -67,7 +67,10 @@ protected:
 	afx_msg void OnQueue192();
 	afx_msg void OnQueue256();
 	afx_msg void OnQueue320();
+	afx_msg void OnBeginDrag(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
+	afx_msg void OnSendGroup( UINT nID );
+
 	DECLARE_MESSAGE_MAP()
 
 private:

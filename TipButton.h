@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // TipButton.h : header file
 //
 
-#include "TipDlg.h"
+#include "TipPopDlg.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CTipButton window
@@ -69,7 +69,7 @@ private:
 	CString m_sTipText;
 	void CloseTip();
 	BOOL ShowTip();
-	CTipDlg * m_pTipDlg;
+	CTipPopDlg * m_pTipDlg;
 };
 
 /////////////////////////////////////////////////////////////////////////////

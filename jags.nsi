@@ -19,6 +19,7 @@ Section "AGStreme (required)"
 	File Help\jagshelp.chm	
 	File CDDBControl.dll	
 	File ReadMe.txt
+	File Tips.txt
 	SetOverwrite off
 	File DB\songs.mdb
 	RegDLL $INSTDIR\CDDBControl.dll		
@@ -59,12 +60,14 @@ Section Uninstall
 	Delete "$DESKTOP\AGStreme.lnk"
 	Delete "$SMPROGRAMS\AGStreme.lnk"
 	Delete "$QUICKLAUNCH\AGStreme.lnk"
-	Delete $INSTDIR\AGStreme.exe
-	Delete $INSTDIR\ui.dll
-	Delete $INSTDIR\AGSatellite.exe
-	Delete $INSTDIR\songs.mdb			
-	Delete $INSTDIR\jagshelp.chm
-	Delete $INSTDIR\Readme.txt
-	Delete $INSTDIR\CDDBControl.dll
-	RMDir $INSTDIR
+	Delete "$INSTDIR\AGStreme.exe"
+	Delete "$INSTDIR\ui.dll"
+	Delete "$INSTDIR\AGSatellite.exe"
+	Delete "$INSTDIR\songs.mdb"			
+	Delete "$INSTDIR\jagshelp.chm"
+	Delete "$INSTDIR\Readme.txt"
+	Delete "$INSTDIR\Tips.txt"
+	Delete "$INSTDIR\CDDBControl.dll"
+	Delete "$INSTDIR\filemapping.ags"
+	RMDir  "$INSTDIR"
 SectionEnd

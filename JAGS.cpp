@@ -52,12 +52,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
 /////////////////////////////////////////////////////////////////////////////
 // CJAGSApp
 BOOL CJAGSApp::m_bClassRegistered = FALSE;
+TCHAR CJAGSApp::AGStremeClipboardFormat[] = "AGSClipFormat100";
 
 BEGIN_MESSAGE_MAP(CJAGSApp, CWinApp)
+	ON_COMMAND(CG_IDS_TIPOFTHEDAY, ShowTipOfTheDay)
 	//{{AFX_MSG_MAP(CJAGSApp)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
 	//}}AFX_MSG_MAP
@@ -187,6 +188,9 @@ BOOL CJAGSApp::InitInstance()
 	m_pMainWnd->ShowWindow(SW_SHOW);
 	m_pMainWnd->UpdateWindow();
 
+	// CG: This line inserted by 'Tip of the Day' component.
+	ShowTipAtStartup();
+
 	return TRUE;
 }
 
@@ -202,6 +206,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAboutDlg)
 	enum { IDD = IDD_ABOUTBOX };
+	CHyperLink	m_ForumUrl;
 	CHyperLink	m_Url;
 	//}}AFX_DATA
 
@@ -229,6 +234,7 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CAboutDlg)
+	DDX_Control(pDX, IDC_FORUM, m_ForumUrl);
 	DDX_Control(pDX, IDC_URL, m_Url);
 	//}}AFX_DATA_MAP
 }
@@ -363,3 +369,57 @@ void CJAGSApp::SetMRUTo(UINT n, LPCTSTR lpszPath)
 	m_pRecentFileList->m_arrNames[n] = lpszPath;
 }
 
+
+void CJAGSApp::ShowTipAtStartup(void)
+{
+	// CG: This function added by 'Tip of the Day' component.
+
+	CCommandLineInfo cmdInfo;
+	ParseCommandLine(cmdInfo);
+	if (cmdInfo.m_bShowSplash)
+	{
+		CTipDlg dlg;
+		if (dlg.m_bStartup)
+			dlg.DoModal();
+	}
+
+}
+
+void CJAGSApp::ShowTipOfTheDay(void)
+{
+	// CG: This function added by 'Tip of the Day' component.
+
+	CTipDlg dlg;
+	dlg.DoModal();
+}
+
+BOOL CJAGSApp::OnIdle(LONG lCount) 
+{
+	CMainFrame * pMainFrame = (CMainFrame *)m_pMainWnd;
+	CJAGSDoc * pDoc = pMainFrame->GetDocument();
+	
+	UINT nUp = pDoc->GetTransferSendRate();
+	UINT nDown = pDoc->GetTransferRecvRate();
+
+	CString sTitle;
+	if (pMainFrame->m_bConnectedToServer) {
+		if (nUp == 0 && nDown == 0) {
+			sTitle = "AGStreme - Idle";
+		}
+		else {
+			sTitle.Format("AGStreme - DL: %.1f KB/s, UL: %.1f KB/s", (double)((double)pDoc->GetTransferRecvRate() / 1024), (double)((double)pDoc->GetTransferSendRate() / 1024));
+		}
+	}
+	else {
+		sTitle = "AGStreme - Not connected";
+	}
+
+	CString sWindowText;
+	pMainFrame->GetWindowText(sWindowText);
+	if (sWindowText != sTitle) {
+		pMainFrame->SetWindowText(sTitle);
+		pMainFrame->SetTrayText(sTitle);
+	}
+
+	return CWinApp::OnIdle(lCount);
+}

@@ -34,10 +34,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <afxmt.h>
 
 struct fileEntry {
+	int nUpdateCounter;
 	TCHAR sFileName[MAX_PATH];
-	int nPos;
-	int nSize;
+	TCHAR sPlayLength[16];
+	unsigned long nPos;
+	unsigned long nSize;
 	int nSpeed;
+	int nBitrate;
 	BOOL bSending;
 	BOOL bUpdated;
 };
@@ -55,7 +58,7 @@ public:
 	POSITION StartListing();
 	void RemoveAll();
 	int GetCount();
-	void AddFile(LPCTSTR sFileName, int nPos, int nSize, int nSpeed, BOOL bSending);
+	void AddFile(LPCTSTR sFileName, unsigned long nPos, unsigned long nSize, int nSpeed, BOOL bSending);
 	CTransferStatus();
 	virtual ~CTransferStatus();
 	fileEntry * FindEntry(LPCTSTR sFileName);

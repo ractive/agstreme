@@ -57,7 +57,7 @@ LINK32=link.exe
 # SUBTRACT LINK32 /debug
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=E:\Programme\NSIS\makensis.exe jags.nsi	AGStreme.exe
+PostBuild_Cmds=D:\Programme\NSIS\makensis.exe jags.nsi	AGStreme.exe
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "JAGS - Win32 Debug"
@@ -158,6 +158,10 @@ SOURCE=.\DownloadTabView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DragChooseDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\EmailOptionsPage.cpp
 # End Source File
 # Begin Source File
@@ -238,11 +242,19 @@ SOURCE=.\MainView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\MapObject.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MapToFolderList.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Message.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\MP3Header.cpp
+SOURCE=.\MP3HeaderInfo.cpp
 # End Source File
 # Begin Source File
 
@@ -380,6 +392,10 @@ SOURCE=.\TipButton.cpp
 # Begin Source File
 
 SOURCE=.\TipDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TipPopDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -531,6 +547,10 @@ SOURCE=.\DownloadTabView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DragChooseDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\EmailOptionsPage.h
 # End Source File
 # Begin Source File
@@ -615,11 +635,19 @@ SOURCE=.\MainView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\MapObject.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MapToFolderList.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Message.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\MP3Header.h
+SOURCE=.\MP3HeaderInfo.h
 # End Source File
 # Begin Source File
 
@@ -764,6 +792,10 @@ SOURCE=.\TipButton.h
 # Begin Source File
 
 SOURCE=.\TipDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TipPopDlg.h
 # End Source File
 # Begin Source File
 
@@ -935,6 +967,10 @@ SOURCE=.\res\JAGSDoc.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\litebulb.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\notconn.ico
 # End Source File
 # Begin Source File
@@ -1004,11 +1040,42 @@ SOURCE=".\res\address book copy.avi"
 # End Source File
 # Begin Source File
 
+SOURCE=.\jags.nsi
+# End Source File
+# Begin Source File
+
 SOURCE=.\ReadMe.txt
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\searchtree.avi
 # End Source File
+# Begin Source File
+
+SOURCE=.\Tips.txt
+# End Source File
 # End Target
 # End Project
+# Section JAGS : {72ADFD54-2C39-11D0-9903-00A0C91BC942}
+# 	1:17:CG_IDS_DIDYOUKNOW:108
+# 	1:22:CG_IDS_TIPOFTHEDAYMENU:107
+# 	1:18:CG_IDS_TIPOFTHEDAY:106
+# 	1:22:CG_IDS_TIPOFTHEDAYHELP:111
+# 	1:19:CG_IDP_FILE_CORRUPT:110
+# 	1:7:IDD_TIP:105
+# 	1:13:IDB_LIGHTBULB:103
+# 	1:18:CG_IDS_FILE_ABSENT:109
+# 	2:17:CG_IDS_DIDYOUKNOW:CG_IDS_DIDYOUKNOW
+# 	2:7:CTipDlg:CTipDlg
+# 	2:22:CG_IDS_TIPOFTHEDAYMENU:CG_IDS_TIPOFTHEDAYMENU
+# 	2:18:CG_IDS_TIPOFTHEDAY:CG_IDS_TIPOFTHEDAY
+# 	2:12:CTIP_Written:OK
+# 	2:22:CG_IDS_TIPOFTHEDAYHELP:CG_IDS_TIPOFTHEDAYHELP
+# 	2:2:BH:
+# 	2:19:CG_IDP_FILE_CORRUPT:CG_IDP_FILE_CORRUPT
+# 	2:7:IDD_TIP:IDD_TIP
+# 	2:8:TipDlg.h:TipDlg.h
+# 	2:13:IDB_LIGHTBULB:IDB_LIGHTBULB
+# 	2:18:CG_IDS_FILE_ABSENT:CG_IDS_FILE_ABSENT
+# 	2:10:TipDlg.cpp:TipDlg.cpp
+# End Section

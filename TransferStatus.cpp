@@ -47,12 +47,15 @@ CTransferStatus::~CTransferStatus()
 	RemoveAll();
 }
 
-void CTransferStatus::AddFile(LPCTSTR sFileName, int nPos, int nSize, int nSpeed, BOOL bSending)
+void CTransferStatus::AddFile(LPCTSTR sFileName, unsigned long nPos, unsigned long nSize, int nSpeed, BOOL bSending)
 {
 	EnterCriticalSection(&critical_section);
 	fileEntry * entry = FindEntry(sFileName);
 	if (entry == NULL) {
 		entry = new fileEntry;
+		entry->nUpdateCounter = 0;
+		*entry->sPlayLength = '\0';
+		entry->nBitrate = -1;
 		strcpy(entry->sFileName, sFileName);
 		m_PtrList.AddHead(entry);
 	}

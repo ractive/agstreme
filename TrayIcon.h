@@ -56,6 +56,8 @@ public:
 	bool RemoveIcon();
 	bool SetIcon(HICON hIcon, LPCSTR lpTip);
 	bool SetIcon(UINT nID);
+	bool SetTip(LPCSTR lpTip);
+
 	virtual ~CTrayIcon();
 	LRESULT OnTrayNotification(WPARAM wParam, LPARAM lParam);
 

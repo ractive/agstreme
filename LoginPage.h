@@ -46,6 +46,7 @@ public:
 	enum { IDD = IDD_LOGIN };
 	CString	m_sPassword;
 	CString	m_sUsername;
+	BOOL	m_bGoldAccount;
 	//}}AFX_DATA
 
 

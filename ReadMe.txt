@@ -3,10 +3,13 @@
                                       (aka JAGS)
 ======================================================================================
 
-AGStreme Version 2.0
+AGStreme Version 2.22
 
-I renamed the program to AGStreme, because there's already a project that uses the
-name JAGS.
+======================================================================================
+THIS VERSION ONLY RUNS PROPERLY ON Windows 2000 AND Windows XP (and with some draw-
+backs on Windows ME)!!
+Windows 9x ist NOT SUPPORTED!
+======================================================================================
 
 What's that?
 ======================================================================================
@@ -51,15 +54,22 @@ If you install the program into a differen directory you may want to copy the fi
 
 into the new installation directory. This way wou can save your shares, settings etc.
 
+GOLD-Members
+======================================================================================
+If you have a gold account, install AGStreme as normal. Then copy the AGSatellite.exe
+of you ORIGINAL gold-client into the directory where AGStreme is installed and
+overwrite the existing file.
+Open the configuration dialog, choose account and check "Gold account". You may have
+to restart AGStreme that the changes will take effect?!?
+Unfortunately I don't have a gold account to test it, so any feedback of gold users is
+welcome!
 
-To start the the program you have to call AGSatellite.exe (not AGStreme.exe!), but the 
-installation program will set this up for you!
 
 PROBLEMS
 ======================================================================================
-- Some users reported that AGStreme does not even start. I have no clue, why!?!?!
+- Some users reported that AGStreme does not even start on Win9x. I have no clue, why!
   Please tell me if it works for you (yes, also then) or not!
-  Include the version of your OS and Internet Explorer if possible, please!
+  Include the version of your OS and Internet Explorer!
 
 - when your start the program for the first time, everything looks quite messy.
   Drag the panes to where you want them. I will see what I can do that a useful
@@ -74,13 +84,32 @@ PROBLEMS
 - If you create a new directory in a folder that has no subdirectories yet, the
   new item may be out of scope :-(
 
-- You can't set the cursor in a tree of list if you are renaming an item
+- You can't set the cursor in a tree or list if you are renaming an item
 
 If you find bugs or if you miss a feature, contact me (see below).
 
 
 CHANGE-LOG
 ======================================================================================
+Version 2.22
+====================
+- Queuing of songs from www.cddb.com now works again!
+
+Version 2.21
+====================
+- Queuing of songs from www.cddb.com now works again!
+
+Version 2.2
+====================
+- Support for the Version 0.608 of the AudioGalaxy Satellite
+- Trying to support gold-accounts
+
+Version 2.1
+====================
+- Drag and drop files from the "Song list" to a directory in the tree
+- MP3 infos (bitrate, song-length etc.) are read in correctly now
+- minor bug-fixes
+
 Version 2.0
 ====================
 - New name AGStreme

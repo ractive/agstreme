@@ -300,6 +300,7 @@ BOOL CDockViewWnd::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 {
 	// Route the command messages through the views
 	// If the bar is floating
+
 	CView * pActiveView = GetActiveView();
 	if (pActiveView->GetSafeHwnd() && pActiveView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
 		return TRUE;
@@ -339,3 +340,4 @@ BOOL CDockViewWnd::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 //DEL 	// route commands to the splitter to the parent frame window
 //DEL 	return GetParentFrame()->SendMessage(WM_COMMAND, wParam, lParam);
 //DEL }
+

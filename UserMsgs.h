@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define WM_REJECTED			(WM_USER + 20)
 #define WM_BROWSERPROGSET	(WM_USER + 21)
 #define WM_RECV				(WM_USER + 22)
-#define WM_SEND				(WM_USER + 23)
+//#define WM_SEND				(WM_USER + 23)
 #define WM_SONGQUEUED		(WM_USER + 24)
 #define WM_SONGIDQUEUED		(WM_USER + 25)
 
@@ -76,3 +76,5 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define INVALID_ACCOUNT 1
 #define OLD_VERSION 2
 #define DUPE 3
+#define GOLD_ACCOUNT_EXPIRED 4
+#define NEVER_WAS_GOLD 5

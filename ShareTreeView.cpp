@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ShareTreeView.h"
 #include "AGSocket.h"
 #include "WinampControl.h"
+#include "DragChooseDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,6 +49,8 @@ CShareTreeView::CShareTreeView()
 	m_bInitialized = FALSE;
 
 	m_bIgnoreChanges = FALSE;
+
+	m_bInternalCF = FALSE;
 }
 
 CShareTreeView::~CShareTreeView()
@@ -64,8 +67,9 @@ BEGIN_MESSAGE_MAP(CShareTreeView, CExploTreeView)
 	ON_COMMAND(ID_SETASDOWNLOADDIR, OnSetasDownloaddir)
 	ON_WM_TIMER()
 	ON_COMMAND(ID_ADDTOFAVORITES, OnAddToFavorites)
-	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, OnEndLabelEdit)
 	ON_WM_SHOWWINDOW()
+	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, OnEndLabelEdit)
+	ON_WM_CREATE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -387,4 +391,105 @@ void CShareTreeView::OnShowWindow(BOOL bShow, UINT nStatus)
 
 		GetDocument()->UpdateAllViews(this, NEW_DIR);
 	}
+}
+
+DROPEFFECT CShareTreeView::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
+{
+	char sName[50];
+	m_bInternalCF = FALSE;
+	pDataObject->BeginEnumFormats();
+	FORMATETC format;
+	// Enum all available clipbooard formats.
+	while (pDataObject->GetNextFormat(&format)) {
+		int n = GetClipboardFormatName(format.cfFormat, sName, 50);
+		if (strcmp(sName, CJAGSApp::AGStremeClipboardFormat) == 0) {
+			// We found our own internal clipboard format.
+			m_CBFormat = format.cfFormat;
+			m_bInternalCF = TRUE;
+			break;
+		}
+	}
+	// We found an internal clipboard format
+	if (m_bInternalCF) {
+		return DROPEFFECT_LINK;
+	}	
+
+	// Let the base class handle all the other clipboard formats
+	return CExploTreeView::OnDragEnter(pDataObject, dwKeyState, point);
+}
+
+void CShareTreeView::OnDragLeave() 
+{
+	m_bInternalCF = FALSE;
+	
+	CExploTreeView::OnDragLeave();
+}
+
+DROPEFFECT CShareTreeView::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
+{
+	DROPEFFECT deParent = CExploTreeView::OnDragOver(pDataObject, dwKeyState, point);
+	// We found an internal clipboard format
+	if (m_bInternalCF) {
+		return DROPEFFECT_LINK;
+	}	
+	
+	return deParent;
+}
+
+BOOL CShareTreeView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point) 
+{
+	if (dropEffect == DROPEFFECT_NONE) {
+		return FALSE;
+	}
+
+	if (m_bInternalCF) {
+		HGLOBAL hData = pDataObject->GetGlobalData(m_CBFormat);
+		char * pClipInfo = (char *)GlobalLock(hData);
+		GlobalUnlock(hData);
+		CJAGSDoc * pDoc = GetDocument();
+
+		CTreeCtrl& TreeCtrl = GetTreeCtrl();
+		CPoint ptTree = point;
+		UINT uFlags = 0;
+		HTREEITEM hTI = TreeCtrl.HitTest(ptTree, &uFlags);
+		if ((hTI == NULL) || !(uFlags & TVHT_ONITEM)) {
+			return FALSE;
+		}
+
+		CString sFolder = GetPath(hTI);
+		CDragChooseDlg dlg;
+		dlg.m_sSubFolder = pDoc->m_sAlbum;
+		dlg.m_sFolder = sFolder;
+		dlg.DoModal();
+		if (dlg.m_bCreateSubFolder) {
+			if (CreateDirectory(dlg.m_sFolder, NULL)) {
+				// The new folder could be created
+				sFolder = dlg.m_sFolder;
+			}
+		}
+
+		pDoc->m_nPrefBitrate = dlg.m_nBitRate;
+
+		char * pCursor = pClipInfo;
+		while (*pCursor != '\0') {
+			pDoc->AddNewFolderMap(pCursor, sFolder);
+			pCursor += strlen(pCursor) + 1;
+		}
+	
+		TreeCtrl.SelectDropTarget(NULL);
+		
+		return TRUE;
+	}
+	
+	return CExploTreeView::OnDrop(pDataObject, dropEffect, point);
+}
+
+int CShareTreeView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+{
+	if (CExploTreeView::OnCreate(lpCreateStruct) == -1)
+		return -1;
+	
+	m_OleDropTarget.Register(this);
+	
+	return 0;
 }

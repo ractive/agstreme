@@ -49,6 +49,7 @@ public:
 	BOOL	m_bStartWinamp;
 	CString	m_sWinAmpExe;
 	BOOL	m_bKeepLog;
+	BOOL	m_bQuickScan;
 	//}}AFX_DATA
 
 

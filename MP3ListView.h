@@ -44,6 +44,7 @@ protected:
 
 	// Generated message map functions
 protected:
+	CMapWordToOb m_PathMap;
 	//{{AFX_MSG(CMP3ListView)
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

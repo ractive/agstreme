@@ -76,6 +76,7 @@
 #define serverWait					0x101
 #define sendPing					0x102
 #define waitingForAccountStatus		0x103
+#define waitForMagic				0x104
 
 // mesgs from the UI
 #define NEW_ACCOUNT_INFO_FROM_UI 		100
@@ -102,6 +103,9 @@
 #define PLAY_SONG_LIST_COMMAND_TO_UI 153                
 #define MASTER_SERVER_CONN_STATE 154
 #define SERVER_CONN_STATE 155
+#define SET_GO_BUTTON_TO_UI 156
+
+#define GOLD_STATUS 200
 
 //results of trying to connect to the master server
 #define MS_UNKNOWN 0
@@ -131,6 +135,6 @@
 #define version				"0.520L"
 #endif
 #ifdef WIN32
-#define version				"0.605W"
+#define version				"0.608W"
 #endif
 

@@ -43,6 +43,7 @@ CLoginPage::CLoginPage() : CPropertyPage(CLoginPage::IDD)
 	//{{AFX_DATA_INIT(CLoginPage)
 	m_sPassword = _T("");
 	m_sUsername = _T("");
+	m_bGoldAccount = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -56,6 +57,7 @@ void CLoginPage::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CLoginPage)
 	DDX_Text(pDX, IDC_PASSWORD, m_sPassword);
 	DDX_Text(pDX, IDC_USERNAME, m_sUsername);
+	DDX_Check(pDX, IDC_ISGOLD, m_bGoldAccount);
 	//}}AFX_DATA_MAP
 }
 
