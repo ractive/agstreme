@@ -34,14 +34,12 @@ class CPidlMgr
 {
 public:
 	LPITEMIDLIST CopyFirst(const LPITEMIDLIST pidl, short n);
-	void Restore(UINT n, LPITEMIDLIST pidl, USHORT cb);
 	BOOL GetParentID(LPITEMIDLIST pidl);
 	UINT GetCount(LPITEMIDLIST pidl);
 	LPITEMIDLIST Copy(LPCITEMIDLIST pidlSource);
 	LPITEMIDLIST Concatenate(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 	UINT GetSize(LPCITEMIDLIST pidl);
 	LPITEMIDLIST GetNextItem(LPCITEMIDLIST pidl);
-	USHORT Crop(UINT n, LPITEMIDLIST pidl);
 
 	CPidlMgr(LPMALLOC pMalloc);
 	virtual ~CPidlMgr();

@@ -53,7 +53,6 @@ public:
 	public:
 	virtual void OnInitialUpdate();
 	protected:
-	virtual void OnDraw(CDC* pDC);      // overridden to draw this view
 	virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 	//}}AFX_VIRTUAL
 
@@ -73,8 +72,10 @@ protected:
 	afx_msg void OnUpdateRemoveShare(CCmdUI* pCmdUI);
 	afx_msg void OnRemoveShare();
 	afx_msg void OnSetasDownloaddir();
+	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+	afx_msg void OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult);
 
 private:
 	void RemoveShare();

@@ -51,6 +51,7 @@ BEGIN_MESSAGE_MAP(CJAGSView, CHtmlView)
 	ON_COMMAND(ID_CDCOVER, OnCdcover)
 	ON_COMMAND(ID_CDDBSEARCH, OnCddbsearch)
 	ON_COMMAND(ID_BROWSERNOTES, OnBrowserNotes)
+	ON_COMMAND(ID_LYRICS, OnLyrics)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -212,4 +213,12 @@ void CJAGSView::OnNewWindow2(LPDISPATCH* ppDisp, BOOL* Cancel)
 //	*Cancel = TRUE;
 
 	CHtmlView::OnNewWindow2(ppDisp, Cancel);
+}
+
+void CJAGSView::OnLyrics() 
+{
+	CString sSong = GetDocument()->GetSongName();
+	sSong.Replace(" ", "+");
+	CString sUrl = "http://www.lyricsrobot.com/cgi-bin/lsearch.pl?terms=" + sSong + "&mode=name";
+	Navigate2(sUrl, 0, _T("_self"));	
 }

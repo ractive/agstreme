@@ -52,6 +52,7 @@ public:
 	public:
 	virtual BOOL InitInstance();
 	virtual void WinHelp(DWORD dwData, UINT nCmd = HELP_CONTEXT);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	//}}AFX_VIRTUAL
 
 // Implementation

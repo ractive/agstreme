@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "MainFrm.h"
 #include "JAGSDoc.h"
 #include "JAGSView.h"
-#include "ExploListView.h"
+#include "ExploTreeView.h"
 #include "HyperLink.h"
 #include <HtmlHelp.h>
 
@@ -189,4 +189,17 @@ void CJAGSApp::WinHelp(DWORD dwData, UINT nCmd)
 	}
 	
 	CWinApp::WinHelp(dwData, nCmd);
+}
+
+BOOL CJAGSApp::PreTranslateMessage(MSG* pMsg) 
+{
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		CView* view = ((CFrameWnd *) AfxGetMainWnd())->GetActiveView();
+		if (((CExploTreeView *) view)->HandleKeyDownMsg(pMsg)) {
+			return TRUE;
+		}
+	}
+	
+	return CWinApp::PreTranslateMessage(pMsg);
 }

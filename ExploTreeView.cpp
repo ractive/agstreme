@@ -51,6 +51,14 @@ BEGIN_MESSAGE_MAP(CExploTreeView, CTreeView)
 	ON_WM_CONTEXTMENU()
 	ON_WM_RBUTTONDOWN()
 	ON_NOTIFY_REFLECT(TVN_BEGINDRAG, OnBegindrag)
+	ON_WM_CREATE()
+	ON_NOTIFY_REFLECT(TVN_BEGINLABELEDIT, OnBeginLabelEdit)
+	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, OnEndLabelEdit)
+	ON_COMMAND(ID_DELETE, OnDelete)
+	ON_COMMAND(ID_DELETEERASE, OnDeleteErase)
+	ON_COMMAND(ID_RENAME, OnRename)
+	ON_COMMAND(ID_NEWDIR, OnNewDir)
+	ON_COMMAND(ID_REFRESH, OnRefresh)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -60,6 +68,16 @@ END_MESSAGE_MAP()
 CExploTreeView::CExploTreeView()
 {
 	m_hMenuItem = NULL;
+	
+	m_nScrollWait = InitialScrollWait;
+
+	m_hItemButton = NULL;
+
+	m_hAccel = NULL;
+
+	m_pEdit = NULL;
+
+	m_bNewDir = FALSE;
 }
 
 CExploTreeView::~CExploTreeView()
@@ -74,7 +92,7 @@ CExploTreeView::~CExploTreeView()
 
 BOOL CExploTreeView::PreCreateWindow(CREATESTRUCT& cs)
 {
-	cs.style |= TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS;
+	cs.style |= TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_EDITLABELS;
 
 	return CTreeView::PreCreateWindow(cs);
 }
@@ -163,7 +181,6 @@ void CExploTreeView::OnItemExpanding(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
 	
-	IShellFolder *pParentFolder;
 	CTreeCtrl &treeCtrl = GetTreeCtrl();
 	if(pNMTreeView->action == TVE_COLLAPSE) {
 		// If the node is collapsed, delete all children...
@@ -171,40 +188,7 @@ void CExploTreeView::OnItemExpanding(NMHDR* pNMHDR, LRESULT* pResult)
 	}
     else if(pNMTreeView->action == TVE_EXPAND)
 	{
-		// If the node is expanded, add the subdirectories
-		HCURSOR	 hCursor;
-		TVITEM   tvItem = {0};
-		tvItem.mask = TVIF_PARAM;
-		tvItem.hItem = pNMTreeView->itemNew.hItem;
-		if(!treeCtrl.GetItem(&tvItem))
-			return;
-		LPITEMDATA pItemInfo = (LPITEMDATA)tvItem.lParam;
-		hCursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-		
-		// Get the parent folder and bind it to the expanded folder
-		if(pItemInfo->pParentFolder == 0)
-		{
-			if(FAILED(SHGetDesktopFolder(&pParentFolder)))
-				return;
-		}
-		else if(FAILED(pItemInfo->pParentFolder->BindToObject(pItemInfo->pidlSelf, NULL, IID_IShellFolder, (void**)&pParentFolder))) {
-			return;
-		}
-	
-		treeCtrl.SetRedraw(FALSE);
-
-		// Add the subdirectories
-		InsertFolder(pNMTreeView->itemNew.hItem, pParentFolder, pItemInfo->pidlFullyQual);
-
-		// Sort the child items
-		TVSORTCB tvsort;
-		tvsort.hParent = pNMTreeView->itemNew.hItem;
-		tvsort.lParam = NULL;
-		tvsort.lpfnCompare = &CompareFunc;
-		treeCtrl.SortChildrenCB(&tvsort);
-		treeCtrl.SetRedraw(TRUE);
-		//pParentFolder->Release();
-		SetCursor(hCursor);
+		Expand(pNMTreeView->itemNew.hItem);
 	}
 }
 
@@ -579,8 +563,6 @@ void CExploTreeView::ENUMFOLDER(IShellFolder *pFolder, LPCITEMIDLIST pidlParent)
 
 void CExploTreeView::PIDLTEST(LPITEMIDLIST pidl)
 {
-	CTreeCtrl &tree = GetTreeCtrl();
-	
 	while(pidl) {
 		CString sPath;
 		SHGetPathFromIDList(pidl, sPath.GetBuffer(_MAX_PATH));
@@ -844,4 +826,548 @@ BOOL CExploTreeView::DoFileTransfer(HTREEITEM hTI, BOOL bForClipBoard)
 
 	delete pFrom;
 	return true;
+}
+
+int CExploTreeView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+{
+	if (CTreeView::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	m_OleDropTarget.Register(this);
+	
+	return 0;
+}
+
+DROPEFFECT CExploTreeView::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
+{
+	UINT uFlags = 0;
+	HTREEITEM hDropItem = GetTreeCtrl().HitTest(point, &uFlags);
+
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+	if (hDropItem != NULL) {
+		treeCtrl.SelectDropTarget(hDropItem);
+	}
+	else {
+		treeCtrl.SelectDropTarget(NULL);
+	}
+
+	static DWORD dwTickCount = 0;
+
+	if (uFlags & TVHT_ONITEMBUTTON) {
+		if (m_hItemButton == hDropItem && dwTickCount && GetTickCount() - dwTickCount > 1000) {
+			treeCtrl.Expand(hDropItem, TVE_TOGGLE);
+			dwTickCount = 0;
+		}
+		else {
+			if (dwTickCount == 0) {
+				dwTickCount = GetTickCount();
+			}
+			m_hItemButton = hDropItem;
+		}
+	}
+	else {
+		m_hItemButton = NULL;
+		dwTickCount = 0;
+	}
+
+	return GetDropEffect(hDropItem, dwKeyState);
+}
+
+DROPEFFECT CExploTreeView::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
+{
+	STGMEDIUM stgMedium;
+	if (pDataObject->GetData(CF_HDROP, &stgMedium)) {
+		DragQueryFile((HDROP)stgMedium.hGlobal, 0, m_sDraggedFile.GetBuffer(MAX_PATH), MAX_PATH);
+		m_sDraggedFile.ReleaseBuffer();
+	}
+
+	return DROPEFFECT_NONE;
+}
+
+DROPEFFECT CExploTreeView::OnDragScroll(DWORD dwKeyState, CPoint point)
+{
+	RECT rect;
+	GetClientRect(&rect);
+	
+	// The whole point of nScrollWait is that after a scroll up/down
+	// we sleep a little bit so that the scrolling is not too fast.
+
+	// This boolean is use to determine if the scroll direction changed.
+	static bool bScrollUp = true;
+
+	// Check if the point is in the upper or lower area of the window.
+	// If yes, scroll up or down.
+	if (point.y > rect.top && point.y < rect.top + ScrollRange) {
+		
+		SendMessage(WM_VSCROLL, SB_LINEUP, 0L);
+		
+		// If the direction of the scrolling changed, reset the waiting amount.
+		if (!bScrollUp) {
+			m_nScrollWait = InitialScrollWait;
+			bScrollUp = true;
+		}
+		else {
+			// Decrease the waiting time every time a line was scrolled.
+			// This way the scrolling becomes faster the more you scroll
+			// Cool, eh :-)
+			m_nScrollWait -= m_nScrollWait / 10;
+		}
+		Sleep(m_nScrollWait);
+	}
+	else if (point.y < rect.bottom && point.y > rect.bottom - ScrollRange) {
+		SendMessage(WM_VSCROLL, SB_LINEDOWN, 0L);
+
+		if (bScrollUp) {
+			m_nScrollWait = InitialScrollWait;
+			bScrollUp = false;
+		}
+		else {
+			m_nScrollWait -= m_nScrollWait / 10;
+		}
+		Sleep(m_nScrollWait);
+	}
+	return CTreeView::OnDragScroll(dwKeyState, point);
+}
+
+
+void CExploTreeView::OnDragLeave() 
+{
+	// If the mouse leaved, remove the drop hilite.
+	GetTreeCtrl().SelectDropTarget(NULL);
+	
+	CTreeView::OnDragLeave();
+}
+
+BOOL CExploTreeView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point) 
+{
+	BOOL bRet = FALSE;
+	
+	if (dropEffect == DROPEFFECT_NONE) {
+		return bRet;
+	}
+
+	STGMEDIUM stgMedium;
+
+	if (pDataObject->GetData(CF_HDROP, &stgMedium)) {
+		UINT uFlags;
+		CTreeCtrl& TreeCtrl = GetTreeCtrl();
+		CPoint ptTree = point;
+		HTREEITEM hTI = TreeCtrl.HitTest(ptTree, &uFlags);
+		if ((hTI != NULL) && (uFlags & TVHT_ONITEM)) {
+			bRet = HandleFileDrop(hTI, dropEffect == DROPEFFECT_COPY, (HDROP)stgMedium.hGlobal);
+		}
+
+		ReleaseStgMedium(&stgMedium);
+	}
+	
+	GetTreeCtrl().SelectDropTarget(NULL);
+
+	return bRet;
+}
+
+BOOL CExploTreeView::HandleFileDrop(HTREEITEM hTI, BOOL bCopy, HDROP hDrop)
+{
+	UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+
+	int nBufferLen = (nFiles * MAX_PATH + 1) + 1;
+	TCHAR *pFrom = new TCHAR[nBufferLen];
+	ZeroMemory(pFrom, nBufferLen);
+	LPTSTR cursor = pFrom;
+	TCHAR sFile[MAX_PATH];
+
+	SHFILEOPSTRUCT shFile;
+	shFile.hwnd = 0;
+	shFile.wFunc = bCopy ? FO_COPY : FO_MOVE;
+
+	// hDrop is a double zero terminated list of filename
+	// Exaclty what SHFileOperation expects
+	for (UINT i = 0; i < nFiles; i++) {
+		int n = DragQueryFile(hDrop, i, sFile, MAX_PATH);
+		lstrcpy(cursor, sFile);
+		cursor += n + 1;
+	}
+
+	shFile.pFrom = pFrom;
+	CString sTo = GetPath(hTI);
+	shFile.pTo = sTo;
+	shFile.fFlags = FOF_ALLOWUNDO;
+	shFile.fAnyOperationsAborted = FALSE;
+
+	BOOL bRet = TRUE;
+
+	// Now we delete the files.
+    bRet = SHFileOperation(&shFile) == 0;
+
+    // BUG: Windows will ask before deleting a .exe.  If the user
+    // cancels the delete, fAnyOperationsAborted is NOT set to TRUE.
+	if (shFile.fAnyOperationsAborted == TRUE)
+		bRet = FALSE;
+
+	delete [] pFrom;
+
+	return bRet;
+}
+
+
+DROPEFFECT CExploTreeView::GetDropEffect(HTREEITEM hTI, DWORD dwKeyState)
+{
+	if (hTI == NULL) {
+		// Not on an item
+		return DROPEFFECT_NONE;
+	}
+
+	LPITEMDATA pItemData = (LPITEMDATA)GetTreeCtrl().GetItemData(hTI);
+	ULONG attributes = 0;
+	pItemData->pParentFolder->GetAttributesOf(1, (LPCITEMIDLIST *)&pItemData->pidlSelf, &attributes);
+	/*ICopyHook * pCopyHook = NULL;
+	pItemData->pParentFolder->QueryInterface(IID_IShellCopyHook, (void **)&pCopyHook);
+	CString sPath = GetPath(hTI);
+	UINT nRes = pCopyHook->CopyCallback(m_hWnd, FO_COPY, FOF_ALLOWUNDO, m_sDraggedFile, FILE_ATTRIBUTE_NORMAL, sPath, FILE_ATTRIBUTE_NORMAL);
+	pCopyHook->Release();*/
+	if (!(attributes & SFGAO_DROPTARGET)) {
+		return DROPEFFECT_NONE;
+	}
+
+	DROPEFFECT dropEffect = DROPEFFECT_NONE;
+	if (dwKeyState & MK_SHIFT) {
+		// When the user presses the SHIFT key, it's always a move operation
+		dropEffect = DROPEFFECT_MOVE;
+	}
+	else if (dwKeyState & MK_CONTROL) {
+		// When the user presses the CTRL key, it's always a copy operation
+		dropEffect = DROPEFFECT_COPY;
+	}
+	else if (hTI) {
+		// It's a move operation if the file is on the same drive, otherwise
+		// it's a copy operation
+		dropEffect = (GetPath(hTI).GetAt(0) == m_sDraggedFile.GetAt(0)) ? DROPEFFECT_MOVE : DROPEFFECT_COPY;
+	}
+	return dropEffect;
+}
+
+
+void CExploTreeView::OnBeginLabelEdit(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	TV_DISPINFO* pTVDispInfo = (TV_DISPINFO*)pNMHDR;
+	
+	m_pEdit = GetTreeCtrl().GetEditControl();
+	if (m_pEdit) {
+		m_pEdit->GetWindowText(m_sOldName);
+		m_pEdit->LimitText(_MAX_DIR);
+		*pResult = 0;
+	}
+	else {
+		*pResult = 1;
+	}
+}
+
+void CExploTreeView::OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	TV_DISPINFO* pTVDispInfo = (TV_DISPINFO*)pNMHDR;
+
+	// Do we have a valid string?
+	if (!m_bNewDir && pTVDispInfo->item.pszText == 0) {
+		*pResult = 0;
+		m_pEdit = NULL;
+		return;
+	}
+
+	if (m_pEdit) {
+		if (m_bNewDir) {
+			CTreeCtrl &treeCtrl = GetTreeCtrl();
+			HTREEITEM hParent = treeCtrl.GetParentItem(pTVDispInfo->item.hItem);
+			if (hParent == NULL) {
+				*pResult = 0;
+				m_pEdit = NULL;
+				return;
+			}
+			CString sPath = GetPath(hParent);
+			if (sPath.Right(1) != "\\") {
+				sPath += "\\";
+			}
+
+			CString sName;
+			treeCtrl.GetEditControl()->GetWindowText(sName);
+			sPath += sName;
+			if (!CreateDirectory(sPath, NULL)) {
+				MessageBox("The directory could not be created\r\n\r\nMake sure the name is valid and unique!", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+				*pResult = 0;
+				treeCtrl.EditLabel(pTVDispInfo->item.hItem);
+				return;
+			}
+			else {
+				m_bNewDir = FALSE;
+			}
+
+			Refresh(hParent);
+
+			*pResult = 1;
+			m_pEdit = NULL;
+			return;
+		}
+		// Only rename the file if the names are different.
+		if (m_sOldName.Compare(pTVDispInfo->item.pszText)) {
+			LPITEMDATA pItemData = (LPITEMDATA)GetTreeCtrl().GetItemData(pTVDispInfo->item.hItem);
+
+			TCHAR tchPath[MAX_PATH];
+			WCHAR wchPath[MAX_PATH];    
+
+			//
+			// Make sure the directory name is in Unicode format.
+			//
+
+			if (IsTextUnicode (tchPath, lstrlen (tchPath), NULL))
+				lstrcpy ((char *) wchPath, tchPath);
+			else
+				MultiByteToWideChar (CP_ACP, 0, pTVDispInfo->item.pszText, -1, wchPath,
+									 sizeof (wchPath) / sizeof (WCHAR));
+
+			LPITEMIDLIST pidlOld = pItemData->pidlSelf;
+			
+			m_pEdit = GetTreeCtrl().GetEditControl();
+
+			if (!SUCCEEDED(pItemData->pParentFolder->SetNameOf(m_hWnd, pItemData->pidlSelf, wchPath, SHGDN_INFOLDER, &(pItemData->pidlSelf)))) {
+				// The entry could not be renamed.
+				// Put in the old name
+				if (m_pEdit) {
+					m_pEdit->SetWindowText(m_sOldName);
+				}
+				*pResult = 0;
+			}
+			else {
+				// Free the old pidl
+				IMalloc * pMalloc;
+				SHGetMalloc(&pMalloc);
+				pMalloc->Free(pidlOld);
+				pMalloc->Release();
+				*pResult = 1;
+			}
+		}
+	}
+
+	m_pEdit = NULL;
+}
+
+BOOL CExploTreeView::DeleteDir(BOOL bKeepInBin)
+{
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+	// Allocate a string for all the names of the files that will
+	// be deleted. It's a double zero terminated string.
+	char *pFrom = new char[MAX_PATH + 2];
+	// Set it to 0
+	memset(pFrom, '\0', MAX_PATH + 2);
+
+	lstrcpy(pFrom, GetPath(treeCtrl.GetSelectedItem()));
+	// Set up the struct to tell Windows to delete the files.
+	SHFILEOPSTRUCT shFile;
+	shFile.hwnd = 0;
+	shFile.wFunc = FO_DELETE;
+	shFile.pFrom = pFrom;
+	shFile.pTo = NULL;
+	// FOF_ALLOWUNDO keeps the files in the recycle bin
+	shFile.fFlags = bKeepInBin ? FOF_ALLOWUNDO : 0;
+	shFile.fAnyOperationsAborted = FALSE;
+
+	bool bRet = true;
+
+	// Now we delete the files.
+    bRet = SHFileOperation(&shFile) == 0;
+
+	delete [] pFrom;
+
+    // BUG: Windows will ask before deleting a .exe.  If the user
+    // cancels the delete, fAnyOperationsAborted is NOT set to TRUE.
+	if (shFile.fAnyOperationsAborted == TRUE)
+		bRet = false;
+
+	if (bRet) {
+		treeCtrl.DeleteItem(treeCtrl.GetSelectedItem());
+	}
+
+	return bRet;	
+}
+
+void CExploTreeView::OnDelete() 
+{
+	CTreeCtrl& treeCtrl = GetTreeCtrl();
+
+	// If the user is editing a filename and hits delete we unfortunately
+	// end up here :-(
+	// If pEdit != NULL we know that the user is editing.
+	if (m_pEdit != NULL) {
+		// As GetEditControl only returns a CTempWnd we make sure we
+		// have the correct CWnd *.
+		m_pEdit = treeCtrl.GetEditControl();
+		m_pEdit->SendMessage(WM_KEYDOWN, VK_DELETE, 0);
+		return;
+	}
+
+	DeleteDir(TRUE);
+}
+
+void CExploTreeView::OnDeleteErase() 
+{
+	CTreeCtrl& treeCtrl = GetTreeCtrl();
+
+	// If the user is editing a filename and hits delete we unfortunately
+	// end up here :-(
+	// If pEdit != NULL we know that the user is editing.
+	if (m_pEdit != NULL) {
+		// As GetEditControl only returns a CTempWnd we make sure we
+		// have the correct CWnd *.
+		m_pEdit = treeCtrl.GetEditControl();
+		m_pEdit->SendMessage(WM_KEYDOWN, VK_DELETE, 0);
+		return;
+	}
+
+	DeleteDir(FALSE);
+}
+
+void CExploTreeView::OnRename() 
+{
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+	HTREEITEM hSel = treeCtrl.GetSelectedItem();
+	if (hSel) {
+		treeCtrl.EditLabel(hSel);
+	}
+}
+
+BOOL CExploTreeView::HandleKeyDownMsg(MSG* pMsg)
+{
+	BOOL bHandledMessage = FALSE;
+
+	if (NULL != pMsg && WM_KEYDOWN == pMsg->message) {
+		if (m_pEdit  && 
+			((VK_RETURN == pMsg->wParam) ||
+			(VK_DELETE == pMsg->wParam) || 
+			(VK_ESCAPE == pMsg->wParam))) {
+				::TranslateMessage(pMsg);
+				::DispatchMessage(pMsg);
+				bHandledMessage = TRUE;
+		}
+	}
+	
+	return bHandledMessage;
+}
+
+void CExploTreeView::OnNewDir() 
+{
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+	HTREEITEM hSel = treeCtrl.GetSelectedItem();
+	if (hSel == NULL) {
+		// We need a base directory
+		return;
+	}
+
+	treeCtrl.Expand(hSel, TVE_EXPAND);
+
+	CString sBasePath = GetPath(hSel);
+	if (sBasePath.Right(1) != "\\") {
+		sBasePath += "\\";
+	}
+
+	int nAppendix = 1;
+	BOOL bWasFound = FALSE;
+	CFileFind finder;
+	CString sNewName = "New Folder";
+	do {
+		finder.Close();
+		if (nAppendix > 1) {
+			sNewName.Format("New Folder (%d)", nAppendix);
+		}
+		nAppendix++;
+	} while (nAppendix < 99 && (bWasFound = finder.FindFile(sBasePath + sNewName)));
+
+	if (!bWasFound) {
+		TVITEM tvi;
+		tvi.hItem = hSel;
+		tvi.mask = TVIF_CHILDREN | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+		treeCtrl.GetItem(&tvi);
+		HTREEITEM hInserted = treeCtrl.InsertItem(sNewName, tvi.iImage, tvi.iSelectedImage, hSel);
+		treeCtrl.EnsureVisible(hInserted);
+		m_bNewDir = TRUE;
+
+		treeCtrl.EditLabel(hInserted);
+	}
+	
+}
+
+void CExploTreeView::Expand(HTREEITEM hItem)
+{
+	IShellFolder *pParentFolder;
+
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+	// If the node is expanded, add the subdirectories
+	HCURSOR	 hCursor;
+	TVITEM   tvItem = {0};
+	tvItem.mask = TVIF_PARAM;
+	tvItem.hItem = hItem;
+	if(!treeCtrl.GetItem(&tvItem))
+		return;
+	LPITEMDATA pItemInfo = (LPITEMDATA)tvItem.lParam;
+	hCursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+	
+	// Get the parent folder and bind it to the expanded folder
+	if(pItemInfo->pParentFolder == 0)
+	{
+		if(FAILED(SHGetDesktopFolder(&pParentFolder)))
+			return;
+	}
+	else if(FAILED(pItemInfo->pParentFolder->BindToObject(pItemInfo->pidlSelf, NULL, IID_IShellFolder, (void**)&pParentFolder))) {
+		return;
+	}
+
+	treeCtrl.SetRedraw(FALSE);
+
+	// Add the subdirectories
+	InsertFolder(hItem, pParentFolder, pItemInfo->pidlFullyQual);
+
+	// Sort the child items
+	TVSORTCB tvsort;
+	tvsort.hParent = hItem;
+	tvsort.lParam = NULL;
+	tvsort.lpfnCompare = &CompareFunc;
+	treeCtrl.SortChildrenCB(&tvsort);
+	treeCtrl.SetRedraw(TRUE);
+	//pParentFolder->Release();
+	SetCursor(hCursor);
+}
+
+void CExploTreeView::Refresh(HTREEITEM hItem)
+{
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+	HTREEITEM hChild = treeCtrl.GetChildItem(hItem);
+
+	CString s = treeCtrl.GetItemText(hItem);
+
+	while (hChild != NULL) {
+		HTREEITEM hNextItem = treeCtrl.GetNextSiblingItem (hChild);
+		treeCtrl.DeleteItem (hChild);
+		hChild = hNextItem;
+	}
+
+
+	Expand(hItem);
+
+}
+
+void CExploTreeView::RefreshAll()
+{
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+	HTREEITEM hRoot = treeCtrl.GetRootItem();
+	while (hRoot) {
+		HTREEITEM hNextRoot = treeCtrl.GetNextSiblingItem(hRoot);
+		Refresh(hRoot);
+		hRoot = hNextRoot;
+	}
+}
+
+void CExploTreeView::OnRefresh() 
+{
+	RefreshAll();	
 }

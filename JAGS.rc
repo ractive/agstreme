@@ -52,8 +52,12 @@ IDB_BANNER              BITMAP  DISCARDABLE     "res\\client-startscreen2.bmp"
 
 IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
 BEGIN
+    BUTTON      ID_APP_EXIT
+    SEPARATOR
     BUTTON      ID_PREFERENCES
     SEPARATOR
+    BUTTON      ID_REFRESH
+    BUTTON      ID_NEWDIR
     BUTTON      ID_ADDSHARE
     BUTTON      ID_REMOVESHARE
     BUTTON      ID_SETASDOWNLOADDIR
@@ -96,6 +100,7 @@ BEGIN
     SEPARATOR
     BUTTON      ID_CDCOVER
     BUTTON      ID_CDDBSEARCH
+    BUTTON      ID_LYRICS
 END
 
 
@@ -167,18 +172,23 @@ END
 
 IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
+    "A",            ID_SELECTALL,           VIRTKEY, CONTROL, NOINVERT
     "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
     "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
     "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_APPS,        ID_SHOWCONTEXTMENU,     VIRTKEY, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
-    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_DELETE,      ID_DELETE,              VIRTKEY, NOINVERT
+    VK_DELETE,      ID_DELETEERASE,         VIRTKEY, SHIFT, NOINVERT
     VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
+    VK_F2,          ID_RENAME,              VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_PROPERTY,            VIRTKEY, ALT, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
 END
@@ -195,7 +205,7 @@ CAPTION "About JAGS"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "JAGS Version 1.0",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "JAGS Version 1.1",IDC_STATIC,40,10,119,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2001 by J.P Bergamin",IDC_STATIC,40,25,
                     119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
@@ -396,8 +406,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,0
- PRODUCTVERSION 1,0,0,0
+ FILEVERSION 1,1,0,0
+ PRODUCTVERSION 1,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -415,14 +425,14 @@ BEGIN
             VALUE "Comments", "For updates visit http://www.ractive.ch/gpl/JAGS.html\0"
             VALUE "CompanyName", "@ractive Software\0"
             VALUE "FileDescription", "JAGS MFC Application\0"
-            VALUE "FileVersion", "1, 0, 0, 0\0"
+            VALUE "FileVersion", "1, 1, 0, 0\0"
             VALUE "InternalName", "JAGS\0"
             VALUE "LegalCopyright", "Copyright (C) 2001 by Jean-Pierre Bergamin, licensed under the GPL\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "JAGS.EXE\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "JAGS Application\0"
-            VALUE "ProductVersion", "1, 0, 0, 0\0"
+            VALUE "ProductVersion", "1, 1, 0, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -750,6 +760,13 @@ BEGIN
     ID_WINAMPNEXT           "Play next song\nNext"
     ID_WINAMPADDTOPL        "Add selected songs to winamp's current playlist\nAdd to playlist"
     ID_WINAMPDELETEPL       "Clear winamp's current playlist\nClear playlist"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEWDIR               "Create a new directory\nNew directory"
+    ID_REFRESH              "Refresh\nRefresh"
+    ID_LYRICS               "Search for lyrics of this song\nSearch lyrics"
 END
 
 #endif    // English (U.S.) resources

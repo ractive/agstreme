@@ -142,6 +142,16 @@
 #define ID_WINAMPADDTOPL                32811
 #define ID_WINAMPDELETEPL               32812
 #define D_SHOWTRANSFERRATE              32815
+#define ID_RENAME                       32816
+#define ID_DELETE                       32817
+#define ID_DELETEERASE                  32818
+#define ID_SELECTALL                    32819
+#define ID_PROPERTY                     32820
+#define ID_SHOWCONTEXTMENU              32821
+#define ID_NEWDIR                       32823
+#define ID_REFRESH                      32824
+#define ID_BUTTON32825                  32825
+#define ID_LYRICS                       32825
 #define ID_MSSERVERSTATE                61204
 #define ID_SERVERSTATE                  61205
 
@@ -151,7 +161,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        169
-#define _APS_NEXT_COMMAND_VALUE         32816
+#define _APS_NEXT_COMMAND_VALUE         32826
 #define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -159,28 +159,6 @@ BOOL CPidlMgr::GetParentID(LPITEMIDLIST pidl)
     return fRemoved;
 }
 
-USHORT CPidlMgr::Crop(UINT n, LPITEMIDLIST pidl)
-{
-	USHORT nRet = pidl->mkid.cb;
-	for(UINT i = 0; i < n; i++) {
-		pidl = GetNextItem(pidl);
-	}
-	if (pidl) {
-		pidl->mkid.cb = 0;
-	}
-	return nRet;
-}
-
-void CPidlMgr::Restore(UINT n, LPITEMIDLIST pidl, USHORT cb)
-{
-	for(UINT i = 0; i < n; i++) {
-		pidl = GetNextItem(pidl);
-	}
-	if (pidl) {
-		USHORT nRet = pidl->mkid.cb;
-		pidl->mkid.cb = cb;
-	}
-}
 
 LPITEMIDLIST CPidlMgr::CopyFirst(const LPITEMIDLIST pidl, short n)
 {
@@ -212,3 +190,4 @@ LPITEMIDLIST CPidlMgr::CopyFirst(const LPITEMIDLIST pidl, short n)
     return pidlRet;
 
 }
+

@@ -315,4 +315,3 @@ void CDockViewWnd::OnInitialUpdate()
 		}
 	}
 }
-

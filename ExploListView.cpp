@@ -40,7 +40,7 @@ static char THIS_FILE[] = __FILE__;
 LPCONTEXTMENU2 CExploListView::m_pIContext2 = NULL;
 WNDPROC CExploListView::m_pOldWndProc = NULL;
 
-
+enum {MP3INFO_TIMER = 1};
 /////////////////////////////////////////////////////////////////////////////
 // CExploListView
 
@@ -56,8 +56,18 @@ BEGIN_MESSAGE_MAP(CExploListView, CListView)
 	ON_COMMAND(ID_WINAMPADDTOPL, OnWinampAddtoPL)
 	ON_NOTIFY_REFLECT(LVN_BEGINDRAG, OnBegindrag)
 	ON_WM_CONTEXTMENU()
-	ON_UPDATE_COMMAND_UI(ID_CDDBSEARCH, OnUpdateBrowser)
 	ON_WM_CLOSE()
+	ON_NOTIFY_REFLECT(LVN_BEGINLABELEDIT, OnBeginlabeledit)
+	ON_NOTIFY_REFLECT(LVN_ENDLABELEDIT, OnEndlabeledit)
+	ON_COMMAND(ID_RENAME, OnRename)
+	ON_COMMAND(ID_DELETE, OnDelete)
+	ON_COMMAND(ID_DELETEERASE, OnDeleteErase)
+	ON_COMMAND(ID_SELECTALL, OnSelectAll)
+	ON_COMMAND(ID_PROPERTY, OnPropertyPage)
+	ON_COMMAND(ID_SHOWCONTEXTMENU, OnShowContextMenu)
+	ON_WM_TIMER()
+	ON_UPDATE_COMMAND_UI(ID_CDDBSEARCH, OnUpdateBrowser)
+	ON_UPDATE_COMMAND_UI(ID_LYRICS, OnUpdateBrowser)
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_FILECHANGE, OnFileChange)
 
@@ -74,7 +84,11 @@ CExploListView::CExploListView()
 
 	m_pThreadInfo = new watchThreadInfo;
 
+	m_pEdit = NULL;
+
 	m_pThread = NULL;
+
+	m_DropEffect = DROPEFFECT_NONE;
 }
 
 CExploListView::~CExploListView()
@@ -86,7 +100,7 @@ BOOL CExploListView::PreCreateWindow(CREATESTRUCT& cs)
 {
 	// TODO: Modify the Window class or styles here by modifying
 	// the CREATESTRUCT cs
-	cs.style |= LVS_REPORT | LVS_SHOWSELALWAYS;
+	cs.style |= LVS_REPORT | LVS_SHOWSELALWAYS | LVS_EDITLABELS;
 
 	return CListView::PreCreateWindow(cs);
 }
@@ -208,7 +222,9 @@ int CExploListView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 	
 	m_pics[MP3] = GetIcon("*.mp3", FALSE);
-
+	
+	m_OleDropTarget.Register(this);
+	
 	return 0;
 }
 
@@ -573,7 +589,12 @@ void CExploListView::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult)
 			!(pNMListView->uOldState & LVIS_FOCUSED)) {
 			CJAGSDoc * pDoc = GetDocument();
 			pDoc->SetTitle(GetListCtrl().GetItemText(pNMListView->iItem, 0));
-			pDoc->UpdateAllViews(this, NEW_SEL);
+
+			// Set a timer to 500 ms. Only then, the MP3 Info is updated
+			// This prevents that the MP3 info of every file is shown 
+			// if you browse the list with the curor keys (up/down)
+			KillTimer(MP3INFO_TIMER);
+			SetTimer(MP3INFO_TIMER, 200, NULL);
 		}
 	}
 	*pResult = 0;
@@ -715,7 +736,7 @@ CString CExploListView::BuildPath(int nItem)
 	return sPath;
 }
 
-BOOL CExploListView::ShowExplorerMenu(LPCTSTR pszPath, POINT point)
+BOOL CExploListView::ShowExplorerMenu(LPCTSTR pszPath, POINT point, BOOL bShowProperty /* = FALSE */)
 {
 
     LPMALLOC pMalloc;
@@ -811,8 +832,54 @@ BOOL CExploListView::ShowExplorerMenu(LPCTSTR pszPath, POINT point)
                 pidlItem = mgr.GetNextItem(pidlItem);
             }
 			
-			ScreenToClient(&point);
-			ShowContextMenu(psfFolder, pidlItem, point);
+			ClientToScreen(&point);
+
+			// Now we fill an array of LPITEMISTLIST with the pidls of all selected files
+			CListCtrl &listCtrl = GetListCtrl();
+		    UINT nNumSel = listCtrl.GetSelectedCount();
+
+			LPITEMIDLIST *pidls = new LPITEMIDLIST[nNumSel];
+
+			POSITION pos = listCtrl.GetFirstSelectedItemPosition();
+	
+			LPITEMIDLIST *cursor = pidls;
+
+			UINT nCount = 0;
+			while (pos) {
+				UINT nSel = listCtrl.GetNextSelectedItem(pos);
+
+				// Get the filename (relative to the path)
+				CString sPath = listCtrl.GetItemText(nSel, 0);
+				//
+				// Make sure the file name is fully qualified and in Unicode format.
+				//
+				GetFullPathName (sPath, sizeof (tchPath) / sizeof (TCHAR), tchPath, NULL);
+
+				if (IsTextUnicode (tchPath, lstrlen (tchPath), NULL)) {
+					lstrcpy ((char *) wchPath, tchPath);
+				}
+				else {
+					MultiByteToWideChar (CP_ACP, 0, sPath, -1, wchPath, sizeof (wchPath) / sizeof (WCHAR));
+				}
+
+
+				if (SUCCEEDED (psfFolder->ParseDisplayName(m_hWnd, NULL, wchPath, &ulCount, cursor, &ulAttr))) {
+					nCount++;
+					cursor++;
+				}
+				
+			}
+
+			// Show the context menu
+			ShowContextMenu(psfFolder, (LPCITEMIDLIST *)pidls, nCount, point, bShowProperty);
+
+			// Free the pidls
+			for (UINT del = 0; del < nCount; del++) {
+				pMalloc->Free(pidls[del]);
+			}
+
+			// And delete the pidl-array
+			delete [] pidls;
  
         }
         pMalloc->Free(pidlMain);
@@ -831,44 +898,50 @@ BOOL CExploListView::ShowExplorerMenu(LPCTSTR pszPath, POINT point)
 #define MIN_SHELL_ID 1
 #define MAX_SHELL_ID 30000
 
-void CExploListView::ShowContextMenu(IShellFolder * pFolder, LPCITEMIDLIST pidlItem, CPoint point)
+void CExploListView::ShowContextMenu(IShellFolder * pFolder, LPCITEMIDLIST *pidlItems, UINT nCount, CPoint point, BOOL bShowProperty /* = FALSE */)
 {
 	CMenu menu;
 	menu.CreatePopupMenu();
 	int cmType; // "version" # of context menu
 	LPCONTEXTMENU pCMx;
 	// m_psfFolder: active IShellFolder; m_localPidl: selected item
-	HRESULT hr = GetSHContextMenu(pFolder, pidlItem, (void**)&pCMx, &cmType);
+	HRESULT hr = GetSHContextMenu(pFolder, pidlItems, nCount, (void**)&pCMx, &cmType);
 	// fill the menu with the standard shell items
 	hr = pCMx->QueryContextMenu(menu, 0, MIN_SHELL_ID, MAX_SHELL_ID, CMF_EXPLORE);
-	// insert a single item of our own for demonstration
-	CMenu treeMenu;
-	treeMenu.LoadMenu(MAKEINTRESOURCE(IDR_TREECONTEXTMENU));
-
-	menu.InsertMenu(0, MF_POPUP | MF_BYPOSITION, (UINT)treeMenu.GetSubMenu(0)->m_hMenu, "JAGS");
 
 	// install the subclassing "hook", for versions 2 or 3
 	if(cmType > 1) {
-	  m_pOldWndProc = (WNDPROC)
-		 SetWindowLong(this->m_hWnd, GWL_WNDPROC, (DWORD)HookWndProc);
-	  m_pIContext2 = (LPCONTEXTMENU2)pCMx; // cast ok for ICMv3
+		if (m_pOldWndProc == NULL) {
+			m_pOldWndProc = (WNDPROC)SetWindowLong(this->m_hWnd, GWL_WNDPROC, (DWORD)HookWndProc);
+		}
+		m_pIContext2 = (LPCONTEXTMENU2)pCMx; // cast ok for ICMv3
 	}
 	else
 		m_pOldWndProc = NULL;
 
-	// show the menu and get the command
-	UINT cmdID = menu.TrackPopupMenu(TPM_RETURNCMD | TPM_LEFTALIGN, point.x, point.y, this);
-	if(m_pOldWndProc) // restore old wndProc
-		SetWindowLong(this->m_hWnd, GWL_WNDPROC, (DWORD)m_pOldWndProc);
+	if (bShowProperty) {
+		CMINVOKECOMMANDINFO ici;
+		ZeroMemory(&ici, sizeof(ici));
+		ici.cbSize = sizeof(CMINVOKECOMMANDINFO);
+		ici.lpVerb = "properties";
+		ici.nShow = SW_SHOWNORMAL;
+		pCMx->InvokeCommand(&ici);
+	}
+	else {
+		// show the menu and get the command
+		UINT cmdID = menu.TrackPopupMenu(TPM_RETURNCMD | TPM_LEFTALIGN, point.x, point.y, this);
+		if(m_pOldWndProc) // restore old wndProc
+			SetWindowLong(this->m_hWnd, GWL_WNDPROC, (DWORD)m_pOldWndProc);
 
-	if(cmdID >= MIN_SHELL_ID && cmdID <= MAX_SHELL_ID)
-		ProcessCMCommand(pCMx, cmdID-MIN_SHELL_ID /*offset passed*/ );
-	else if(cmdID)
-		GetParentFrame()->PostMessage(WM_COMMAND, cmdID); // our command
-		// else ID==0, no menu selection
+		if(cmdID >= MIN_SHELL_ID && cmdID <= MAX_SHELL_ID)
+			ProcessCMCommand(pCMx, cmdID-MIN_SHELL_ID /*offset passed*/ );
+		else if(cmdID)
+			GetParentFrame()->PostMessage(WM_COMMAND, cmdID); // our command
+			// else ID==0, no menu selection
 
-	pCMx->Release();
-	m_pIContext2 = NULL; // prevents accidental use
+		pCMx->Release();
+		m_pIContext2 = NULL; // prevents accidental use
+	}
 
 }
 
@@ -919,12 +992,12 @@ LRESULT CALLBACK CExploListView::HookWndProc(HWND hWnd, UINT msg, WPARAM wp, LPA
    return ::CallWindowProc(m_pOldWndProc, hWnd, msg, wp, lp);
 }
 
-HRESULT CExploListView::GetSHContextMenu(LPSHELLFOLDER psfFolder, LPCITEMIDLIST localPidl, void** ppCM, int* pcmType)
+HRESULT CExploListView::GetSHContextMenu(LPSHELLFOLDER psfFolder, LPCITEMIDLIST *localPidls, UINT nCount, void** ppCM, int* pcmType)
 {
    *ppCM = NULL;
    LPCONTEXTMENU pICv1 = NULL; // plain version
    // try to obtain the lowest possible IContextMenu
-   HRESULT hr = psfFolder->GetUIObjectOf(NULL, 1, &localPidl, 
+   HRESULT hr = psfFolder->GetUIObjectOf(NULL, nCount, localPidls, 
                    IID_IContextMenu, NULL, (void**)&pICv1);
    if(pICv1) { // try to obtain a higher level pointer, first 3 then 2
       hr = pICv1->QueryInterface(IID_IContextMenu3, ppCM);
@@ -1014,3 +1087,289 @@ LRESULT CExploListView::OnFileChange(WPARAM wParam, LPARAM lParam)
 	return 1;
 }
 
+
+void CExploListView::OnBeginlabeledit(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
+	// TODO: Add your control notification handler code here
+
+	m_pEdit = GetListCtrl().GetEditControl();
+	if (m_pEdit) {
+		m_sOldFileName = BuildPath(pDispInfo->item.iItem);
+		m_pEdit->LimitText(_MAX_FNAME);
+		*pResult = 0;
+	}
+	else {
+		*pResult = 1;
+	}
+}
+
+void CExploListView::OnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	NMLVDISPINFO* pDispInfo = (NMLVDISPINFO*)pNMHDR;
+	*pResult = 0;
+
+	// Do we have a valie string?
+	if (pDispInfo->item.pszText == 0) {
+		*pResult = 1;
+		m_pEdit = NULL;
+		return;
+	}
+
+	if (m_pEdit) {
+		// Build the new filename
+		CJAGSDoc * pDoc = GetDocument();
+		CString sNewFileName = pDoc->GetPathName();
+		if (sNewFileName.Right(1) != "\\") {
+			sNewFileName += "\\";
+		}
+
+		sNewFileName += pDispInfo->item.pszText;
+
+		// Only rename the file if the names are different.
+		if (m_sOldFileName != sNewFileName) {
+			if (!MoveFile(m_sOldFileName, sNewFileName)) {
+				// The entry could not be renamed.
+				AfxMessageBox("The file could not be renamed!\nMake sure the name is unique and valid.", MB_OK | MB_ICONSTOP);
+				m_pEdit = GetListCtrl().GetEditControl();
+				// Put in the old name
+				if (m_pEdit) {
+					m_pEdit->SetWindowText(m_sOldFileName);
+				}
+			}
+		}
+	}
+
+	m_pEdit = NULL;
+}
+
+void CExploListView::OnRename() 
+{
+	CListCtrl &ListCtrl = GetListCtrl();
+	POSITION pos = ListCtrl.GetFirstSelectedItemPosition();
+	if (pos != NULL) {
+		ListCtrl.EditLabel(ListCtrl.GetNextSelectedItem(pos));
+	}
+}
+
+void CExploListView::OnDelete() 
+{
+	CListCtrl& ListCtrl = GetListCtrl();
+
+	// If the user is editing a filename and hits delete we unfortunately
+	// end up here :-(
+	// If pEdit != NULL we know that the user is editing.
+	if (m_pEdit != NULL) {
+		// As GetEditControl only returns a CTempWnd we make sure we
+		// have the correct CWnd *.
+		m_pEdit = ListCtrl.GetEditControl();
+		m_pEdit->SendMessage(WM_KEYDOWN, VK_DELETE, 0);
+		return;
+	}
+
+	DeleteFiles(TRUE);
+
+}
+
+BOOL CExploListView::DeleteFiles(BOOL bKeepInBin)
+{
+	CListCtrl &listCtrl = GetListCtrl();
+
+	// Allocate a string for all the names of the files that will
+	// be deleted. It's a double zero terminated string.
+	char *pFrom = new char[listCtrl.GetSelectedCount() * (MAX_PATH + 1) + 1];
+	// Set it to 0
+	memset(pFrom, '\0', listCtrl.GetSelectedCount() * (_MAX_PATH + 1) + 1);
+	char *cursor = pFrom;
+
+	POSITION pos = listCtrl.GetFirstSelectedItemPosition();
+	while (pos) {
+		int nItem = listCtrl.GetNextSelectedItem(pos);
+
+		// Get the filename
+		CString sPath = BuildPath(nItem);
+		// Copy the filename to pFrom
+		strcpy(cursor, sPath);
+		cursor += sPath.GetLength() + 1;
+	}
+
+	// Set up the struct to tell Windows to delete the files.
+	SHFILEOPSTRUCT shFile;
+	shFile.hwnd = 0;
+	shFile.wFunc = FO_DELETE;
+	shFile.pFrom = pFrom;
+	shFile.pTo = NULL;
+	// FOF_ALLOWUNDO keeps the files in the recycle bin
+	shFile.fFlags = bKeepInBin ? FOF_ALLOWUNDO : 0;
+	shFile.fAnyOperationsAborted = FALSE;
+
+	bool bRet = true;
+
+	// Now we delete the files.
+    bRet = SHFileOperation(&shFile) == 0;
+
+	delete [] pFrom;
+
+    // BUG: Windows will ask before deleting a .exe.  If the user
+    // cancels the delete, fAnyOperationsAborted is NOT set to TRUE.
+	if (shFile.fAnyOperationsAborted == TRUE)
+		bRet = false;
+
+	return bRet;
+
+}
+
+void CExploListView::OnDeleteErase() 
+{
+	DeleteFiles(FALSE);	
+}
+
+DROPEFFECT CExploListView::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
+{
+	STGMEDIUM stgMedium;
+	if (pDataObject->GetData(CF_HDROP, &stgMedium)) {
+		CString sDraggedFile;
+		DragQueryFile((HDROP)stgMedium.hGlobal, 0, sDraggedFile.GetBuffer(MAX_PATH), MAX_PATH);
+		sDraggedFile.ReleaseBuffer();
+
+		if (dwKeyState & MK_SHIFT) {
+			// When the user presses the SHIFT key, it's always a move operation
+			m_DropEffect = DROPEFFECT_MOVE;
+		}
+		else if (dwKeyState & MK_CONTROL) {
+			// When the user presses the CTRL key, it's always a copy operation
+			m_DropEffect = DROPEFFECT_COPY;
+		}
+		else {
+			// It's a move operation if the file is on the same drive, otherwise
+			// it's a copy operation
+			m_DropEffect = (GetDocument()->GetPathName().GetAt(0) == sDraggedFile.GetAt(0)) ? DROPEFFECT_MOVE : DROPEFFECT_COPY;
+		}
+	}
+
+	return m_DropEffect;
+}
+
+DROPEFFECT CExploListView::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point) 
+{
+	return m_DropEffect;
+}
+
+void CExploListView::OnDragLeave() 
+{
+	m_DropEffect = DROPEFFECT_NONE;
+
+	CListView::OnDragLeave();
+}
+
+BOOL CExploListView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point) 
+{
+	BOOL bRet = FALSE;
+	
+	if (dropEffect == DROPEFFECT_NONE) {
+		return bRet;
+	}
+
+	STGMEDIUM stgMedium;
+
+	if (pDataObject->GetData(CF_HDROP, &stgMedium)) {
+		bRet = HandleFileDrop(dropEffect == DROPEFFECT_COPY, (HDROP)stgMedium.hGlobal);
+
+		ReleaseStgMedium(&stgMedium);
+	}
+	
+	return bRet;
+}
+
+BOOL CExploListView::HandleFileDrop(BOOL bCopy, HDROP hDrop)
+{
+	UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+
+	int nBufferLen = (nFiles * MAX_PATH + 1) + 1;
+	TCHAR *pFrom = new TCHAR[nBufferLen];
+	ZeroMemory(pFrom, nBufferLen);
+	LPTSTR cursor = pFrom;
+	TCHAR sFile[MAX_PATH];
+
+	SHFILEOPSTRUCT shFile;
+	shFile.hwnd = 0;
+	shFile.wFunc = bCopy ? FO_COPY : FO_MOVE;
+
+	// hDrop is a double zero terminated list of filename
+	// Exaclty what SHFileOperation expects
+	for (UINT i = 0; i < nFiles; i++) {
+		int n = DragQueryFile(hDrop, i, sFile, MAX_PATH);
+		lstrcpy(cursor, sFile);
+		cursor += n + 1;
+	}
+
+	shFile.pFrom = pFrom;
+	CString sTo = GetDocument()->GetPathName();
+	shFile.pTo = sTo;
+	shFile.fFlags = FOF_ALLOWUNDO;
+	shFile.fAnyOperationsAborted = FALSE;
+
+	BOOL bRet = TRUE;
+
+	// Now we delete the files.
+    bRet = SHFileOperation(&shFile) == 0;
+
+    // BUG: Windows will ask before deleting a .exe.  If the user
+    // cancels the delete, fAnyOperationsAborted is NOT set to TRUE.
+	if (shFile.fAnyOperationsAborted == TRUE)
+		bRet = FALSE;
+
+	delete [] pFrom;
+
+	return bRet;
+}
+
+void CExploListView::OnSelectAll() 
+{
+	// Select all items
+	CListCtrl& ListCtrl = GetListCtrl();
+	UINT nCount = ListCtrl.GetItemCount();
+	for (UINT i = 0; i < nCount; i++) {
+		ListCtrl.SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
+	}
+}
+
+void CExploListView::OnPropertyPage() 
+{
+	CListCtrl &listCtrl = GetListCtrl();
+	POSITION pos = listCtrl.GetFirstSelectedItemPosition();
+	if (pos) {
+		ShowExplorerMenu(BuildPath(listCtrl.GetNextSelectedItem(pos)), CPoint(0, 0), TRUE);	
+	}
+}
+
+void CExploListView::OnShowContextMenu() 
+{
+	// This method is called if the user hits the "context menu" key on the keyboard
+	CListCtrl &listCtrl = GetListCtrl();
+	POSITION pos = listCtrl.GetFirstSelectedItemPosition();
+	if (pos) {
+		int nItem = listCtrl.GetNextSelectedItem(pos);
+		CPoint point;
+		listCtrl.GetItemPosition(nItem, &point);
+		ShowExplorerMenu(BuildPath(nItem), point);	
+	}
+	
+}
+
+void CExploListView::OnTimer(UINT nIDEvent) 
+{
+	if (nIDEvent == MP3INFO_TIMER) {
+		KillTimer(MP3INFO_TIMER);
+		// When the timer elapsed, we show the MP3 Info
+		GetDocument()->UpdateAllViews(this, NEW_SEL);	
+	}
+	CListView::OnTimer(nIDEvent);
+}
+
+BOOL CExploListView::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pLResult) 
+{
+	// TODO: Add your specialized code here and/or call the base class
+	
+	return CListView::OnChildNotify(message, wParam, lParam, pLResult);
+}

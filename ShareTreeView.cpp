@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static char THIS_FILE[] = __FILE__;
 #endif
 
+enum {ITEMCHANGED_TIMER = 5};
+
 /////////////////////////////////////////////////////////////////////////////
 // CShareTreeView
 
@@ -53,20 +55,14 @@ CShareTreeView::~CShareTreeView()
 BEGIN_MESSAGE_MAP(CShareTreeView, CExploTreeView)
 	//{{AFX_MSG_MAP(CShareTreeView)
 	ON_NOTIFY_REFLECT(TVN_SELCHANGED, OnSelchanged)
+	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT, OnEndLabelEdit)
 	ON_UPDATE_COMMAND_UI(ID_SETASDOWNLOADDIR, OnUpdateSetDownloadDir)
 	ON_UPDATE_COMMAND_UI(ID_REMOVESHARE, OnUpdateRemoveShare)
 	ON_COMMAND(ID_REMOVESHARE, OnRemoveShare)
 	ON_COMMAND(ID_SETASDOWNLOADDIR, OnSetasDownloaddir)
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// CShareTreeView drawing
-
-void CShareTreeView::OnDraw(CDC* pDC)
-{
-	// TODO: add draw code here
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // CShareTreeView diagnostics
@@ -162,7 +158,14 @@ void CShareTreeView::OnSelchanged(NMHDR* pNMHDR, LRESULT* pResult)
 	CJAGSDoc * pDoc = GetDocument();
 
 	pDoc->SetPathName(sPath, FALSE);
-	pDoc->UpdateAllViews(this, NEW_DIR);
+
+	// We start a timer
+	// When it runs out, the other views (esp the MP3 files view)
+	// are updated
+
+	// The timer allows faster browsing throught the tree (i.e. with
+	// the cursor keys)
+	SetTimer(ITEMCHANGED_TIMER, 200, NULL);
 	*pResult = 0;
 }
 
@@ -304,4 +307,30 @@ void CShareTreeView::OnSetasDownloaddir()
 	}
 
 	CAGSocket::GetInstance()->SendInitRescan();
+}
+
+void CShareTreeView::OnTimer(UINT nIDEvent) 
+{
+	if (nIDEvent == ITEMCHANGED_TIMER) {
+		KillTimer(ITEMCHANGED_TIMER);
+		// Now the other views shall be updated
+		GetDocument()->UpdateAllViews(this, NEW_DIR);
+	}
+	
+	CExploTreeView::OnTimer(nIDEvent);
+}
+
+void CShareTreeView::OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	CExploTreeView::OnEndLabelEdit(pNMHDR, pResult);
+
+	if (*pResult) {
+		CTreeCtrl &treeCtrl = GetTreeCtrl();
+		if (treeCtrl.GetParentItem(treeCtrl.GetSelectedItem()) == NULL) {
+			if (GetDocument()->SaveShares()) {
+				CAGSocket::GetInstance()->SendInitRescan();
+			}
+		}
+
+	}
 }

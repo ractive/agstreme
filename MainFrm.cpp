@@ -323,6 +323,8 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext) 
 {
+	if (!AfxOleInit())
+		return FALSE;
 
 	return CFrameWnd::OnCreateClient(lpcs, pContext);
 }
@@ -1212,3 +1214,4 @@ void CMainFrame::OnHelp()
 {
 	HtmlHelp(m_hWnd,"jagshelp.chm",HH_DISPLAY_TOPIC,0);
 }
+

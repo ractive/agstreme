@@ -30,6 +30,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <afxole.h>
+
 class CExploTreeView : public CTreeView
 {
 protected: // create from serialization only
@@ -48,8 +50,13 @@ public:
 	public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual void NoItemContextMenu(CWnd * pWnd, CPoint point);
-	protected:
+	virtual DROPEFFECT OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
+	virtual DROPEFFECT OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
+	virtual void OnDragLeave();
+	virtual BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
+	virtual DROPEFFECT OnDragScroll(DWORD dwKeyState, CPoint point);
 	//}}AFX_VIRTUAL
+	BOOL HandleKeyDownMsg(MSG* pMsg);
 
 // Implementation
 public:
@@ -69,9 +76,17 @@ protected:
 	HTREEITEM AddRootItem(LPCTSTR szPath);
 	HTREEITEM m_hOldSelection;
 	HTREEITEM m_hMenuItem;
+	CEdit * m_pEdit;
 
 // Generated message map functions
 protected:
+	void RefreshAll();
+	void Refresh(HTREEITEM hItem);
+	void Expand(HTREEITEM hItem);
+	BOOL m_bNewDir;
+	BOOL DeleteDir(BOOL bKeepInBin);
+	DROPEFFECT GetDropEffect(HTREEITEM hTI, DWORD dwKeyState);
+	BOOL HandleFileDrop(HTREEITEM hTI, BOOL bCopy, HDROP hDrop);
 	BOOL DoFileTransfer(HTREEITEM hTI, BOOL bForClipboard);
 	void ShowContextMenu(IShellFolder * pFolder, LPCITEMIDLIST pidlItem, CPoint point);
 	void OpenPidl(const LPITEMIDLIST pidl);
@@ -80,10 +95,27 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnBegindrag(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnBeginLabelEdit(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnEndLabelEdit(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnDelete();
+	afx_msg void OnDeleteErase();
+	afx_msg void OnRename();
+	afx_msg void OnNewDir();
+	afx_msg void OnRefresh();
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
+
 private:
+	CString m_sOldName;
+	HTREEITEM m_hItemButton;
+	CString m_sDraggedFile;
+	enum {InitialScrollWait = 400};
+	enum {ScrollRange = 30};
+	int m_nScrollWait;
+
+
 	HRESULT GetSHContextMenu(LPSHELLFOLDER psfFolder, LPCITEMIDLIST localPidl, void** ppCM, int* pcmType);
 	HRESULT ProcessCMCommand(LPCONTEXTMENU pCM, UINT idCmdOffset);
 
@@ -96,6 +128,11 @@ private:
 	BOOL InsertFolder(HTREEITEM hParentItem,IShellFolder* pParentFolder, LPITEMIDLIST pidlParent);
 	static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort); 
 	CPtrList m_ptrList;
+
+	COleDropTarget m_OleDropTarget;
+
+
+	HACCEL m_hAccel;
 };
 
 /////////////////////////////////////////////////////////////////////////////

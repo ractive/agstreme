@@ -2,7 +2,7 @@
                                    JAGS Readme
 ======================================================================================
 
-JAGS Version 1.0
+JAGS Version 1.1
 
 What's that?
 ======================================================================================
@@ -71,12 +71,23 @@ PROBLEMS
   like i.e. full WinAmp integration, better MP3 management (maybe even with access to
   cddb.org or so) etc...
 
+- If you create a new directory in a folder that has no subdirectories yet, the
+  new item may be out of scope :-(
+
+- The "Shares" pane must be refreshed manually
 
 If you find bugs or if you miss a feature, contact me (see below).
 
 
 CHANGE-LOG
 ======================================================================================
+Version 1.1
+====================
+- Full Drag and Drop support
+- Context-Menu support
+- Search for song lyrics added
+- Minor bug-fixes and other improvements
+
 Version 1.0
 ====================
 - The "MP3-files" pane is automatically updated

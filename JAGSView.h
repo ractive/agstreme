@@ -80,6 +80,7 @@ protected:
 	afx_msg void OnCdcover();
 	afx_msg void OnCddbsearch();
 	afx_msg void OnBrowserNotes();
+	afx_msg void OnLyrics();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
