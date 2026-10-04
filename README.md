@@ -149,9 +149,10 @@ applied to all of them.
   Gracenote `CDDBControl.dll` and its generated `.tlh`/`.tli` headers, the
   DAO redistributable, the personal `songs.mdb` databases, Paint Shop Pro
   working files, compiled help, Visual C++ IDE state files and CVS metadata.
-- Scrubbed: the Gracenote client credentials in `CDDBInfo.cpp` and `MainFrm.cpp`, and a
-  commented-out test account (e-mail address, user name, password) in
-  `MainFrm.cpp`.
+- Scrubbed in every commit: the Gracenote client credentials in `CDDBInfo.cpp`
+  and `MainFrm.cpp`, a test account (e-mail address, user name, password) in
+  `MainFrm.cpp` that was live code in 0.5 and 0.7 and commented out later, and
+  the author's street address in `help/contact.html`.
 - Source files are Windows-1252 encoded with CRLF line endings and are stored
   byte-for-byte (`.gitattributes` disables text conversion).
 - Author: Jean-Pierre Bergamin <james@ractive.ch>.
