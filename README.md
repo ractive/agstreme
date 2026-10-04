@@ -148,3 +148,29 @@ The source was originally published at `http://www.ractive.ch/gpl/AGStreme.html`
 GNU General Public License, version 2 (see `LICENSE` and the original
 `LICENSE.TXT`). Third-party components keep their own licences; see
 `THIRD_PARTY.md`.
+
+## Where it was published
+
+- The ractive.ch project page (archived):
+  <http://web.archive.org/web/20011112004510/http://www.ractive.ch/gpl/AGStreme.html>.
+  Releases listed there: JAGS 1.0 and 1.1 (July 2001), AGStreme 2.0
+  (26 Sep 2001), 2.1 (8 Oct 2001), 2.2 (1 Nov 2001), 2.21 (12 Nov 2001),
+  2.22 (28 Apr 2002). "AGStreme was formerly known as JAGS. Because there's
+  already another software-project named JAGS I renamed the program to
+  AGStreme!"
+- SourceForge project `jags2001` (registered 12 July 2001), installers and
+  source zips still downloadable: <https://sourceforge.net/projects/jags2001/files/>.
+  The SourceForge blurb spells out the name: "JAGS (James' AudioGalaxy
+  Satellite) is a full featured client for the filesharing platform on
+  www.audiogalaxy.com."
+- Mentioned on Slashdot, "Spyware in Audio Galaxy" (27 Jan 2002): "Here's a
+  plug for AGstreme ... It's a GPL AudioGalaxy client replacement, which a
+  boatload more features. My favorite: it can read CDDB entries and then
+  request download of one or more tracks from a given CD."
+  <https://yro.slashdot.org/story/02/01/27/0354232/spyware-in-audio-galaxy>
+- Recommended on the AnandTech forums (Jan and Mar 2002) as the spyware-free
+  alternative to the official satellite:
+  <https://forums.anandtech.com/threads/spyware-at-its-worst.719670/>,
+  <https://forums.anandtech.com/threads/anyone-use-audiogalaxy-anymore.754457/>.
+- Original screenshots from the ractive.ch page are in
+  `docs/screenshots/ractive.ch/`.
