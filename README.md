@@ -122,13 +122,26 @@ AGStreme 2.22.
 
 | Version | Date | Notes |
 |---|---|---|
-| 0.7 to 1.1 | July to August 2001 | Released as "JAGS": shares, browser navigation, transfer meter, WinAmp support, drag and drop, lyrics search. |
-| 2.0 | September 2001 | Renamed AGStreme; music database, CDDB integration, ID3v2 support, album search. First commit in this repository (source zip as published). |
+| 0.5 to 1.1 | July 2001 | Released as "JAGS": shares, browser navigation, transfer meter, WinAmp support, drag and drop, lyrics search. Commits 1 to 4 in this repository (source zips of 22, 24, 27 and 31 July 2001). |
+| 2.0 | September 2001 | Renamed AGStreme; music database, CDDB integration, ID3v2 support, album search. Commits 5 and 6 in this repository (the source zip as published, and the backup working copy of the same day). |
 | 2.1 / 2.12 | October 2001 | Drag and drop from the song list, correct MP3 info. |
 | 2.2 / 2.21 | November 2001 | Support for satellite 0.608, gold accounts. |
-| 2.22 | April 2002 | CDDB queuing fixed again. Second commit in this repository (working copy, with a few later edits up to January 2004). |
+| 2.22 | April 2002 | CDDB queuing fixed again. Commit 7 in this repository (working copy, with a few later edits up to January 2004). |
 
 The source was originally published at `http://www.ractive.ch/gpl/AGStreme.html`.
+
+### History of this repository
+
+No version control survived from 2001, so the history was assembled from
+snapshots. The first four commits are the source zips `JAGS_src_0.5.zip`,
+`JAGS_src_0.7.zip`, `JAGS_src_1.0.zip` and `JAGS_src_2.zip` (22 to 31 July
+2001, versions 0.5 to 1.1) found in a machine backup of 2001. Then follows the
+published `AGStreme_src.zip` of 27 September 2001 (version 2.0) and the backup's
+working copy of the same day, which differs from it by a single later edit.
+The last import is the author's working copy of version 2.22 (April 2002, with
+edits up to January 2004). Each snapshot was committed with the newest source
+file's modification time as author date; the same exclusions and scrubs were
+applied to all of them.
 
 ## Notes on this archive
 
