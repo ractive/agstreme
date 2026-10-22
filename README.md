@@ -108,7 +108,7 @@ only.
 | `help/` | HTML Help source (topics, images, `jagshelp.hhp/.hhc/.hhk`). The compiled `jagshelp.chm` is not committed. |
 | `id3lib/` | Vendored id3lib 3.8.0pre1 with zlib 1.1.3 (LGPL / zlib licence). |
 | `jags.nsi` | NSIS installer script. |
-- `filemapping.ags` (a serialised list of the author's own MP3 files) was removed from the archive together with `songs.mdb`.- `filemapping.ags` (a serialised list of the author's own MP3 files) was removed from the archive together with `songs.mdb`.
+| `Tips.txt` | Runtime data: tip-of-the-day texts. The companion file `filemapping.ags`, a serialised list of the author's own MP3 files, was removed from the archive together with `songs.mdb`. |
 | `docs/` | Logo and screenshots for this README. |
 
 Some reusable MFC classes written for this program were extracted into the
